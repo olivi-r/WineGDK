@@ -1,8 +1,9 @@
-IMPORTS = advapi32
-MODULE	= xgameruntime.dll
+IMPORTS = advapi32 combase
+MODULE  = xgameruntime.dll
 
 SOURCES	= \
 	GDKComponent/InitInternalGDKC.c \
 	GDKComponent/System/XSystem.c \
+	GDKComponent/System/XSystemAnalytics.c \
 	main.c \
 	provider.idl

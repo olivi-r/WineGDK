@@ -26,8 +26,10 @@ import "xsystem.idl";
 /* --- xgameruntime --- */
 
 interface IXSystem;
+interface IXSystemAnalytics;
 
 coclass XSystemImpl;
+coclass XSystemAnalyticsImpl;
 
 [ local, object, uuid(dadc2895-34b0-4ef5-a83e-45114d629b80) ]
 interface IXSystem : IUnknown
@@ -40,8 +42,20 @@ interface IXSystem : IUnknown
     HRESULT XSystemAllowFullDownloadBandwidth( [in] BOOLEAN enable );
 }
 
+[ local, object, uuid(b884675d-b738-4a9c-815d-9a9a1e0c6c9b) ]
+interface IXSystemAnalytics : IUnknown
+{
+    XSystemAnalyticsInfo XSystemGetAnalyticsInfo();
+}
+
 [ uuid(e349bd1a-fc20-4e40-b99c-4178cc6b409f) ]
 coclass XSystemImpl
 {
     [default] interface IXSystem;
+}
+
+[ uuid(b884675d-b738-4a9c-815d-9a9a1e0c6c9b) ]
+coclass XSystemAnalyticsImpl
+{
+    [default] interface IXSystemAnalytics;
 }

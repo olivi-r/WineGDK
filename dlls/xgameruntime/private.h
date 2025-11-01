@@ -23,19 +23,30 @@
 
 #define COBJMACROS
 
+#include <roapi.h>
 #include <stdlib.h>
 #include <unknwn.h>
 #include <windows.h>
 #include <wine/debug.h>
+#include <winstring.h>
 #include <xgameerr.h>
 
 #include "provider.h"
+
+#define WIDL_using_Windows_Foundation
+#define WIDL_using_Windows_Foundation_Collections
+#include <windows.foundation.h>
+#define WIDL_using_Windows_Globalization
+#include <windows.globalization.h>
+#define WIDL_using_Windows_System_Profile
+#include <windows.system.profile.h>
 
 /* October 2025 Release of GDK */
 #define GDKC_VERSION 10002L
 #define GAMING_SERVICES_VERSION 4429L
 
 extern IXSystem *x_system_impl;
+extern IXSystemAnalytics *x_system_analytics_impl;
 
 typedef struct _INITIALIZE_OPTIONS
 {
