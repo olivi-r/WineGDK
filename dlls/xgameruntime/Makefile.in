@@ -1,5 +1,5 @@
 MODULE	= xgameruntime.dll
-IMPORTS	= advapi32 shell32
+IMPORTS	= advapi32 combase shell32
 
 SOURCES = \
 	gdkc.c \
@@ -21,5 +21,6 @@ SOURCES = \
 	xpersistentlocalstorage.c \
 	xstore.c \
 	xsystem.c \
+	xsystemanalytics.c \
 	xthreading.c \
 	xuser.c
