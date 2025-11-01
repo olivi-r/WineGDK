@@ -21,15 +21,24 @@
 #pragma makedep header
 
 import "propidl.idl";
+import "xgameruntimefeature.idl";
 import "xsystem.idl";
 
 /* --- xgameruntime --- */
 
+interface IXGameRuntimeFeature;
 interface IXSystem;
 interface IXSystemAnalytics;
 
+coclass XGameRuntimeFeatureImpl;
 coclass XSystemImpl;
 coclass XSystemAnalyticsImpl;
+
+[ local, object, uuid(8836fe87-edb9-4fe3-8dad-05f0d2cd5b40) ]
+interface IXGameRuntimeFeature : IUnknown
+{
+    BOOLEAN XGameRuntimeIsFeatureAvailable( [in] XGameRuntimeFeature feature );
+}
 
 [ local, object, uuid(dadc2895-34b0-4ef5-a83e-45114d629b80) ]
 interface IXSystem : IUnknown
@@ -46,6 +55,12 @@ interface IXSystem : IUnknown
 interface IXSystemAnalytics : IUnknown
 {
     XSystemAnalyticsInfo XSystemGetAnalyticsInfo();
+}
+
+[ uuid(8836fe87-edb9-4fe3-8dad-05f0d2cd5b40) ]
+coclass XGameRuntimeFeatureImpl
+{
+    [default] interface IXGameRuntimeFeature;
 }
 
 [ uuid(e349bd1a-fc20-4e40-b99c-4178cc6b409f) ]

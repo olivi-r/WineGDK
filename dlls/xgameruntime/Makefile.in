@@ -3,6 +3,7 @@ MODULE  = xgameruntime.dll
 
 SOURCES	= \
 	GDKComponent/InitInternalGDKC.c \
+	GDKComponent/System/XGameRuntimeFeature.c \
 	GDKComponent/System/XSystem.c \
 	GDKComponent/System/XSystemAnalytics.c \
 	main.c \

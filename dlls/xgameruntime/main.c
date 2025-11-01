@@ -104,7 +104,11 @@ HRESULT WINAPI QueryApiImpl( const GUID *runtimeClassId, REFIID interfaceId, voi
 
     TRACE( "runtimeClassId %s, interfaceId %s, out %p.\n", debugstr_guid( runtimeClassId ), debugstr_guid( interfaceId ), out );
 
-    if (IsEqualGUID( runtimeClassId, &CLSID_XSystemImpl ))
+    if (IsEqualGUID( runtimeClassId, &CLSID_XGameRuntimeFeatureImpl ))
+    {
+        return IXGameRuntimeFeature_QueryInterface( x_game_runtime_feature_impl, interfaceId, out );
+    }
+    else if (IsEqualGUID( runtimeClassId, &CLSID_XSystemImpl ))
     {
         return IXSystem_QueryInterface( x_system_impl, interfaceId, out );
     }

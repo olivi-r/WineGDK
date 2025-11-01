@@ -45,6 +45,7 @@
 #define GDKC_VERSION 10002L
 #define GAMING_SERVICES_VERSION 4429L
 
+extern IXGameRuntimeFeature *x_game_runtime_feature_impl;
 extern IXSystem *x_system_impl;
 extern IXSystemAnalytics *x_system_analytics_impl;
 
