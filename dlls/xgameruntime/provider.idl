@@ -43,6 +43,7 @@ interface IGameActivationImpl1;
 interface IXGameEvent;
 interface IXGameInvite;
 interface IGameProtocolImpl1;
+interface IXGameRuntimeFeature;
 interface IXLauncher;
 
 coclass XAccessibilityImpl;
@@ -55,6 +56,7 @@ coclass XGameActivationImpl;
 coclass XGameEventImpl;
 coclass XGameInviteImpl;
 coclass XGameProtocolImpl;
+coclass XGameRuntimeFeatureImpl;
 coclass XLauncherImpl;
 
 [
@@ -216,6 +218,16 @@ interface IGameProtocolImpl1 : IUnknown
 [
     local,
     object,
+    uuid(8836fe87-edb9-4fe3-8dad-05f0d2cd5b40)
+]
+interface IXGameRuntimeFeature : IUnknown
+{
+    BOOLEAN XGameRuntimeIsFeatureAvailable( [in] XGameRuntimeFeature feature );
+}
+
+[
+    local,
+    object,
     uuid(1b339674-328d-4283-a200-3171f18d3639)
 ]
 interface IXLauncher : IUnknown
@@ -303,6 +315,14 @@ coclass XGameInviteImpl
 coclass XGameProtocolImpl
 {
     [default] interface IGameProtocolImpl1;
+}
+
+[
+    uuid(8836fe87-edb9-4fe3-8dad-05f0d2cd5b40)
+]
+coclass XGameRuntimeFeatureImpl
+{
+    [default] interface IXGameRuntimeFeature;
 }
 
 [

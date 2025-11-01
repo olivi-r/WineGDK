@@ -8,6 +8,7 @@ SOURCES = \
 	display.c \
 	error.c \
 	event.c \
+	feature.c \
 	game.c \
 	gdkc.c \
 	invite.c \
