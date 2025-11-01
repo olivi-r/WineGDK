@@ -23,13 +23,23 @@
 
 #define COBJMACROS
 
+#include <roapi.h>
 #include <stdlib.h>
 #include <windows.h>
 #include <wine/debug.h>
+#include <winstring.h>
 #include <xgameerr.h>
 #include <xgameruntimeinit.h>
 
 #include "provider.h"
+
+#define WIDL_using_Windows_Foundation
+#define WIDL_using_Windows_Foundation_Collections
+#include <windows.foundation.h>
+#define WIDL_using_Windows_Globalization
+#include <windows.globalization.h>
+#define WIDL_using_Windows_System_Profile
+#include <windows.system.profile.h>
 
 /* April 2026 Release of GDK */
 #define GDKC_VERSION 10002L
@@ -52,6 +62,7 @@ extern IXPackage *x_package_impl;
 extern IXPersistentLocalStorage *x_persistent_local_storage_impl;
 extern IStoreImpl6 *x_store_impl;
 extern IXSystem *x_system_impl;
+extern IXSystemAnalytics *analytics_impl;
 
 /* Deference is for other modules to communicate with eachother through the same binary. */
 HRESULT WINAPI QueryApiImpl( const GUID *runtimeClassId, REFIID interfaceId, void **out );

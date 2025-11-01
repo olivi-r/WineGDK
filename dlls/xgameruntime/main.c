@@ -99,6 +99,8 @@ HRESULT WINAPI QueryApiImpl( const GUID *runtimeClassId, REFIID interfaceId, voi
         return IStoreImpl6_QueryInterface( x_store_impl, interfaceId, out );
     if (IsEqualGUID( runtimeClassId, &CLSID_XSystemImpl ))
         return IXSystem_QueryInterface( x_system_impl, interfaceId, out );
+    if (IsEqualGUID( runtimeClassId, &CLSID_XSystemAnalyticsImpl ))
+        return IXSystemAnalytics_QueryInterface( analytics_impl, interfaceId, out );
 
     FIXME( "%s not implemented, returning ERROR_NOT_SUPPORTED.\n", debugstr_guid( runtimeClassId ) );
     return HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED );

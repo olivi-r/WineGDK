@@ -1,9 +1,10 @@
 MODULE	= xgameruntime.dll
-IMPORTS	= advapi32 shell32
+IMPORTS	= advapi32 combase shell32
 
 SOURCES = \
 	accessibility.c \
 	activation.c \
+	analytics.c \
 	capture.c \
 	display.c \
 	error.c \

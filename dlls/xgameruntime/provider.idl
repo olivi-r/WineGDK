@@ -55,6 +55,7 @@ interface IStoreImpl4;
 interface IStoreImpl5;
 interface IStoreImpl6;
 interface IXSystem;
+interface IXSystemAnalytics;
 
 coclass XAccessibilityImpl;
 coclass XAppCaptureImpl;
@@ -73,6 +74,7 @@ coclass XPackageImpl;
 coclass XPersistentLocalStorageImpl;
 coclass XStoreImpl;
 coclass XSystemImpl;
+coclass XSystemAnalyticsImpl;
 
 [
     local,
@@ -506,6 +508,16 @@ interface IXSystem : IUnknown
 }
 
 [
+    local,
+    object,
+    uuid(b884675d-b738-4a9c-815d-9a9a1e0c6c9b)
+]
+interface IXSystemAnalytics : IUnknown
+{
+    XSystemAnalyticsInfo XSystemGetAnalyticsInfo();
+}
+
+[
     uuid(3e241977-6237-41e9-8559-102c2d9983f1)
 ]
 coclass XAccessibilityImpl
@@ -639,4 +651,12 @@ coclass XStoreImpl
 coclass XSystemImpl
 {
     [default] interface IXSystem;
+}
+
+[
+    uuid(b884675d-b738-4a9c-815d-9a9a1e0c6c9b)
+]
+coclass XSystemAnalyticsImpl
+{
+    [default] interface IXSystemAnalytics;
 }
