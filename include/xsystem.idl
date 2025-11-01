@@ -180,11 +180,29 @@ interface IXSystem5 : IXSystem4
 }
 
 [
+    local,
+    object,
+    uuid(b884675d-b738-4a9c-815d-9a9a1e0c6c9b)
+]
+interface IXSystemAnalytics : IUnknown
+{
+    XSystemAnalyticsInfo XSystemGetAnalyticsInfo();
+}
+
+[
     uuid(e349bd1a-fc20-4e40-b99c-4178cc6b409f)
 ]
 coclass XSystemImpl
 {
     [default] interface IXSystem5;
+}
+
+[
+    uuid(b884675d-b738-4a9c-815d-9a9a1e0c6c9b)
+]
+coclass XSystemAnalyticsImpl
+{
+    [default] interface IXSystemAnalytics;
 }
 
 cpp_quote("#endif")
