@@ -206,6 +206,10 @@ static VOID WINAPI x_threading_XAsyncComplete( IXThreading* iface, XAsyncBlock* 
     impl->status = result;
     impl->provider.data->bufferSize = requiredBufferSize;
 
+    /* invoke the completion routine */
+    if ( impl->threadBlock->callback )
+        impl->threadBlock->callback( asyncBlock );
+
     return;
 }
 
