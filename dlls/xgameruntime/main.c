@@ -116,6 +116,10 @@ HRESULT WINAPI QueryApiImpl( const GUID *runtimeClassId, REFIID interfaceId, voi
     {
         return IXSystemAnalytics_QueryInterface( x_system_analytics_impl, interfaceId, out );
     }
+    else if ( IsEqualGUID( runtimeClassId, &CLSID_XThreadingImpl ) )
+    {
+        return IXThreading_QueryInterface( x_threading_impl, interfaceId, out );
+    }
 
     FIXME( "%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid( runtimeClassId ) );
     return E_NOINTERFACE;

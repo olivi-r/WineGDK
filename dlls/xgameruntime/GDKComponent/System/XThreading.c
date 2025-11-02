@@ -71,10 +71,9 @@ static HRESULT WINAPI x_threading_XAsyncGetStatus( IXThreading *iface, XAsyncBlo
 
     TRACE( "iface %p, asyncBlock %p, wait %d\n", iface, asyncBlock, wait );
 
-    if ( XCheckBlockAndInitialize( asyncBlock ) == S_FALSE ) return E_INVALIDARG; /* <-- Invalid for this call. */
     impl = impl_from_XAsyncBlock( asyncBlock );
 
-    if ( impl->status == E_PENDING && wait )
+    if ( wait )
     {
         WaitForThreadpoolWorkCallbacks( impl->async_run_work, FALSE );
         /* impl->status will be set by the thread */
@@ -88,7 +87,6 @@ static HRESULT WINAPI x_threading_XAsyncGetResultSize( IXThreading *iface, XAsyn
 
     TRACE( "iface %p, asyncBlock %p, bufferSize %p\n", iface, asyncBlock, bufferSize );
 
-    if ( XCheckBlockAndInitialize( asyncBlock ) == S_FALSE ) return E_INVALIDARG; /* <-- Invalid for this call. */
     impl = impl_from_XAsyncBlock( asyncBlock );
 
     if ( impl->status != S_OK ) return impl->status;
@@ -104,7 +102,6 @@ static VOID WINAPI x_threading_XAsyncCancel( IXThreading *iface, XAsyncBlock *as
 
     TRACE( "iface %p, asyncBlock %p\n", iface, asyncBlock );
 
-    if ( XCheckBlockAndInitialize( asyncBlock ) == S_FALSE ) return; /* <-- Invalid for this call. */
     impl = impl_from_XAsyncBlock( asyncBlock );
 
     if ( impl->status == S_OK ) return;
@@ -136,7 +133,7 @@ static HRESULT WINAPI x_threading_XAsyncBegin(IXThreading* iface, XAsyncBlock* a
 
     TRACE( "iface %p, context %p, identity %p, identityName %s, provider %p\n", iface, context, identity, identityName, provider );
 
-    XCheckBlockAndInitialize( asyncBlock );
+    XInitializeBlock( asyncBlock );
     impl = impl_from_XAsyncBlock( asyncBlock );
 
     if (!(newProvider.data = calloc( 1, sizeof(*newProvider.data) ))) return E_OUTOFMEMORY;
@@ -176,7 +173,6 @@ static HRESULT WINAPI x_threading_XAsyncSchedule( IXThreading* iface, XAsyncBloc
 
     TRACE( "iface %p, asyncBlock %p, delayInMs %d\n", iface, asyncBlock, delayInMs );
 
-    if ( XCheckBlockAndInitialize( asyncBlock ) == S_FALSE ) return E_INVALIDARG; /* <-- Invalid for this call. */
     impl = impl_from_XAsyncBlock( asyncBlock );
 
     if ( FAILED( impl->status ) ) return impl->status;
@@ -200,11 +196,13 @@ static VOID WINAPI x_threading_XAsyncComplete( IXThreading* iface, XAsyncBlock* 
 
     TRACE( "iface %p, asyncBlock %p, result %#lx, requiredBufferSize %Iu\n", iface, asyncBlock, result, requiredBufferSize );
 
-    if ( XCheckBlockAndInitialize( asyncBlock ) == S_FALSE ) return; /* <-- Invalid for this call. */
     impl = impl_from_XAsyncBlock( asyncBlock );
 
     impl->status = result;
     impl->provider.data->bufferSize = requiredBufferSize;
+
+    if ( SUCCEEDED( result ) )
+        impl->provider.data->buffer = malloc( requiredBufferSize );
 
     /* invoke the completion routine */
     if ( impl->threadBlock->callback )
@@ -217,10 +215,13 @@ static HRESULT WINAPI x_threading_XAsyncGetResult( IXThreading* iface, XAsyncBlo
 {
     struct x_async_work *impl;
 
+    HRESULT hr;
+
     TRACE( "iface %p, asyncBlock %p, identity %p, bufferSize %Iu, buffer %p, bufferUsed %p\n", iface, asyncBlock, identity, bufferSize, buffer, bufferUsed );
 
-    if ( XCheckBlockAndInitialize( asyncBlock ) == S_FALSE ) return HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ); /* <-- Invalid for this call. */
     impl = impl_from_XAsyncBlock( asyncBlock );
+
+    if ( FAILED( impl->status ) ) return impl->status;
 
     if ( !impl->provider.data->buffer ) return HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED );
     if ( impl->provider.data->bufferSize > bufferSize ) return E_BOUNDS;
@@ -229,10 +230,21 @@ static HRESULT WINAPI x_threading_XAsyncGetResult( IXThreading* iface, XAsyncBlo
     if ( bufferUsed )
         *bufferUsed = impl->provider.data->bufferSize;
 
+    impl->provider.operation = XAsyncOp_GetResult;
+
+    /* GetResult is not asynchronous */
+    hr = impl->provider.callback( XAsyncOp_GetResult, impl->provider.data );
+    if ( FAILED( hr ) ) return hr;
+
     if( buffer )
         memcpy( buffer, impl->provider.data->buffer, impl->provider.data->bufferSize );
 
-    return S_OK;
+    /* Microsoft is very vague about when Cleanup is invoked.
+       We'll invoke it here just to be safe. */
+
+    hr = impl->provider.callback( XAsyncOp_Cleanup, impl->provider.data );
+
+    return hr;
 }
 
 static const struct IXThreadingVtbl x_threading_vtbl =
