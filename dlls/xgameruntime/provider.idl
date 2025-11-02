@@ -21,18 +21,28 @@
 #pragma makedep header
 
 import "propidl.idl";
+import "xasync.idl";
+import "xasyncprovider.idl";
 import "xgameruntimefeature.idl";
 import "xsystem.idl";
+import "xtaskqueue.idl";
 
 /* --- xgameruntime --- */
 
+interface IWineAsyncWork;
 interface IXGameRuntimeFeature;
 interface IXSystem;
 interface IXSystemAnalytics;
+interface IXThreading;
 
 coclass XGameRuntimeFeatureImpl;
 coclass XSystemImpl;
 coclass XSystemAnalyticsImpl;
+coclass XThreadingImpl;
+
+[ local, object, uuid(7664288b-54e9-45f9-af0b-b4ad047fa194) ]
+interface IWineAsyncWorkImpl : IUnknown
+{}
 
 [ local, object, uuid(8836fe87-edb9-4fe3-8dad-05f0d2cd5b40) ]
 interface IXGameRuntimeFeature : IUnknown
@@ -57,6 +67,39 @@ interface IXSystemAnalytics : IUnknown
     XSystemAnalyticsInfo XSystemGetAnalyticsInfo();
 }
 
+[ local, object, uuid(073b7dcb-1fcf-4030-94be-e3c9eb623428) ]
+interface IXThreading : IUnknown
+{
+    HRESULT XAsyncGetStatus( [in, out] XAsyncBlock *asyncBlock, [in] BOOLEAN wait );
+    HRESULT XAsyncGetResultSize( [in, out] XAsyncBlock *asyncBlock, [out] SIZE_T *bufferSize );
+    void    XAsyncCancel( [in, out] XAsyncBlock *asyncBlock );
+    HRESULT XAsyncRun( [in, out] XAsyncBlock *asyncBlock, [in] XAsyncWork *work );
+    HRESULT XAsyncBegin( [in, out] XAsyncBlock *asyncBlock, [in, optional] void *context, [in, optional] const void *identity, [in, optional] const CHAR *identityName, [in] XAsyncProvider *provider );
+    HRESULT __PADDING__();
+    HRESULT XAsyncSchedule( [in, out] XAsyncBlock *asyncBlock, [in] UINT32 delayInMs );
+    void    XAsyncComplete( [in, out] XAsyncBlock *asyncBlock, [in] HRESULT result, [in] SIZE_T requiredBufferSize );
+    HRESULT XAsyncGetResult( [in, out] XAsyncBlock *asyncBlock, [in, optional] const void *identity, [in] SIZE_T bufferSize, [out, size_is(bufferSize)] void *buffer, [out, optional] SIZE_T *bufferUsed );
+    HRESULT XTaskQueueCreate( [in] XTaskQueueDispatchMode workDispatchMode, [in] XTaskQueueDispatchMode completionDispatchMode, [out] XTaskQueueHandle *queue );
+    HRESULT XTaskQueueCreateComposite( [in] XTaskQueuePortHandle workPort, [in] XTaskQueuePortHandle completionPort, [out] XTaskQueueHandle *queue );
+    HRESULT XTaskQueueGetPort( [in] XTaskQueueHandle queue, [in] XTaskQueuePort port, [out] XTaskQueuePortHandle *portHandle );
+    HRESULT XTaskQueueDuplicateHandle( [in] XTaskQueueHandle queueHandle, [out] XTaskQueueHandle *duplicatedHandle );
+    BOOLEAN XTaskQueueDispatch( [in] XTaskQueueHandle queue, [in] XTaskQueuePort port, [in] UINT32 timeoutInMs );
+    void    XTaskQueueCloseHandle( [in] XTaskQueueHandle queue );
+    HRESULT XTaskQueueSubmitCallback( [in] XTaskQueueHandle queue, [in] XTaskQueuePort port, [in, optional] void *callbackContext, [in] XTaskQueueCallback *callback );
+    HRESULT XTaskQueueSubmitDelayedCallback( [in] XTaskQueueHandle queue, [in] XTaskQueuePort port, [in] UINT32 delayMs, [in, optional] void *callbackContext, [in] XTaskQueueCallback *callback );
+    HRESULT XTaskQueueRegisterWaiter( [in] XTaskQueueHandle queue, [in] XTaskQueuePort port, [in] HANDLE waitHandle, void *callbackContext, XTaskQueueCallback *callback, XTaskQueueRegistrationToken *token );
+    void    XTaskQueueUnregisterWaiter( [in] XTaskQueueHandle queue, [in] XTaskQueueRegistrationToken token );
+    HRESULT XTaskQueueTerminate( [in] XTaskQueueHandle queue, [in] BOOLEAN wait, [in, optional] void *callbackContext, [in, optional] XTaskQueueTerminatedCallback *callback );
+    HRESULT XTaskQueueRegisterMonitor( [in] XTaskQueueHandle queue, [in, optional] void *callbackContext, [in] XTaskQueueMonitorCallback *callback, [out] XTaskQueueRegistrationToken *token );
+    void    XTaskQueueUnregisterMonitor( [in] XTaskQueueHandle queue, [in] XTaskQueueRegistrationToken token );
+    BOOLEAN XTaskQueueGetCurrentProcessTaskQueue( [out] XTaskQueueHandle *queue );
+    void    XTaskQueueSetCurrentProcessTaskQueue( [in] XTaskQueueHandle queue );
+    HRESULT XThreadSetTimeSensitive( [in] BOOLEAN isTimeSensitiveThread );
+    HRESULT __PADDING_2__();
+    void    XThreadAssertNotTimeSensitive();
+    BOOLEAN XThreadIsTimeSensitive();
+}
+
 [ uuid(8836fe87-edb9-4fe3-8dad-05f0d2cd5b40) ]
 coclass XGameRuntimeFeatureImpl
 {
@@ -73,4 +116,10 @@ coclass XSystemImpl
 coclass XSystemAnalyticsImpl
 {
     [default] interface IXSystemAnalytics;
+}
+
+[ uuid(073b7dcb-1fcf-4030-94be-e3c9eb623428) ]
+coclass XThreadingImpl
+{
+    [default] interface IXThreading;
 }
