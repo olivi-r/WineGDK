@@ -22,13 +22,17 @@
 #ifndef XTHREADING_H
 #define XTHREADING_H
 
+#define X_ASYNC_WORK_MAGIC 0x58A55A01u
+
 #include "../../private.h"
 
+#include <stdint.h>
 #include <string.h>
 
 struct x_threading
 {
     IXThreading IXThreading_iface;
+    BOOLEAN isTimeSensitiveThread;
     LONG ref;
 };
 
@@ -49,6 +53,8 @@ struct x_async_provider
  */
 struct x_async_work
 {
+    UINT32 magic;
+
     IWineAsyncWorkImpl IWineAsyncWorkImpl_iface;
     XAsyncBlock *threadBlock;
     HRESULT status;
@@ -58,6 +64,13 @@ struct x_async_work
     HANDLE event;
     TP_WORK *async_run_work;
     CRITICAL_SECTION cs;
+};
+
+struct x_task_queue
+{
+    XTaskQueueHandle handle_iface;
+    XTaskQueueDispatchMode workDispatchMode;
+    XTaskQueueDispatchMode completionDispatchMode;
 };
 
 struct x_async_work *impl_from_XAsyncBlock( XAsyncBlock *block );
