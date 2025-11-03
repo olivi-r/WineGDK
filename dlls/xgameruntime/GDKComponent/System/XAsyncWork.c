@@ -21,6 +21,8 @@
 
 #include "XThreading.h"
 
+#include "wine/exception.h"
+
 WINE_DEFAULT_DEBUG_CHANNEL(gdkc);
 
 static inline struct x_async_work *impl_from_IWineAsyncWorkImpl( IWineAsyncWorkImpl *iface )
@@ -28,13 +30,32 @@ static inline struct x_async_work *impl_from_IWineAsyncWorkImpl( IWineAsyncWorkI
     return CONTAINING_RECORD( iface, struct x_async_work, IWineAsyncWorkImpl_iface );
 }
 
+static inline BOOLEAN is_valid_read_ptr( const void *ptr, size_t size )
+{
+    MEMORY_BASIC_INFORMATION mbi;
+    if ( !ptr ) return FALSE;
+    if ( !VirtualQuery( ptr, &mbi, sizeof(mbi) ) ) return FALSE;
+    return !( mbi.Protect & ( PAGE_NOACCESS | PAGE_GUARD ) );
+}
+
 /* static object inheritence */
 struct x_async_work *impl_from_XAsyncBlock( XAsyncBlock *block )
 {
+    PVOID p;
     struct x_async_work *w;
-    if (!block) return NULL;
-    w = (struct x_async_work *)( (char *)block - offsetof( struct x_async_work, threadBlock ) );
-    if ( w->magic != X_ASYNC_WORK_MAGIC ) return NULL;
+
+    if ( !block )
+        return NULL;
+
+    memcpy( &p, block->internal, sizeof(p) );
+    w = (struct x_async_work *)p;
+
+    if ( !is_valid_read_ptr( w, sizeof(*w) ) )
+        return NULL;
+
+    if ( w->magic != X_ASYNC_WORK_MAGIC )
+        return NULL;
+
     return w;
 }
 

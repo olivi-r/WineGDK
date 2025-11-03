@@ -380,7 +380,10 @@ static HRESULT WINAPI x_threading_XThreadSetTimeSensitive( IXThreading* iface, B
 
 static VOID WINAPI x_threading_XThreadAssertNotTimeSensitive( IXThreading* iface )
 {
-    FIXME( "iface %p.\n", iface );
+    struct x_threading *impl = impl_from_IXThreading( iface );
+    TRACE( "iface %p.\n", iface );
+    if ( impl->isTimeSensitiveThread && IsDebuggerPresent() )
+        DebugBreak();
     /* no-op return */
 }
 
