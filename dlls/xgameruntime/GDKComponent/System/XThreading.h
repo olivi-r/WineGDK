@@ -76,7 +76,14 @@ typedef struct XTask
     struct XTask *next;
 } XTask;
 
-struct XTaskQueuePortObject //<-- Our own XTaskQueuePortObject implementation
+typedef struct XMonitor
+{
+    XTaskQueueMonitorCallback *callback;
+    PVOID context;
+    struct XMonitor *next;
+} XMonitor;
+
+struct XTaskQueuePortObject /* <-- Our own XTaskQueuePortObject implementation */
 {
     XTask *tasks_head, *tasks_tail;
     UINT32 tasksCount;
@@ -85,10 +92,12 @@ struct XTaskQueuePortObject //<-- Our own XTaskQueuePortObject implementation
     BOOLEAN isRunning;
 };
 
-struct XTaskQueueObject //<-- Our own XTaskQueueObject implementation
+struct XTaskQueueObject /* <-- Our own XTaskQueueObject implementation */
 {
     XTaskQueuePortHandle workPortHandle;
     XTaskQueuePortHandle completionPortHandle;
+    XMonitor *monitors_head, *monitors_tail;
+    UINT32 monitorsCount;
 
     HANDLE dispatchHandle;
     BOOLEAN isRunning;
