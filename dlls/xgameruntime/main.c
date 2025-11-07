@@ -153,6 +153,10 @@ HRESULT WINAPI QueryApiImpl( const GUID *runtimeClassId, REFIID interfaceId, voi
     {
         return IXGameRuntimeFeature_QueryInterface( x_game_runtime_feature_impl, interfaceId, out );
     }
+    else if (IsEqualGUID( runtimeClassId, &CLSID_XNetworkingImpl ))
+    {
+        return IXNetworking_QueryInterface( x_networking_impl, interfaceId, out );
+    }
     else if (IsEqualGUID( runtimeClassId, &CLSID_XSystemImpl ))
     {
         return IXSystem_QueryInterface( x_system_impl, interfaceId, out );

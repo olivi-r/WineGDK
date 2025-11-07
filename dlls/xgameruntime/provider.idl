@@ -24,6 +24,7 @@ import "propidl.idl";
 import "xasync.idl";
 import "xasyncprovider.idl";
 import "xgameruntimefeature.idl";
+import "xnetworking.idl";
 import "xsystem.idl";
 import "xtaskqueue.idl";
 
@@ -31,11 +32,13 @@ import "xtaskqueue.idl";
 
 interface IWineAsyncWork;
 interface IXGameRuntimeFeature;
+interface IXNetworking;
 interface IXSystem;
 interface IXSystemAnalytics;
 interface IXThreading;
 
 coclass XGameRuntimeFeatureImpl;
+coclass XNetworkingImpl;
 coclass XSystemImpl;
 coclass XSystemAnalyticsImpl;
 coclass XThreadingImpl;
@@ -48,6 +51,29 @@ interface IWineAsyncWorkImpl : IUnknown
 interface IXGameRuntimeFeature : IUnknown
 {
     BOOLEAN XGameRuntimeIsFeatureAvailable( [in] XGameRuntimeFeature feature );
+}
+
+[ local, object, uuid(bf2346b2-39af-4658-b5ea-44713c7e83b3) ]
+interface IXNetworking : IUnknown
+{
+    HRESULT XNetworkingQueryPreferredLocalUdpMultiplayerPort( [out] UINT16 *preferredLocalUdpMultiplayerPort );
+    HRESULT XNetworkingQueryPreferredLocalUdpMultiplayerPortAsync( [in, out] XAsyncBlock *asyncBlock );
+    HRESULT XNetworkingQueryPreferredLocalUdpMultiplayerPortAsyncResult( [in, out] XAsyncBlock *asyncBlock, [out] UINT16 *preferredLocalUdpMultiplayerPort );
+    HRESULT XNetworkingRegisterPreferredLocalUdpMultiplayerPortChanged( [in, optional] XTaskQueueHandle queue, [in, optional] void *context, [in] XNetworkingPreferredLocalUdpMultiplayerPortChangedCallback *callback, [out] XTaskQueueRegistrationToken *token );
+    BOOLEAN XNetworkingUnregisterPreferredLocalUdpMultiplayerPortChanged( [in] XTaskQueueRegistrationToken token, [in] BOOLEAN wait );
+    HRESULT XNetworkingQuerySecurityInformationForUrlAsync( [in] const CHAR *url, [in, out] XAsyncBlock *asyncBlock );
+    HRESULT XNetworkingQuerySecurityInformationForUrlAsyncResultSize( [in, out] XAsyncBlock *asyncBlock, [out] SIZE_T *securityInformationBufferByteCount );
+    HRESULT XNetworkingQuerySecurityInformationForUrlAsyncResult( [in, out] XAsyncBlock *asyncBlock, [in] SIZE_T securityInformationBufferByteCount, [out, optional] SIZE_T *securityInformationBufferByteCountUsed, [out] UINT8 *securityInformationBuffer, [out] XNetworkingSecurityInformation **securityInformation );
+    HRESULT XNetworkingQuerySecurityInformationForUrlUtf16Async( [in] const WCHAR *url, [in, out] XAsyncBlock *asyncBlock );
+    HRESULT XNetworkingQuerySecurityInformationForUrlUtf16AsyncResultSize( [in, out] XAsyncBlock *asyncBlock, [out] SIZE_T *securityInformationBufferByteCount );
+    HRESULT XNetworkingQuerySecurityInformationForUrlUtf16AsyncResult( [in, out] XAsyncBlock *asyncBlock, [in] SIZE_T securityInformationBufferByteCount, [out, optional] SIZE_T *securityInformationBufferByteCountUsed, [out] UINT8 *securityInformationBuffer, [out] XNetworkingSecurityInformation **securityInformation );
+    HRESULT XNetworkingVerifyServerCertificate( [in] void *requestHandle, [in] const XNetworkingSecurityInformation *securityInformation );
+    HRESULT XNetworkingGetConnectivityHint( [out] XNetworkingConnectivityHint *connectivityHint );
+    HRESULT XNetworkingRegisterConnectivityHintChanged( [in, optional] XTaskQueueHandle queue, [in, optional] void *context, [in] XNetworkingConnectivityHintChangedCallback *callback, [out] XTaskQueueRegistrationToken *token );
+    BOOLEAN XNetworkingUnregisterConnectivityHintChanged( [in] XTaskQueueRegistrationToken token, [in] BOOLEAN wait );
+    HRESULT XNetworkingQueryConfigurationSetting( [in] XNetworkingConfigurationSetting configurationSetting, [out] UINT64 *value );
+    HRESULT XNetworkingSetConfigurationSetting( [in] XNetworkingConfigurationSetting configurationParameter, [in] UINT64 value );
+    HRESULT XNetworkingQueryStatistics( [in] XNetworkingStatisticsType statisticsType, [out] XNetworkingStatisticsBuffer *statisticsBuffer );
 }
 
 [ local, object, uuid(dadc2895-34b0-4ef5-a83e-45114d629b80) ]
@@ -104,6 +130,12 @@ interface IXThreading : IUnknown
 coclass XGameRuntimeFeatureImpl
 {
     [default] interface IXGameRuntimeFeature;
+}
+
+[ uuid(37e56907-2f10-41e8-b72f-36edb185331a) ]
+coclass XNetworkingImpl
+{
+    [default] interface IXNetworking;
 }
 
 [ uuid(e349bd1a-fc20-4e40-b99c-4178cc6b409f) ]
