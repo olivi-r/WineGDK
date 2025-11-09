@@ -24,6 +24,8 @@
 
 #include "../../../private.h"
 
+#include <stdint.h>
+
 #include "XOSThreading.h"
 #include "AtomicVector.h"
 #include "ThreadPool.h"
@@ -306,6 +308,9 @@ typedef struct IXTaskQueueVtbl {
         BOOLEAN allowTermination,
         BOOLEAN allowClose);
 
+    XTaskQueueHandle (STDMETHODCALLTYPE *GetHandle)(
+        IXTaskQueue* This);
+
     HRESULT (STDMETHODCALLTYPE *GetPortContext)(
         IXTaskQueue* This,
         XTaskQueuePort port,
@@ -348,7 +353,7 @@ typedef struct IXTaskQueueVtbl {
     VOID    (*RundownObject)(
         IXTaskQueue* This);
 
-    VOID    (*OnTerminationCallback)(
+    VOID    (CALLBACK *OnTerminationCallback)(
         PVOID context);
 } IXTaskQueueVtbl;
 
@@ -521,5 +526,13 @@ struct x_task_queue_wait_callback
 };
 
 HRESULT XTaskQueueCreate( XTaskQueueDispatchMode workDispatchMode, XTaskQueueDispatchMode completionDispatchMode, XTaskQueueHandle* queue );
+HRESULT XTaskQueueGetPort( XTaskQueueHandle queue, XTaskQueuePort port, XTaskQueuePortHandle* portHandle );
+HRESULT XTaskQueueCreateComposite( XTaskQueuePortHandle workPort, XTaskQueuePortHandle completionPort, XTaskQueueHandle* queue );
+BOOLEAN XTaskQueueDispatch( XTaskQueueHandle queue, XTaskQueuePort port, UINT32 timeoutInMs );
+VOID XTaskQueueCloseHandle( XTaskQueueHandle queue );
+HRESULT XTaskQueueTerminate( XTaskQueueHandle queue, BOOLEAN wait, PVOID callbackContext, XTaskQueueTerminatedCallback* callback );
+HRESULT XTaskQueueSubmitDelayedCallback( XTaskQueueHandle queue, XTaskQueuePort port, UINT32 delayMs, PVOID callbackContext, XTaskQueueCallback* callback );
+HRESULT XTaskQueueDuplicateHandle( XTaskQueueHandle queue, XTaskQueueHandle* duplicatedHandle );
+HRESULT XTaskQueueRegisterMonitor( XTaskQueueHandle queue, PVOID callbackContext, XTaskQueueMonitorCallback* callback, XTaskQueueRegistrationToken* token );
 
 #endif
