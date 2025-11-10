@@ -27,6 +27,43 @@ WINE_DEFAULT_DEBUG_CHANNEL(xgameruntime);
 
 static HMODULE xgameruntime;
 
+static VOID LoadOtherRuntime( DWORD *asked )
+{
+    LPCSTR valueName = "LoadOtherRuntimeAsked";
+    LPCSTR subKey = "Software\\Wine\\WineGDK";
+    DWORD value, dataSize = sizeof(DWORD);
+    LONG result;
+    HKEY hKey;
+
+    *asked = 0;
+
+    result = RegCreateKeyExA(
+        HKEY_LOCAL_MACHINE, subKey, 0, NULL, REG_OPTION_NON_VOLATILE,
+        KEY_READ | KEY_WRITE, NULL, &hKey, NULL
+    );
+
+    if (result != ERROR_SUCCESS) return;
+
+    /* Try to read the value */
+    result = RegQueryValueExA( hKey, valueName, NULL, NULL, (LPBYTE)&value, &dataSize );
+
+    if ( result == ERROR_FILE_NOT_FOUND )
+    {
+        value = 1;
+
+        result = RegSetValueExA( hKey, valueName, 0, REG_DWORD, (const BYTE*)&value, sizeof(DWORD) );
+    }
+    else if (result == ERROR_SUCCESS)
+    {
+        *asked = value;
+        value = 1;
+
+        result = RegSetValueExA( hKey, valueName, 0, REG_DWORD, (const BYTE*)&value, sizeof(DWORD) );
+    }
+
+    RegCloseKey( hKey );
+}
+
 HRESULT WINAPI DllCanUnloadNow( void )
 {
     return xgameruntime != NULL ? S_FALSE : S_OK;
@@ -50,6 +87,8 @@ BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, void *reserved )
 
     return TRUE;
 }
+
+typedef HRESULT (WINAPI *InitializeApiImplEx2_ext)( ULONG gdkVer, ULONG gsVer, CHAR mode, INITIALIZE_OPTIONS *options );
 
 HRESULT WINAPI InitializeApiImplEx2( ULONG gdkVer, ULONG gsVer, CHAR mode, INITIALIZE_OPTIONS *options )
 {
@@ -75,6 +114,8 @@ HRESULT WINAPI InitializeApiImpl( ULONG gdkVer, ULONG gsVer )
     TRACE( "gdkVer %ld, gsVer %ld.\n", gdkVer, gsVer );
     return InitializeApiImplEx2( gdkVer, gsVer, 0, NULL );
 }
+
+typedef HRESULT (WINAPI *QueryApiImpl_ext)( const GUID *runtimeClassId, REFIID interfaceId, void **out );
 
 HRESULT WINAPI QueryApiImpl( const GUID *runtimeClassId, REFIID interfaceId, void **out )
 {
@@ -102,6 +143,10 @@ HRESULT WINAPI QueryApiImpl( const GUID *runtimeClassId, REFIID interfaceId, voi
      *  IXSystem_XSystemAllowFullDownloadBandwidth  (offset 64)
      */
 
+    HMODULE hMod = LoadLibraryA("xgameruntime.dll.threading");
+    QueryApiImpl_ext func = (QueryApiImpl_ext)GetProcAddress( hMod, "QueryApiImpl" );
+    DWORD asked;
+
     TRACE( "runtimeClassId %s, interfaceId %s, out %p.\n", debugstr_guid( runtimeClassId ), debugstr_guid( interfaceId ), out );
 
     if (IsEqualGUID( runtimeClassId, &CLSID_XGameRuntimeFeatureImpl ))
@@ -116,9 +161,21 @@ HRESULT WINAPI QueryApiImpl( const GUID *runtimeClassId, REFIID interfaceId, voi
     {
         return IXSystemAnalytics_QueryInterface( x_system_analytics_impl, interfaceId, out );
     }
-    else if ( IsEqualGUID( runtimeClassId, &CLSID_XThreadingImpl ) )
+    else if (IsEqualGUID( runtimeClassId, &CLSID_XThreadingImpl ))
     {
-        return IXThreading_QueryInterface( x_threading_impl, interfaceId, out );
+        /**
+         * For IXThreading, It's much better to use the native library instead.
+         */
+        if (!func)
+        {
+            LoadOtherRuntime( &asked );
+            if (!asked)
+                MessageBoxA( NULL, "The game has requested XThreading\nIt's recommended that you use Microsoft's native binary for this instead.\nTo do so, copy xgameruntime.dll from a Windows machine and place it under the name \"xgameruntime.dll.threading\" within either the game's binaries or within your prefix's system32 folder.\nYou won't be asked this again.", "Attention Required!", MB_ICONEXCLAMATION );
+
+            return IXThreading_QueryInterface( x_threading_impl, interfaceId, out );
+        }
+
+        return func( runtimeClassId, interfaceId, out );
     }
 
     FIXME( "%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid( runtimeClassId ) );

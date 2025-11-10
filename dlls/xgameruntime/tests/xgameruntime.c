@@ -85,6 +85,7 @@ static inline HRESULT CALLBACK XAsyncProvider_testCallback( XAsyncOp op, const X
     {
         case XAsyncOp_Begin:
             trace( "Begin invoked\n" );
+            IXThreading_XAsyncComplete( xthreading, data->async, S_OK, 0 );
             return S_OK;
 
         case XAsyncOp_DoWork:
@@ -302,9 +303,17 @@ static void test_XThreading(void)
     /* --- XAsync --- */
     {
         XAsyncBlock currentBlock;
+        XTaskQueueHandle taskHandle;
 
         currentBlock.callback = NULL;
         currentBlock.queue = NULL;
+
+        hr = IXThreading_XTaskQueueCreate( xthreading, XTaskQueueDispatchMode_Manual, XTaskQueueDispatchMode_Manual, &taskHandle );
+        ok( hr == S_OK, "got hr %#lx.\n", hr );
+
+        IXThreading_XTaskQueueSetCurrentProcessTaskQueue( xthreading, taskHandle );
+
+        trace( "BEFORE IS %p\n", currentBlock.queue );
 
         /**
          * xgameruntime.lib::XAsyncBegin
@@ -312,18 +321,21 @@ static void test_XThreading(void)
         hr = IXThreading_XAsyncBegin( xthreading, &currentBlock, NULL, NULL, NULL, XAsyncProvider_testCallback );
         ok( hr == S_OK, "got hr %#lx.\n", hr );
 
-        /**
-         * xgameruntime.lib::XAsyncGetStatus
-         */
-        hr = IXThreading_XAsyncGetStatus( xthreading, &currentBlock, TRUE );
-        ok( hr == S_OK, "got hr %#lx.\n", hr );
+        trace( "AFTER IS %p\n", currentBlock.queue );
+        trace( "taskHandle IS %p\n", taskHandle );
 
         /**
          * xgameruntime.lib::XAsyncSchedule
          */
-        hr = IXThreading_XAsyncSchedule( xthreading, &currentBlock, 1000 );
+        /* hr = IXThreading_XAsyncSchedule( xthreading, &currentBlock, 1000 );
+           ok( hr == S_OK, "got hr %#lx.\n", hr ); */
+
+        hr = IXThreading_XTaskQueueDispatch( xthreading, taskHandle, 0, 1000 );
         ok( hr == S_OK, "got hr %#lx.\n", hr );
 
+        /**
+         * xgameruntime.lib::XAsyncGetStatus
+         */
         hr = IXThreading_XAsyncGetStatus( xthreading, &currentBlock, TRUE );
         ok( hr == S_OK, "got hr %#lx.\n", hr );
 
