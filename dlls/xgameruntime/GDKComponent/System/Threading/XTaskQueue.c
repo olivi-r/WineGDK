@@ -40,6 +40,12 @@ static void CALLBACK x_task_queue_port_VectorVisitOperation( void *context )
     impl->lpVtbl->ItemQueued( impl );
 }
 
+static void CALLBACK x_task_queue_port_ThreadPoolOperation(void* context, ThreadPoolActionStatus *status)
+{
+    IXTaskQueuePort *impl = (IXTaskQueuePort *)context;
+    impl->lpVtbl->ProcessThreadPoolCallback( context, status );
+}
+
 static inline struct x_task_queue_port_context *impl_from_IXTaskQueuePortContext( IXTaskQueuePortContext *iface )
 {
     return CONTAINING_RECORD( iface, struct x_task_queue_port_context, IXTaskQueuePortContext_iface );
@@ -154,7 +160,8 @@ static VOID WINAPI x_task_queue_port_context_ItemQueued( IXTaskQueuePortContext 
 
     TRACE( "iface %p.\n", iface );
 
-    impl->callbackSubmitted->lpVtbl->Invoke( impl->callbackSubmitted, impl->type );
+    if ( impl->callbackSubmitted->lpVtbl )
+        impl->callbackSubmitted->lpVtbl->Invoke( impl->callbackSubmitted, impl->type );
 
     return;
 }
@@ -254,12 +261,7 @@ static ULONG WINAPI x_task_queue_monitor_callback_Release( IXTaskQueueMonitorCal
 
 static HRESULT WINAPI x_task_queue_monitor_callback_Register( IXTaskQueueMonitorCallback *iface, PVOID context, XTaskQueueMonitorCallback* callback, XTaskQueueRegistrationToken* token )
 {
-    UINT32 bufferReadIdx;
-    UINT32 bufferWriteIdx;
-    UINT32 expected;
-    UINT32 desired;
-    UINT32 idx;
-    UINT32 expectedSwap;
+    XMonitor *monitor;
 
     struct x_task_queue_monitor_callback *impl = impl_from_IXTaskQueueMonitorCallback( iface );
 
@@ -268,42 +270,24 @@ static HRESULT WINAPI x_task_queue_monitor_callback_Register( IXTaskQueueMonitor
     if ( !callback || !token )
         return E_POINTER;
 
-    token->token = 0;
+    if (!(monitor = calloc( 1, sizeof(*monitor) ))) return E_OUTOFMEMORY;
+
+    token->token = impl->monitors_size;
+    impl->monitors_size++;
+
+    monitor->callback = callback;
+    monitor->token = token->token;
+    monitor->context = context;
+    monitor->next = NULL;
 
     EnterCriticalSection( &impl->cs );
-    bufferReadIdx = ( impl->ref & 0x80000000 ? 1 : 0 );
-    bufferWriteIdx = 1 - bufferReadIdx;
 
-    for( idx = 0; idx < ARRAYSIZE( impl->monitors_buffer1 ); idx++ )
+    if ( !impl->monitors_tail )
     {
-        if ( token->token == 0 && impl->monitors_buffers[bufferReadIdx][idx].callback ==  NULL )
-        {
-            InterlockedIncrement64( &impl->nextToken );
-            token->token = InterlockedCompareExchange64( &impl->nextToken, 0, 0 );
-            impl->monitors_buffers[bufferWriteIdx][idx].token = token->token;
-            impl->monitors_buffers[bufferWriteIdx][idx].context = context;
-            impl->monitors_buffers[bufferWriteIdx][idx].callback = callback;
-        }
-        else
-        {
-            impl->monitors_buffers[bufferWriteIdx][idx] = impl->monitors_buffers[bufferReadIdx][idx];
-        }
-    }
-
-    if ( token->token == 0 )
-        return E_OUTOFMEMORY;
-
-    /* Now spin wait to swap the active buffer. */
-    expected = bufferReadIdx << 31;
-    desired = bufferWriteIdx << 31;
-
-    for (;;)
-    {
-        expectedSwap = expected;
-        if ( InterlockedCompareExchange( &impl->ref, 0, 0 ) == InterlockedCompareExchange( &impl->ref, expectedSwap, desired ) )
-        {
-            break;
-        }
+        impl->monitors_head = impl->monitors_tail = monitor;
+    } else {
+        impl->monitors_tail->next = monitor;
+        impl->monitors_tail = monitor;
     }
 
     LeaveCriticalSection( &impl->cs );
@@ -313,75 +297,68 @@ static HRESULT WINAPI x_task_queue_monitor_callback_Register( IXTaskQueueMonitor
 
 static VOID WINAPI x_task_queue_monitor_callback_Unregister( IXTaskQueueMonitorCallback *iface, XTaskQueueRegistrationToken token )
 {
-    UINT32 bufferReadIdx;
-    UINT32 bufferWriteIdx;
-    UINT32 idx;
-    UINT32 expected;
-    UINT32 desired;
-    UINT32 expectedSwap;
+    XMonitor *current;
+    XMonitor *previous = NULL;
+    XMonitor *next;
 
     struct x_task_queue_monitor_callback *impl = impl_from_IXTaskQueueMonitorCallback( iface );
 
     TRACE( "iface %p, token %lld.\n", iface, token.token );
 
     EnterCriticalSection( &impl->cs );
-    bufferReadIdx = ( impl->ref & 0x80000000 ? 1 : 0 );
-    bufferWriteIdx = 1 - bufferReadIdx;
 
-    for( idx = 0; idx < ARRAYSIZE( impl->monitors_buffer1 ); idx++ )
+    current = impl->monitors_head;
+
+    while ( current )
     {
-        if ( impl->monitors_buffers[bufferReadIdx][idx].token == token.token )
+        next = current->next;
+        if ( current->token == token.token )
         {
-            impl->monitors_buffers[bufferWriteIdx][idx].callback = NULL;
-        }
-        else
-        {
-            impl->monitors_buffers[bufferWriteIdx][idx] = impl->monitors_buffers[bufferReadIdx][idx];
-        }
-    }
+            if ( previous )
+                previous->next = next;
+            else
+                impl->monitors_head = next;
 
-    /* Now spin wait to swap the active buffer. */
-    expected = bufferReadIdx << 31;
-    desired = bufferWriteIdx << 31;
+            if ( impl->monitors_tail == current )
+                impl->monitors_tail = previous;
 
-    for (;;)
-    {
-        expectedSwap = expected;
-        if ( InterlockedCompareExchange( &impl->ref, 0, 0 ) == InterlockedCompareExchange( &impl->ref, expectedSwap, desired ) )
-        {
+            current->next = NULL;
+            free( current );
             break;
+        } else
+        {
+            previous = current;
         }
+        current = next;
     }
 
     LeaveCriticalSection( &impl->cs );
+
+    return;
 }
 
 static VOID WINAPI x_task_queue_monitor_callback_Invoke( IXTaskQueueMonitorCallback *iface, XTaskQueuePort port )
 {
-    UINT32 indexAndRef;
-    UINT32 bufferIdx;
-    UINT32 idx = 0;
+    XMonitor *current;
 
     struct x_task_queue_monitor_callback *impl = impl_from_IXTaskQueueMonitorCallback( iface );
 
     TRACE( "iface %p, port %d.\n", iface, port );
 
-    InterlockedIncrement( &impl->ref );
-    indexAndRef = InterlockedCompareExchange( &impl->ref, 0, 0 );
-    bufferIdx = (indexAndRef & 0x80000000 ? 1 : 0);
+    EnterCriticalSection( &impl->cs );
 
-    for( idx = 0; idx < ARRAYSIZE( impl->monitors_buffer1 ); idx++ )
+    current = impl->monitors_head;
+
+    while ( current )
     {
-        if ( impl->monitors_buffers[bufferIdx][idx].callback != NULL )
-        {
-            impl->monitors_buffers[bufferIdx][idx].callback(
-                impl->monitors_buffers[bufferIdx][idx].context,
-                impl->queue,
-                port);
-        }
+        if ( current->callback )
+            current->callback( current->context, impl->queue, port );
+        current = current->next;
     }
 
-    InterlockedDecrement( &impl->ref );
+    LeaveCriticalSection( &impl->cs );
+
+    return;
 }
 
 static const struct IXTaskQueueMonitorCallbackVtbl x_task_queue_monitor_callback_vtbl =
@@ -456,6 +433,23 @@ static HRESULT WINAPI x_task_queue_port_Initialize( IXTaskQueuePort *iface, XTas
 
     impl->timer->lpVtbl->Initialize( impl->timer, iface, x_task_queue_port_WaitTimerOperation );
 
+    switch (mode)
+    {
+        case XTaskQueueDispatchMode_Manual:
+            /* nothing */
+            break;
+
+        case XTaskQueueDispatchMode_ThreadPool:
+        case XTaskQueueDispatchMode_SerializedThreadPool:
+            hr = impl->threadPool->lpVtbl->Initialize( impl->threadPool, iface, x_task_queue_port_ThreadPoolOperation );
+            if ( FAILED( hr ) ) return hr;
+            break;
+
+        case XTaskQueueDispatchMode_Immediate:
+            /* nothing */
+            break;
+    }
+
     return S_OK;
 }
 
@@ -472,7 +466,7 @@ static HRESULT WINAPI x_task_queue_port_QueueItem( IXTaskQueuePort *iface, IXTas
 {
     HRESULT hr;
 
-    XQueue queue;
+    XQueue *queue;
 
     struct x_task_queue_port *impl = impl_from_IXTaskQueuePort( iface );
 
@@ -481,38 +475,40 @@ static HRESULT WINAPI x_task_queue_port_QueueItem( IXTaskQueuePort *iface, IXTas
     hr = iface->lpVtbl->VerifyNotTerminated( iface, portContext );
     if ( FAILED( hr ) ) return hr;
 
-    queue.portContext = portContext;
-    queue.callback = callback;
-    queue.callbackContext = callbackContext;
-    queue.id = impl->nextId;
+    if (!(queue = calloc( 1, sizeof(*queue) ))) return E_OUTOFMEMORY;
+
+    queue->portContext = portContext;
+    queue->callback = callback;
+    queue->callbackContext = callbackContext;
+    queue->id = impl->nextId;
 
     InterlockedIncrement( &impl->nextId );
 
     if ( waitMs == 0 )
     {
-        queue.enqueueTime = 0;
-        if( !(iface->lpVtbl->AppendEntry( iface, &queue )) ) return E_OUTOFMEMORY;
+        queue->enqueueTime = 0;
+        if( !(iface->lpVtbl->AppendEntry( iface, queue )) ) return E_OUTOFMEMORY;
     } else
     {
-        queue.enqueueTime = impl->timer->lpVtbl->GetAbsoluteTime( impl->timer, waitMs );
+        queue->enqueueTime = impl->timer->lpVtbl->GetAbsoluteTime( impl->timer, waitMs );
         if ( !impl->pendingQueueList_tail )
         {
             /* queue list is empty */
-            impl->pendingQueueList_head = impl->pendingQueueList_tail = &queue;
+            impl->pendingQueueList_head = impl->pendingQueueList_tail = queue;
         } else
         {
-            impl->pendingQueueList_tail->next = &queue;
-            impl->pendingQueueList_tail = &queue;
+            impl->pendingQueueList_tail->next = queue;
+            impl->pendingQueueList_tail = queue;
         }
 
         while ( TRUE )
         {
             LONG64 due = InterlockedCompareExchange64( &impl->timerDue, 0, 0 ) ;
-            if ( queue.enqueueTime < due )
+            if ( queue->enqueueTime < due )
             {
-                if ( InterlockedCompareExchange64( &impl->timerDue, queue.enqueueTime, due ) == due )
+                if ( InterlockedCompareExchange64( &impl->timerDue, queue->enqueueTime, due ) == due )
                 {
-                    impl->timer->lpVtbl->Start( impl->timer, queue.enqueueTime );
+                    impl->timer->lpVtbl->Start( impl->timer, queue->enqueueTime );
                     break;
                 }
             }
@@ -694,6 +690,7 @@ static BOOLEAN WINAPI x_task_queue_port_Dispatch( IXTaskQueuePort *iface, IXTask
 static BOOLEAN x_task_queue_port_DrainOneItem( IXTaskQueuePort *iface )
 {
     BOOLEAN popped = FALSE;
+    BOOLEAN canceled;
 
     XQueue *front;
 
@@ -714,14 +711,22 @@ static BOOLEAN x_task_queue_port_DrainOneItem( IXTaskQueuePort *iface )
     }
     else
     {
-        front = impl->queueList_tail;
+        front = impl->queueList_head;
         impl->queueList_head = front->next;
+
+        if ( impl->queueList_head == NULL )
+            impl->queueList_tail = NULL;
+
         popped = TRUE;
     }
 
+    TRACE("popped %d!\n", popped);
+
     if ( popped )
     {
-        front->callback( front->callbackContext, iface->lpVtbl->IsCallCanceled( iface, front ) );
+        TRACE("calling %p!\n", front->callback);
+        canceled = iface->lpVtbl->IsCallCanceled( iface, front );
+        front->callback( front->callbackContext, canceled );
         InterlockedDecrement( &impl->processingCallback );
         WakeAllConditionVariable( &impl->cv );
         front->portContext->lpVtbl->Release( front->portContext );
@@ -748,8 +753,9 @@ static BOOLEAN x_task_queue_port_Wait( IXTaskQueuePort *iface, IXTaskQueuePortCo
 
     TRACE( "iface %p, portContext %p, timeout %d.\n", iface, portContext, timeout );
 
-    while ( impl->suspended || ( !impl->queueList_head && !impl->terminateList_head ) )
+    while ( impl->suspended || ( impl->queueList_head && impl->terminateList_head ) )
     {
+        TRACE( "impl->queueList_head was %p, impl->terminateList_head was %p\n", impl->queueList_head, impl->terminateList_head);
         if ( portContext->lpVtbl->get_Status( portContext ) == XTaskQueuePortStatus_Terminated )
         {
             return FALSE;
@@ -959,9 +965,11 @@ static BOOLEAN x_task_queue_port_AppendEntry( IXTaskQueuePort *iface, XQueue *en
     entry->next = NULL;
     if ( !impl->queueList_tail )
     {
+        TRACE("queue list was empty!\n");
         impl->queueList_head = impl->queueList_tail = entry;
     } else
     {
+        TRACE("queue list was not empty!\n");
         impl->queueList_tail->next = entry;
         impl->queueList_tail = entry;
     }
@@ -1047,7 +1055,7 @@ static VOID x_task_queue_port_EraseQueue( IXTaskQueuePort *iface, XQueue *queueH
     return;
 }
 
-static BOOLEAN x_task_queue_port_ScheduleNextPendingCallback( IXTaskQueuePort *iface, UINT64 dueTime, XQueue *dueEntry )
+static BOOLEAN x_task_queue_port_ScheduleNextPendingCallback( IXTaskQueuePort *iface, UINT64 dueTime, XQueue **dueEntry )
 {
     XQueue *current;
     XQueue *previous = NULL;
@@ -1073,7 +1081,7 @@ static BOOLEAN x_task_queue_port_ScheduleNextPendingCallback( IXTaskQueuePort *i
         removed = FALSE;
         if ( !hasDueEntry && current->enqueueTime == dueTime )
         {
-            dueEntry = current;
+            *dueEntry = current;
             hasDueEntry = TRUE;
 
             if ( previous )
@@ -1166,12 +1174,13 @@ static VOID x_task_queue_port_SubmitPendingCallback( IXTaskQueuePort *iface )
 
     TRACE( "iface %p.\n", iface );
 
-    if ( iface->lpVtbl->ScheduleNextPendingCallback( iface, InterlockedCompareExchange64( &impl->timerDue, 0, 0 ), dueEntry ) )
+    if ( iface->lpVtbl->ScheduleNextPendingCallback( iface, InterlockedCompareExchange64( &impl->timerDue, 0, 0 ), &dueEntry ) )
     {
         if ( !iface->lpVtbl->AppendEntry( iface, dueEntry ) )
         {
             dueEntry->portContext->lpVtbl->Release( dueEntry->portContext );
-            free( dueEntry );
+            if ( dueEntry )
+                free( dueEntry );
         }
     }
 
@@ -1447,6 +1456,8 @@ static HRESULT WINAPI x_task_queue_Initialize( IXTaskQueue *iface, XTaskQueuePor
 
     hr = completionContext->port->lpVtbl->Attach( completionContext->port, &completionContext->IXTaskQueuePortContext_iface );
     if ( FAILED( hr ) ) return hr;
+
+    TRACE( "completionContext->callbackSubmitted is %p, workContext->callbackSubmitted is %p\n", workContext->callbackSubmitted, workContext->callbackSubmitted );
 
     return S_OK;
 }
@@ -1834,10 +1845,6 @@ HRESULT XTaskQueueCreate( XTaskQueueDispatchMode workDispatchMode, XTaskQueueDis
     monitor_callback_impl->IXTaskQueueMonitorCallback_iface.lpVtbl = &x_task_queue_monitor_callback_vtbl;
     InitializeCriticalSection( &monitor_callback_impl->cs );
     monitor_callback_impl->queue = &impl->queueHeader;
-    memset( monitor_callback_impl->monitors_buffer1, 0, sizeof(monitor_callback_impl->monitors_buffer1) );
-    memset( monitor_callback_impl->monitors_buffer2, 0, sizeof(monitor_callback_impl->monitors_buffer2) );
-    monitor_callback_impl->monitors_buffers[0] = monitor_callback_impl->monitors_buffer1;
-    monitor_callback_impl->monitors_buffers[1] = monitor_callback_impl->monitors_buffer2;
     monitor_callback_impl->ref = 1;
 
     impl->callbackSubmitted = &monitor_callback_impl->IXTaskQueueMonitorCallback_iface;
@@ -2016,7 +2023,7 @@ HRESULT XTaskQueueSubmitDelayedCallback( XTaskQueueHandle queue, XTaskQueuePort 
     IXTaskQueuePort *queuePort;
     IXTaskQueue *impl;
 
-    FIXME( "queue %p, port %d, delayMs %d, callbackContext %p, callback %p stub!\n", queue, port, delayMs, callbackContext, callback );
+    TRACE( "queue %p, port %d, delayMs %d, callbackContext %p, callback %p.\n", queue, port, delayMs, callbackContext, callback );
 
     if ( !queue )
         return FALSE;
@@ -2070,4 +2077,26 @@ HRESULT XTaskQueueRegisterMonitor( XTaskQueueHandle queue, PVOID callbackContext
     impl = ((struct XTaskQueueObject*)queue)->headQueue;
 
     return impl->lpVtbl->RegisterSubmitCallback( impl, callbackContext, callback, token );
+}
+
+VOID XTaskQueueResumeTermination( XTaskQueueHandle queue )
+{
+    HRESULT hr = S_OK;
+    IXTaskQueuePortContext *portContext;
+    IXTaskQueuePort *queuePort;
+    IXTaskQueue *impl;
+
+    TRACE( "queue %p.\n", queue );
+
+    if ( !queue )
+        return;
+
+    impl = ((struct XTaskQueueObject*)queue)->headQueue;
+
+    hr = impl->lpVtbl->GetPortContext( impl, XTaskQueuePort_Work, &portContext );
+    if ( FAILED( hr ) ) return;
+
+    queuePort = portContext->lpVtbl->get_Port( portContext );
+
+    queuePort->lpVtbl->ResumeTermination( queuePort, portContext );
 }

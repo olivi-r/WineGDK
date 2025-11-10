@@ -41,18 +41,18 @@ static HRESULT WINAPI selfProviderOperation( XAsyncOp op, const XAsyncProviderDa
 
     switch ( op )
     {
-        case Begin:
+        case XAsyncOp_Begin:
             return XAsyncSchedule(data->async, 0);
 
-        case DoWork:
+        case XAsyncOp_DoWork:
             work = (XAsyncWork *)data->context;
             hr = work( data->async );
             XAsyncComplete( data->async, hr, 0 );
             break;
 
-        case Cancel:
-        case Cleanup:
-        case GetResult:
+        case XAsyncOp_Cancel:
+        case XAsyncOp_Cleanup:
+        case XAsyncOp_GetResult:
             break;
     }
 
@@ -336,7 +336,7 @@ static HRESULT AllocStateNoCompletion( XAsyncBlock* asyncBlock, AsyncBlockIntern
 
     XTaskQueueHandle queue;
 
-    TRACE( "asyncBlock %p, internal %p, contextSize %lld.\n", asyncBlock, internal, contextSize );
+    TRACE( "asyncBlock %p, internal %p, contextSize %Iu.\n", asyncBlock, internal, contextSize );
 
     if (!(stateImpl = calloc( 1, sizeof(*stateImpl) ))) return E_OUTOFMEMORY;
 
@@ -364,14 +364,14 @@ static HRESULT AllocStateNoCompletion( XAsyncBlock* asyncBlock, AsyncBlockIntern
     queue = asyncBlock->queue;
     if ( queue == NULL )
     {
-        if ( IXThreadingImpl_XTaskQueueGetCurrentProcessTaskQueue( x_threading_impl, &stateImpl->queue ) == FALSE )
+        if ( IXThreading_XTaskQueueGetCurrentProcessTaskQueue( x_threading_impl, &stateImpl->queue ) == FALSE )
         {
             return HRESULT_FROM_WIN32( ERROR_NO_TASK_QUEUE );
         }
     }
     else
     {
-        queue->headQueue->lpVtbl->AddRef( queue->headQueue );
+        ((struct XTaskQueueObject*)queue)->headQueue->lpVtbl->AddRef( ((struct XTaskQueueObject*)queue)->headQueue );
         stateImpl->queue = queue;
     }
 
@@ -396,7 +396,7 @@ static HRESULT AllocState( XAsyncBlock* asyncBlock, SIZE_T contextSize )
     HRESULT hr;
     AsyncBlockInternal* internal;
 
-    TRACE( "asyncBlock %p, contextSize %lld.\n", asyncBlock, contextSize );
+    TRACE( "asyncBlock %p, contextSize %Iu.\n", asyncBlock, contextSize );
 
     if ( !asyncBlock )
         return E_INVALIDARG;
@@ -449,7 +449,7 @@ static void CleanupProviderForLocation( IAsyncState *state, ProviderCleanupLocat
 
     if ( InterlockedCompareExchange( &stateImpl->providerCleanup, 0, 0 ) == InterlockedCompareExchange( &stateImpl->providerCleanup, location, CleanupLocation_CleanedUp ) )
     {
-        stateImpl->providerCallback( Cleanup, &stateImpl->providerData );
+        stateImpl->providerCallback( XAsyncOp_Cleanup, &stateImpl->providerData );
     }
 
     return;
@@ -505,7 +505,7 @@ static void SignalWait( IAsyncState* state )
     }
 }
 
-static void CALLBACK CompletionCallback( void* context, BOOL canceled )
+static void CALLBACK CompletionCallback( void* context, BOOLEAN canceled )
 {
     IAsyncState *state = (IAsyncState *)context;
     XAsyncBlock* asyncBlock;
@@ -539,7 +539,7 @@ static HRESULT SignalCompletion( IAsyncState *state )
     if ( stateImpl->providerData.async->callback != NULL )
     {
         state->lpVtbl->AddRef( state );
-        hr = XTaskQueueSubmitDelayedCallback( stateImpl->queue, Completion, 0, (PVOID)state, CompletionCallback );
+        hr = XTaskQueueSubmitDelayedCallback( stateImpl->queue, XTaskQueuePort_Completion, 0, (PVOID)state, CompletionCallback );
 
         if ( SUCCEEDED( hr ) )
         {
@@ -568,7 +568,7 @@ static void CleanupState( IAsyncState *state)
 }
 
 
-static void CALLBACK WorkerCallback( PVOID context, BOOL canceled )
+static void CALLBACK WorkerCallback( PVOID context, BOOLEAN canceled )
 {
     HRESULT callStatus;
     IAsyncState *state = (IAsyncState *)context;
@@ -622,7 +622,7 @@ static void CALLBACK WorkerCallback( PVOID context, BOOL canceled )
     }
     else
     {
-        callStatus = stateImpl->providerCallback( DoWork, &stateImpl->providerData );
+        callStatus = stateImpl->providerCallback( XAsyncOp_DoWork, &stateImpl->providerData );
 
         /*
          * Work routine can return E_PENDING if there is more work to do.  Otherwise
@@ -789,7 +789,7 @@ VOID XAsyncCancel( XAsyncBlock* asyncBlock )
 
         if ( TrySetProviderCleanup( state, CleanupLocation_InCancel ) )
         {
-            stateImpl->providerCallback( Cancel, &stateImpl->providerData );
+            stateImpl->providerCallback( XAsyncOp_Cancel, &stateImpl->providerData );
             RevertProviderCleanup( state, CleanupLocation_InCancel );
         }
     }
@@ -817,7 +817,7 @@ HRESULT XAsyncRun( XAsyncBlock* asyncBlock, XAsyncWork* work )
     return hr;
 }
 
-HRESULT XAsyncBegin( XAsyncBlock* asyncBlock, PVOID context, PVOID identity, LPCSTR identityName, XAsyncProviderCallback* provider )
+HRESULT XAsyncBegin( XAsyncBlock *asyncBlock, void *context, const VOID *identity, const CHAR *identityName, XAsyncProvider *provider )
 {
     HRESULT hr;
     IAsyncState *state;
@@ -847,7 +847,7 @@ HRESULT XAsyncBegin( XAsyncBlock* asyncBlock, PVOID context, PVOID identity, LPC
     stateImpl->identityName = identityName;
     stateImpl->providerData.context = context;
 
-    hr = stateImpl->providerCallback( Begin, &stateImpl->providerData );
+    hr = stateImpl->providerCallback( XAsyncOp_Begin, &stateImpl->providerData );
     if ( FAILED( hr ) )
     {
         XAsyncComplete( asyncBlock, hr, 0 );
@@ -897,7 +897,7 @@ HRESULT XAsyncSchedule( XAsyncBlock* asyncBlock, UINT32 delayInMs )
 
     state->lpVtbl->AddRef( state );
 
-    hr = XTaskQueueSubmitDelayedCallback( stateImpl->queue, Work, delayInMs, (PVOID)state, WorkerCallback );
+    hr = XTaskQueueSubmitDelayedCallback( stateImpl->queue, XTaskQueuePort_Work, delayInMs, (PVOID)state, WorkerCallback );
 
     state->lpVtbl->Release( state );
 
@@ -917,7 +917,7 @@ VOID XAsyncComplete( XAsyncBlock* asyncBlock, HRESULT result, SIZE_T requiredBuf
     struct x_async_block_guard *impl;
     struct async_state *stateImpl = NULL;
 
-    TRACE( "asyncBlock %p, result %#lx, requiredBufferSize %lld.\n", asyncBlock, result, requiredBufferSize );
+    TRACE( "asyncBlock %p, result %#lx, requiredBufferSize %Iu.\n", asyncBlock, result, requiredBufferSize );
 
     if ( result == E_PENDING )
     {

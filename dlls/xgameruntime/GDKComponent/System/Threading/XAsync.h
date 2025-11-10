@@ -111,7 +111,7 @@ struct async_state
     LONG /* ProviderCleanupLocation */ providerCleanup;
     LONG workScheduled;
     BOOLEAN valid;
-    XAsyncProviderCallback *providerCallback;
+    XAsyncProvider *providerCallback;
     XAsyncProviderData providerData;
     XAsyncBlock providerAsyncBlock;
     XAsyncBlock *userAsyncBlock;
