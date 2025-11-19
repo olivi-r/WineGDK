@@ -163,7 +163,7 @@ static HRESULT WINAPI x_networking_XNetworkingGetConnectivityHint( IXNetworking 
 static HRESULT WINAPI x_networking_XNetworkingRegisterConnectivityHintChanged( IXNetworking *iface, XTaskQueueHandle queue, void *context, XNetworkingConnectivityHintChangedCallback *callback, XTaskQueueRegistrationToken *token )
 {
     FIXME( "iface %p, queue %p, context %p, callback %p, token %p stub!\n", iface, queue, context, callback, token );
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 static BOOLEAN WINAPI x_networking_XNetworkingUnregisterConnectivityHintChanged( IXNetworking *iface, XTaskQueueRegistrationToken token, BOOLEAN wait )
