@@ -22,6 +22,15 @@
 
 import "propidl.idl";
 
+cpp_quote("#if 0")
+typedef struct APP_LOCAL_DEVICE_ID
+{
+    BYTE value[32];
+} APP_LOCAL_DEVICE_ID;
+cpp_quote("#endif")
+
+#include <xuser.h>
+
 cpp_quote("#include <xasync.h>")
 
 // --- xgameruntime --- //
@@ -33,17 +42,26 @@ typedef enum XGameRuntimeFeature XGameRuntimeFeature;
 
 typedef struct XVersion XVersion;
 typedef struct XSystemAnalyticsInfo XSystemAnalyticsInfo;
-
-/* type-pruning version of XAsyncCompletionRoutine */
+typedef struct XAsyncBlock XAsyncBlock;
+typedef struct XTaskQueueObject *XTaskQueueHandle;
+typedef struct XTaskQueueRegistrationToken XTaskQueueRegistrationToken;
 
 interface IWineAsyncWorkImpl;
 interface IXSystemImpl;
 interface IXSystemAnalyticsImpl;
 interface IXGameRuntimeFeatureImpl;
+interface IXUserImpl;
+interface IXUserImpl2;
+interface IXUserImpl3;
+interface IXUserImpl4;
+interface IXUserImpl5;
+interface IXUserImpl6;
+interface IXUserGamertagImpl;
 
 coclass XSystemImpl;
 coclass XSystemAnalyticsImpl;
 coclass XGameRuntimeFeatureImpl;
+coclass XUserImpl;
 
 enum XSystemHandleType
 {
@@ -167,6 +185,117 @@ interface IXGameRuntimeFeatureImpl : IUnknown
 }
 
 [
+    local,
+    object,
+    uuid(01acd177-91f9-4763-a38e-ccbb55ce32e0)
+]
+interface IXUserImpl : IUnknown
+{
+    HRESULT XUserDuplicateHandle( [in] XUserHandle handle, [out] XUserHandle *duplicatedHandle );
+    void    XUserCloseHandle( [in] XUserHandle user );
+    INT32   XUserCompare( [in, optional] XUserHandle user1, [in, optional] XUserHandle user2 );
+    HRESULT XUserGetMaxUsers( [out] UINT32 *maxUsers );
+    HRESULT XUserAddAsync( [in] XUserAddOptions options, [in, out] XAsyncBlock *async );
+    HRESULT XUserAddResult( [in, out] XAsyncBlock *async, [out] XUserHandle *newUser );
+    HRESULT XUserGetLocalId( [in] XUserHandle user, [out] XUserLocalId *userLocalId );
+    HRESULT XUserFindUserByLocalId( [in] XUserLocalId userLocalId, [out] XUserHandle *handle );
+    HRESULT XUserGetId( [in] XUserHandle user, [out] UINT64 *userId );
+    HRESULT XUserFindUserById( [in] UINT64 userId, [out] XUserHandle *handle );
+    HRESULT XUserGetIsGuest( [in] XUserHandle user, [out] boolean *isGuest );
+    HRESULT XUserGetState( [in] XUserHandle user, [out] XUserState *state );
+    HRESULT __PADDING__();
+    HRESULT XUserGetGamerPictureAsync( [in] XUserHandle user, [in] XUserGamerPictureSize pictureSize, [in, out] XAsyncBlock *async );
+    HRESULT XUserGetGamerPictureResultSize( [in, out] XAsyncBlock *async, [out] SIZE_T *bufferSize );
+    HRESULT XUserGetGamerPictureResult( [in, out] XAsyncBlock *async, [in] SIZE_T bufferSize, [out, size_is(bufferSize)] void *buffer, [out, optional] SIZE_T *bufferUsed );
+    HRESULT XUserGetAgeGroup( [in] XUserHandle user, [out] XUserAgeGroup *ageGroup );
+    HRESULT XUserCheckPrivilege( [in] XUserHandle user, [in] XUserPrivilegeOptions options, [in] XUserPrivilege privilege, [out] boolean *hasPrivilege, [out, optional] XUserPrivilegeDenyReason *reason );
+    HRESULT XUserResolvePrivilegeWithUiAsync( [in] XUserHandle user, [in] XUserPrivilegeOptions options, [in] XUserPrivilege privilege, [in, out] XAsyncBlock *async );
+    HRESULT XUserResolvePrivilegeWithUiResult( [in, out] XAsyncBlock *async );
+    HRESULT XUserGetTokenAndSignatureAsync( [in] XUserHandle user, [in] XUserGetTokenAndSignatureOptions options, [in, string] const CHAR *method, [in, string] const CHAR *url, [in] SIZE_T headerCount, [in, optional, length_is(headerCount)] const XUserGetTokenAndSignatureHttpHeader headers[*], [in] SIZE_T bodySize, [in, optional, size_is(bodySize)] const void *bodyBuffer, [in, out] XAsyncBlock *async );
+    HRESULT XUserGetTokenAndSignatureResultSize( [in, out] XAsyncBlock *async, [out] SIZE_T *bufferSize );
+    HRESULT XUserGetTokenAndSignatureResult( [in, out] XAsyncBlock *async, [in] SIZE_T bufferSize, [out, size_is(bufferSize)] void *buffer, [out] XUserGetTokenAndSignatureData **ptrToBuffer, [out, optional] SIZE_T *bufferUsed );
+    HRESULT XUserGetTokenAndSignatureUtf16Async( [in] XUserHandle user, [in] XUserGetTokenAndSignatureOptions options, [in, string] const WCHAR *method, [in, string] const WCHAR *url, [in] SIZE_T headerCount, [in, optional, length_is(headerCount)] const XUserGetTokenAndSignatureUtf16HttpHeader headers[*], [in] SIZE_T bodySize, [in, optional, size_is(bodySize)] const void *bodyBuffer, [in, out] XAsyncBlock *async );
+    HRESULT XUserGetTokenAndSignatureUtf16ResultSize( [in, out] XAsyncBlock *async, [out] SIZE_T *bufferSize );
+    HRESULT XUserGetTokenAndSignatureUtf16Result( [in, out] XAsyncBlock *async, [in] SIZE_T bufferSize, [out, size_is(bufferSize)] void *buffer, [out] XUserGetTokenAndSignatureUtf16Data **ptrToBuffer, [out, optional] SIZE_T *bufferUsed );
+    HRESULT XUserResolveIssueWithUiAsync( [in] XUserHandle user, [in, optional, string] const CHAR *url, [in, out] XAsyncBlock *async );
+    HRESULT XUserResolveIssueWithUiResult( [in, out] XAsyncBlock *async );
+    HRESULT XUserResolveIssueWithUiUtf16Async( [in] XUserHandle user, [in, optional, string] const WCHAR *url, [in, out] XAsyncBlock *async );
+    HRESULT XUserResolveIssueWithUiUtf16Result( [in, out] XAsyncBlock *async );
+    HRESULT XUserRegisterForChangeEvent( [in, optional] XTaskQueueHandle queue, [in, optional] void *context, [in] XUserChangeEventCallback *callback, [out] XTaskQueueRegistrationToken *token );
+    boolean XUserUnregisterForChangeEvent( [in] XTaskQueueRegistrationToken token, [in] boolean wait );
+    HRESULT XUserGetSignOutDeferral( [out] XUserSignOutDeferralHandle *deferral );
+    void    XUserCloseSignOutDeferralHandle( [in] XUserSignOutDeferralHandle deferral );
+}
+
+[
+    local,
+    object,
+    uuid(eb9bf948-18dc-4d82-bbcc-40e0a809c4c0)
+]
+interface IXUserImpl2 : IXUserImpl
+{
+    HRESULT XUserAddByIdWithUiAsync( [in] UINT64 userId, [in, out] XAsyncBlock *async );
+    HRESULT XUserAddByIdWithUiResult( [in, out] XAsyncBlock *async, [out] XUserHandle *newUser );
+}
+
+[
+    local,
+    object,
+    uuid(1bf2f8c5-d507-4e52-bb05-f726d0e71161)
+]
+interface IXUserImpl3 : IXUserImpl2
+{
+    HRESULT XUserGetMsaTokenSilentlyAsync( [in] XUserHandle user, [in] XUserGetMsaTokenSilentlyOptions options, [in, string] const CHAR *scope, [in, out] XAsyncBlock *async );
+    HRESULT XUserGetMsaTokenSilentlyResult( [in, out] XAsyncBlock *async, [in] SIZE_T resultTokenSize, [out, string, size_is(resultTokenSize)] CHAR *resultToken, [out, optional] SIZE_T *resultTokenUsed );
+    HRESULT XUserGetMsaTokenSilentlyResultSize( [in, out] XAsyncBlock *async, [out] SIZE_T *tokenSize );
+}
+
+[
+    local,
+    object,
+    uuid(079415e3-6727-437f-8e9d-8f8f9b2439f7)
+]
+interface IXUserImpl4 : IXUserImpl3
+{
+    boolean XUserIsStoreUser( [in] XUserHandle user );
+}
+
+[
+    local,
+    object,
+    uuid(26f3c674-a2fe-44fa-b6c4-a323bc94ff53)
+]
+interface IXUserImpl5 : IXUserImpl4
+{
+    HRESULT XUserPlatformRemoteConnectSetEventHandlers( [in, optional] XTaskQueueHandle queue, [in] XUserPlatformRemoteConnectEventHandlers *handlers );
+    HRESULT XUserPlatformRemoteConnectCancelPrompt( [in] XUserPlatformOperation operation );
+    HRESULT XUserPlatformSpopPromptSetEventHandlers( [in, optional] XTaskQueueHandle queue, [in] XUserPlatformSpopPromptEventHandler *handler, [in, optional] void *context );
+    HRESULT XUserPlatformSpopPromptComplete( [in] XUserPlatformOperation operation, [in] XUserPlatformOperationResult result );
+}
+
+[
+    local,
+    object,
+    uuid(5131d685-4394-4ee6-8c18-bfb5d4aef1ff)
+]
+interface IXUserImpl6 : IXUserImpl5
+{
+    boolean XUserIsSignOutPresent();
+    HRESULT XUserSignOutAsync( [in] XUserHandle user, [in, out] XAsyncBlock *async );
+    HRESULT XUserSignOutResult( [in, out] XAsyncBlock *async );
+}
+
+[
+    local,
+    object,
+    uuid(cef4fac0-7676-4a94-a119-4c43f9eb5b74)
+]
+interface IXUserGamertagImpl : IUnknown
+{
+    HRESULT XUserGetGamertag( [in] XUserHandle user, [in] XUserGamertagComponent gamertagComponent, [in] SIZE_T gamertagSize, [out, string, size_is(gamertagSize)] CHAR *gamertag, [out, optional] SIZE_T *gamertagUsed );
+}
+
+[
     uuid(e349bd1a-fc20-4e40-b99c-4178cc6b409f)
 ]
 coclass XSystemImpl
@@ -190,3 +319,11 @@ coclass XGameRuntimeFeatureImpl
     [default] interface IXGameRuntimeFeatureImpl;
 }
 
+[
+    uuid(01acd177-91f9-4763-a38e-ccbb55ce32e0)
+]
+coclass XUserImpl
+{
+    [default] interface IXUserImpl;
+    interface IXUserGamertagImpl;
+}

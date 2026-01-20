@@ -359,6 +359,55 @@ static void test_XThreading(void)
     }
 }
 
+static void test_XUser(void)
+{
+    XUserSignOutDeferralHandle deferral = (void *)0xdeadbeef;
+    IXUserImpl6 *xuser6;
+    IXUserImpl *xuser;
+    UINT32 maxUsers;
+    boolean res;
+    HRESULT hr;
+
+    hr = QueryApiImpl_fun( &CLSID_XUserImpl, &IID_IXUserImpl, (void **)&xuser );
+    ok( hr == S_OK, "got hr %#lx.\n", hr );
+
+    check_interface( xuser, &IID_IUnknown, TRUE );
+    check_interface( xuser, &IID_IXUserImpl, TRUE );
+    check_interface( xuser, &IID_IXUserImpl2, TRUE );
+    check_interface( xuser, &IID_IXUserImpl3, TRUE );
+    check_interface( xuser, &IID_IXUserImpl4, TRUE );
+    check_interface( xuser, &IID_IXUserImpl5, TRUE );
+    check_interface( xuser, &IID_IXUserImpl6, TRUE );
+    check_interface( xuser, &IID_IXUserGamertagImpl, TRUE );
+
+    /**
+     * xgameruntime.lib::XUserGetMaxUsers
+     */
+    hr = IXUserImpl_XUserGetMaxUsers( xuser, &maxUsers );
+    ok( hr == S_OK, "got hr %#lx.\n", hr );
+    ok( maxUsers == 1, "got maxUsers %u.\n", maxUsers );
+
+    /**
+     * xgameruntime.lib::XUserGetSignOutDeferral
+     */
+    hr = IXUserImpl_XUserGetSignOutDeferral( xuser, &deferral );
+    ok( hr == E_GAMEUSER_DEFERRAL_NOT_AVAILABLE, "got hr %#lx.\n", hr );
+    ok( deferral == NULL, "got deferral %p.\n", deferral );
+
+    hr = IXUserImpl_QueryInterface( xuser, &IID_IXUserImpl6, (void **)&xuser6 );
+    ok( hr == S_OK, "got hr %#lx.\n", hr );
+    IXUserImpl_Release( xuser );
+    if (FAILED(hr)) return;
+
+    /**
+     * xgameruntime.lib::XUserIsSignOutPresent
+     */
+    res = IXUserImpl6_XUserIsSignOutPresent( xuser6 );
+    ok( res == FALSE, "got res %d.\n", res );
+
+    IXUserImpl6_Release( xuser6 );
+}
+
 START_TEST(xgameruntime)
 {
     HRESULT hr;
@@ -371,6 +420,7 @@ START_TEST(xgameruntime)
     test_XSystemAnalytics();
     test_XGameRuntimeFeature();
     test_XThreading();
+    test_XUser();
 
     RoUninitialize();
 }
