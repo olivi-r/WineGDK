@@ -177,6 +177,10 @@ HRESULT WINAPI QueryApiImpl( const GUID *runtimeClassId, REFIID interfaceId, voi
 
         return func( runtimeClassId, interfaceId, out );
     }
+    else if (IsEqualGUID( runtimeClassId, &CLSID_XUserImpl ))
+    {
+        return IXUser6_QueryInterface( x_user_impl, interfaceId, out );
+    }
 
     FIXME( "%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid( runtimeClassId ) );
     return E_NOINTERFACE;
