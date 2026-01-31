@@ -24,6 +24,7 @@ import "propidl.idl";
 
 // --- xgameruntime --- //
 typedef void* XSystemHandle;
+typedef struct XUser* XUserHandle;
 
 typedef enum XSystemHandleType XSystemHandleType;
 typedef enum XSystemHandleCallbackReason XSystemHandleCallbackReason;
@@ -36,10 +37,12 @@ interface IWineAsyncWorkImpl;
 interface IXSystemImpl;
 interface IXSystemAnalyticsImpl;
 interface IXGameRuntimeFeatureImpl;
+interface IXLauncherImpl;
 
 coclass XSystemImpl;
 coclass XSystemAnalyticsImpl;
 coclass XGameRuntimeFeatureImpl;
+coclass XLauncherImpl;
 
 enum XSystemHandleType
 {
@@ -163,6 +166,16 @@ interface IXGameRuntimeFeatureImpl : IUnknown
 }
 
 [
+    local,
+    object,
+    uuid(1b339674-328d-4283-a200-3171f18d3639)
+]
+interface IXLauncherImpl : IUnknown
+{
+    HRESULT XLaunchUri( [in, optional] XUserHandle user, [in, string] const char *uri );
+}
+
+[
     uuid(e349bd1a-fc20-4e40-b99c-4178cc6b409f)
 ]
 coclass XSystemImpl
@@ -186,3 +199,10 @@ coclass XGameRuntimeFeatureImpl
     [default] interface IXGameRuntimeFeatureImpl;
 }
 
+[
+    uuid(1b339674-328d-4283-a200-3171f18d3639)
+]
+coclass XLauncherImpl
+{
+    [default] interface IXLauncherImpl;
+}

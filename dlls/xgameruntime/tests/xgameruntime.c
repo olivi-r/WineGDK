@@ -359,6 +359,20 @@ static void test_XThreading(void)
     }
 }
 
+void test_XLauncher(void)
+{
+    IXLauncherImpl *xlauncher;
+    HRESULT hr;
+
+    hr = QueryApiImpl_fun( &CLSID_XLauncherImpl, &IID_IXLauncherImpl, (void **)&xlauncher );
+    ok( hr == S_OK, "got hr %#lx.\n", hr );
+
+    check_interface( xlauncher, &IID_IUnknown, TRUE );
+    check_interface( xlauncher, &IID_IXLauncherImpl, TRUE );
+
+    IXLauncherImpl_Release( xlauncher );
+}
+
 START_TEST(xgameruntime)
 {
     HRESULT hr;
@@ -371,6 +385,7 @@ START_TEST(xgameruntime)
     test_XSystemAnalytics();
     test_XGameRuntimeFeature();
     test_XThreading();
+    test_XLauncher();
 
     RoUninitialize();
 }
