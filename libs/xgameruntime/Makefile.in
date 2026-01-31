@@ -5,7 +5,9 @@ SOURCES = \
 	xappcapture.c \
 	xasync.c \
 	xasyncprovider.c \
+	xdisplay.c \
 	xgameruntimeinit.c \
+	xlauncher.c \
 	xspeechsynthesizer.c \
 	xtaskqueue.c \
 	xthread.c \
