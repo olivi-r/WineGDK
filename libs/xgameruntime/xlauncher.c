@@ -18,28 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __WINE_XGAMERUNTIME_PRIVATE_H
-#define __WINE_XGAMERUNTIME_PRIVATE_H
-
-#define COBJMACROS
-
-#include <stdlib.h>
-#include <windows.h>
-#include <wine/debug.h>
+#include <wtypes.h>
 #include <xgameruntime.h>
 
-extern IXAccessibility *x_accessibility_impl;
-extern IXAppCapture *capture_impl;
-extern IXAppCapture5 *capture5_impl;
-extern IXDisplay *x_display_impl;
-extern IXLauncher *x_launcher_impl;
-extern IXThreading *x_threading_impl;
-extern IXUser6 *x_user_impl;
-extern IXUserDevice2 *x_user_device_impl;
-
-/* Deference is for other modules to communicate with eachother through the same binary. */
-HRESULT WINAPI QueryApiImpl( const GUID *classId, REFIID interfaceId, void **out );
-
-HRESULT WINAPI GDKC_InitAPI( ULONG gdkVer, ULONG gsVer, char mode, const XGameRuntimeOptions *options );
-
-#endif
+HRESULT WINAPI XLaunchUri( XUserHandle requestingUser, const char *uri )
+{
+    return E_NOTIMPL;
+}

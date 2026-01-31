@@ -132,6 +132,46 @@ static void test_XAppCapture( void )
     IXAppCapture2_Release( xappcapture2 );
 }
 
+static void test_XDisplay( void )
+{
+    IXDisplay *xdisplay = NULL;
+    HRESULT hr;
+
+    hr = QueryApiImpl( &CLSID_XDisplayImpl, &IID_IXDisplay, (void **)&xdisplay );
+    ok( hr == S_OK || broken( hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) ), "got hr %#lx.\n", hr );
+    if (hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) )
+    {
+        win_skip( "clsid %s not supported, skipping tests.\n", debugstr_guid( &CLSID_XDisplayImpl ) );
+        return;
+    }
+    if (!xdisplay) return;
+
+    check_interface( xdisplay, &IID_IUnknown );
+    check_interface( xdisplay, &IID_IXDisplay );
+
+    IXDisplay_Release( xdisplay );
+}
+
+static void test_XLauncher( void )
+{
+    IXLauncher *xlauncher = NULL;
+    HRESULT hr;
+
+    hr = QueryApiImpl( &CLSID_XLauncherImpl, &IID_IXLauncher, (void **)&xlauncher );
+    ok( hr == S_OK || broken( hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) ), "got hr %#lx.\n", hr );
+    if (hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) )
+    {
+        win_skip( "clsid %s not supported, skipping tests.\n", debugstr_guid( &CLSID_XLauncherImpl ) );
+        return;
+    }
+    if (!xlauncher) return;
+
+    check_interface( xlauncher, &IID_IUnknown );
+    check_interface( xlauncher, &IID_IXLauncher );
+
+    IXLauncher_Release( xlauncher );
+}
+
 static void test_XThreading( void )
 {
     IXThreading *xthreading = NULL;
@@ -211,6 +251,8 @@ START_TEST(xgameruntime)
 
     test_XAccessibility();
     test_XAppCapture();
+    test_XDisplay();
+    test_XLauncher();
     test_XThreading();
     test_XUser();
     test_XUserDevice();
