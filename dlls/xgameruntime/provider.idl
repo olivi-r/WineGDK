@@ -36,10 +36,12 @@ import "xgameruntime.h";
 interface IXAccessibility;
 interface IXAppCapture;
 interface IXAppCapture2;
+interface IXLauncher;
 
 coclass XAccessibilityImpl;
 coclass XAppCaptureImpl;
 coclass XAppCaptureImpl2;
+coclass XLauncherImpl;
 
 [
     local,
@@ -119,6 +121,16 @@ interface IXAppCapture2 : IUnknown
 }
 
 [
+    local,
+    object,
+    uuid(1b339674-328d-4283-a200-3171f18d3639)
+]
+interface IXLauncher : IUnknown
+{
+    HRESULT XLaunchUri( [in, optional] XUserHandle user, [in, string] const char *uri );
+}
+
+[
     uuid(3e241977-6237-41e9-8559-102c2d9983f1)
 ]
 coclass XAccessibilityImpl
@@ -140,4 +152,12 @@ coclass XAppCaptureImpl
 coclass XAppCaptureImpl2
 {
     [default] interface IXAppCapture2;
+}
+
+[
+    uuid(1b339674-328d-4283-a200-3171f18d3639)
+]
+coclass XLauncherImpl
+{
+    [default] interface IXLauncher;
 }

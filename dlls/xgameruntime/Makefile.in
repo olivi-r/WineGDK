@@ -1,9 +1,10 @@
 MODULE	= xgameruntime.dll
-IMPORTS	= advapi32
+IMPORTS	= advapi32 shell32
 
 SOURCES = \
 	accessibility.c \
 	capture.c \
 	gdkc.c \
+	launcher.c \
 	main.c \
 	provider.idl
