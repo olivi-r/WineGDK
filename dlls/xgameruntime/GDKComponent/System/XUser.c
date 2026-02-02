@@ -704,16 +704,89 @@ static HRESULT WINAPI x_user_XUserGetMaxUsers( IXUserImpl6 *iface, UINT32 *maxUs
     return S_OK;
 }
 
+struct XUserAddContext
+{
+    XUserAddOptions options;
+    XUserHandle user;
+};
+
+static HRESULT WINAPI XUserAddProvider( XAsyncOp op, const XAsyncProviderData *data )
+{
+    struct XUserAddContext *context;
+    IXThreadingImpl *xthreading;
+    HRESULT hr;
+
+    TRACE( "op %d, data %p.\n", op, data );
+
+    if (FAILED(hr = QueryApiImpl( &CLSID_XThreadingImpl, &IID_IXThreadingImpl, (void **)&xthreading ))) return hr;
+    context = (struct XUserAddContext *)data->context;
+
+    switch (op)
+    {
+        case Begin:
+            hr = IXThreadingImpl_XAsyncSchedule( xthreading, data->async, 0 );
+            break;
+
+        case GetResult:
+            memcpy( data->buffer, &context->user, sizeof(XUserHandle) );
+            break;
+
+        case DoWork:
+            if (context->options & XUserAddOptions_AddDefaultUserSilently)
+                hr = LoadDefaultUser( &context->user );
+            else hr = E_ABORT;
+
+            IXThreadingImpl_XAsyncComplete( xthreading, data->async, hr, sizeof(XUserHandle) );
+            hr = S_OK;
+            break;
+
+        case Cleanup:
+            free( context );
+            break;
+
+        case Cancel:
+            break;
+    }
+
+    IXThreadingImpl_Release( xthreading );
+    return hr;
+}
+
 static HRESULT WINAPI x_user_XUserAddAsync( IXUserImpl6 *iface, XUserAddOptions options, XAsyncBlock *async )
 {
-    FIXME( "iface %p, options %d, async %p stub!\n", iface, options, async );
-    return E_NOTIMPL;
+    struct XUserAddContext *context;
+    IXThreadingImpl *xthreading;
+    HRESULT hr;
+
+    TRACE( "iface %p, options %d, async %p.\n", iface, options, async );
+
+    if (!async) return E_POINTER;
+    if (FAILED(hr = QueryApiImpl( &CLSID_XThreadingImpl, &IID_IXThreadingImpl, (void **)&xthreading ))) return hr;
+    if (!(context = calloc( 1, sizeof(*context) )))
+    {
+        IXThreadingImpl_Release( xthreading );
+        return E_OUTOFMEMORY;
+    }
+
+    context->options = options;
+    hr = IXThreadingImpl_XAsyncBegin( xthreading, async, context, NULL, "XUserAddAsync", XUserAddProvider );
+    IXThreadingImpl_Release( xthreading );
+    if (FAILED(hr)) free( context );
+    return hr;
 }
 
 static HRESULT WINAPI x_user_XUserAddResult( IXUserImpl6 *iface, XAsyncBlock *async, XUserHandle *newUser )
 {
-    FIXME( "iface %p, async %p, newUser %p stub!\n", iface, async, newUser );
-    return E_NOTIMPL;
+    IXThreadingImpl *xthreading;
+    HRESULT hr;
+
+    TRACE( "iface %p, async %p, newUser %p.\n", iface, async, newUser );
+
+    if (!async || !newUser) return E_POINTER;
+    if (FAILED(hr = QueryApiImpl( &CLSID_XThreadingImpl, &IID_IXThreadingImpl, (void **)&xthreading ))) return hr;
+    hr = IXThreadingImpl_XAsyncGetResult( xthreading, async, x_user_XUserAddAsync, sizeof(XUserHandle), newUser, NULL );
+    IXThreadingImpl_Release( xthreading );
+    return hr;
 }
 
 static HRESULT WINAPI x_user_XUserGetLocalId( IXUserImpl6 *iface, XUserHandle user, XUserLocalId *userLocalId )
