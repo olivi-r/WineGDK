@@ -23,6 +23,61 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(gdkc);
 
+static HRESULT CALLBACK HTTPClientProvider( XAsyncOp operation, const XAsyncProviderData *data )
+{
+    HRESULT status;
+    IXThreading *threadingImpl;
+
+    struct UrlSecurityInfoContext *context = (struct UrlSecurityInfoContext *)data->context;
+
+    /* Threading module may be obtained from another binary. */
+    TRACE( "operation %d, data %p\n", operation, data );
+
+    status = QueryApiImpl( &CLSID_XThreadingImpl, &IID_IXThreading, (void **)&threadingImpl );
+    if ( FAILED( status ) ) return status;
+
+    switch ( operation )
+    {
+        case XAsyncOp_Begin:
+        {
+            return IXThreading_XAsyncSchedule( threadingImpl, data->async, 100 );
+        }
+
+        case XAsyncOp_DoWork:
+        {
+            status = httpclient_ObtainSecurityInformationForUrl( context->url, &context->securityInformationBuffer, &context->securityInformationBufferCount, &context->securityInformation );
+
+            IXThreading_XAsyncComplete( threadingImpl, data->async, status, context->securityInformationBufferCount );
+
+            return status;
+        }
+
+        case XAsyncOp_GetResult:
+        {
+            if ( data->buffer && data->bufferSize >= context->securityInformationBufferCount )
+            {
+                memcpy( data->buffer, &context->securityInformationBuffer, context->securityInformationBufferCount );
+                return S_OK;
+            }
+            return E_BOUNDS;
+        }
+
+        case XAsyncOp_Cancel:
+        {
+            IXThreading_XAsyncComplete( threadingImpl, data->async, E_ABORT, 0 );
+            return S_OK;
+        }
+
+        case XAsyncOp_Cleanup:
+        {
+            free( context );
+            return S_OK;
+        }
+    }
+
+    return E_NOTIMPL;
+}
+
 static inline struct x_networking *impl_from_IXNetworking( IXNetworking *iface )
 {
     return CONTAINING_RECORD( iface, struct x_networking, IXNetworking_iface );
@@ -119,26 +174,71 @@ static HRESULT WINAPI x_networking_XNetworkingQuerySecurityInformationForUrlAsyn
 
 static HRESULT WINAPI x_networking_XNetworkingQuerySecurityInformationForUrlUtf16Async( IXNetworking *iface, const WCHAR *url, XAsyncBlock *asyncBlock )
 {
-    FIXME( "iface %p, url %p, asyncBlock %p stub!\n", iface, url, asyncBlock );
-    return E_NOTIMPL;
+    HRESULT status;
+    IXThreading *threadingImpl;
+    struct UrlSecurityInfoContext *context;
+
+    TRACE( "iface %p, url %p, asyncBlock %p.\n", iface, url, asyncBlock );
+
+    /* Threading module may be obtained from another binary. */
+    status = QueryApiImpl( &CLSID_XThreadingImpl, &IID_IXThreading, (void **)&threadingImpl );
+    if ( FAILED( status ) ) return status;
+
+    context = (struct UrlSecurityInfoContext *)malloc( sizeof( struct UrlSecurityInfoContext ) );
+    if ( !context ) return E_OUTOFMEMORY;
+
+    context->url = url;
+
+    status = IXThreading_XAsyncBegin( threadingImpl, asyncBlock, context, NULL, "XNetworkingQuerySecurityInformationForUrlUtf16Async", HTTPClientProvider );
+
+    if ( FAILED( status ) )
+    {
+        free( context );
+    }
+
+    return status;
 }
 
 static HRESULT WINAPI x_networking_XNetworkingQuerySecurityInformationForUrlUtf16AsyncResultSize( IXNetworking *iface, XAsyncBlock *asyncBlock, SIZE_T *securityInformationBufferByteCount )
 {
-    FIXME( "iface %p, asyncBlock %p, securityInformationBufferByteCount %p stub!\n", iface, asyncBlock, securityInformationBufferByteCount );
-    return E_NOTIMPL;
+    HRESULT status;
+    IXThreading *threadingImpl;
+
+    TRACE( "iface %p, asyncBlock %p, securityInformationBufferByteCount %p.\n", iface, asyncBlock, securityInformationBufferByteCount );
+
+    /* Threading module may be obtained from another binary. */
+    status = QueryApiImpl( &CLSID_XThreadingImpl, &IID_IXThreading, (void **)&threadingImpl );
+    if ( FAILED( status ) ) return status;
+
+    status = IXThreading_XAsyncGetResultSize( threadingImpl, asyncBlock, securityInformationBufferByteCount );
+
+    return status;
 }
 
 static HRESULT WINAPI x_networking_XNetworkingQuerySecurityInformationForUrlUtf16AsyncResult( IXNetworking *iface, XAsyncBlock *asyncBlock, SIZE_T securityInformationBufferByteCount, SIZE_T *securityInformationBufferByteCountUsed, UINT8 *securityInformationBuffer, XNetworkingSecurityInformation **securityInformation )
 {
-    FIXME( "iface %p, asyncBlock %p, securityInformationBufferByteCount %Iu, securityInformationBufferByteCountUsed %p, securityInformationBuffer %p, securityInformation %p stub!\n", iface, asyncBlock, securityInformationBufferByteCount, securityInformationBufferByteCountUsed, securityInformationBuffer, securityInformation );
-    return E_NOTIMPL;
+    HRESULT status;
+    IXThreading *threadingImpl;
+
+    TRACE( "iface %p, asyncBlock %p, securityInformationBufferByteCount %Iu, securityInformationBufferByteCountUsed %p, securityInformationBuffer %p, securityInformation %p.\n", iface, asyncBlock, securityInformationBufferByteCount, securityInformationBufferByteCountUsed, securityInformationBuffer, securityInformation );
+
+    /* Threading module may be obtained from another binary. */
+    status = QueryApiImpl( &CLSID_XThreadingImpl, &IID_IXThreading, (void **)&threadingImpl );
+    if ( FAILED( status ) ) return status;
+
+    status = IXThreading_XAsyncGetResult( threadingImpl, asyncBlock, NULL, securityInformationBufferByteCount, securityInformationBuffer, securityInformationBufferByteCountUsed );
+    if ( FAILED( status ) ) return status;
+
+    /* Extract the XNetworkingSecurityInformation header from the buffer. */
+    *securityInformation = (XNetworkingSecurityInformation *)securityInformationBuffer;
+
+    return S_OK;
 }
 
 static HRESULT WINAPI x_networking_XNetworkingVerifyServerCertificate( IXNetworking *iface, void *requestHandle, const XNetworkingSecurityInformation *securityInformation )
 {
     FIXME( "iface %p, requestHandle %p, securityInformation %p stub!\n", iface, requestHandle, securityInformation );
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 static HRESULT WINAPI x_networking_XNetworkingGetConnectivityHint( IXNetworking *iface, XNetworkingConnectivityHint *connectivityHint )
@@ -162,7 +262,10 @@ static HRESULT WINAPI x_networking_XNetworkingGetConnectivityHint( IXNetworking 
 
 static HRESULT WINAPI x_networking_XNetworkingRegisterConnectivityHintChanged( IXNetworking *iface, XTaskQueueHandle queue, void *context, XNetworkingConnectivityHintChangedCallback *callback, XTaskQueueRegistrationToken *token )
 {
+    XNetworkingConnectivityHint hint;
     FIXME( "iface %p, queue %p, context %p, callback %p, token %p stub!\n", iface, queue, context, callback, token );
+    x_networking_XNetworkingGetConnectivityHint( iface, &hint );
+    callback( context, &hint );
     return S_OK;
 }
 

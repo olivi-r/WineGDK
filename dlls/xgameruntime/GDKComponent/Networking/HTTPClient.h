@@ -1,6 +1,6 @@
 /*
  * Xbox Game runtime Library
- *  GDK Component: Networking API -> XNetworking
+ *  GDK Component: System API -> XNetworking
  *
  * Written by Weather
  *
@@ -19,27 +19,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef XNETWORKING_H
-#define XNETWORKING_H
+#ifndef HTTPCLIENT_H
+#define HTTPCLIENT_H
 
 #include "../../private.h"
-#include "HTTPClient.h"
 
 #include <string.h>
+#include <wincrypt.h>
+#include <schannel.h>
+#include <winhttp.h>
 
-struct x_networking
-{
-    IXNetworking IXNetworking_iface;
-    LONG ref;
-};
-
-struct UrlSecurityInfoContext
-{
-    BYTE *securityInformationBuffer;
-    SIZE_T securityInformationBufferCount;
-    const WCHAR *url;
-    XNetworkingSecurityInformation *securityInformation;
-};
-
+HRESULT httpclient_ObtainSecurityInformationForUrl( LPCWSTR url, BYTE **outBuffer, SIZE_T *outBufferByteCount, XNetworkingSecurityInformation **securityInformation );
 
 #endif
