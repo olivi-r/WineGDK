@@ -13,4 +13,5 @@ SOURCES = \
 	invite.c \
 	launcher.c \
 	main.c \
+	protocol.c \
 	provider.idl

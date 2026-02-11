@@ -44,6 +44,7 @@ extern IXGame *x_game_impl;
 extern IGameActivationImpl1 *x_game_activation_impl;
 extern IXGameEvent *x_game_event_impl;
 extern IXGameInvite *x_game_invite_impl;
+extern IGameProtocolImpl1 *x_game_protocol_impl;
 extern IXLauncher *x_launcher_impl;
 
 /* Deference is for other modules to communicate with eachother through the same binary. */
