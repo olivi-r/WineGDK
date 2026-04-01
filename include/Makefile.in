@@ -1249,6 +1249,7 @@ SOURCES = \
 	xpsobjectmodel.idl \
 	xpsobjectmodel_1.idl \
 	xsystem.idl \
+	xuser.idl \
 	zmouse.h
 
 INSTALL_LIB = \
