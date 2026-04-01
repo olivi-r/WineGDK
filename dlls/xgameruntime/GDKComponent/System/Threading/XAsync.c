@@ -334,7 +334,7 @@ static HRESULT AllocStateNoCompletion( XAsyncBlock* asyncBlock, AsyncBlockIntern
 
     XTaskQueueHandle queue;
 
-    TRACE( "asyncBlock %p, internal %p, contextSize %lld.\n", asyncBlock, internal, contextSize );
+    TRACE( "asyncBlock %p, internal %p, contextSize %Id.\n", asyncBlock, internal, contextSize );
 
     if (!(stateImpl = calloc( 1, sizeof(*stateImpl) ))) return E_OUTOFMEMORY;
 
@@ -392,7 +392,7 @@ static HRESULT AllocState( XAsyncBlock* asyncBlock, SIZE_T contextSize )
     HRESULT hr;
     AsyncBlockInternal* internal;
 
-    TRACE( "asyncBlock %p, contextSize %lld.\n", asyncBlock, contextSize );
+    TRACE( "asyncBlock %p, contextSize %Id.\n", asyncBlock, contextSize );
 
     if ( !asyncBlock )
         return E_INVALIDARG;
@@ -895,7 +895,7 @@ VOID XAsyncComplete( XAsyncBlock* asyncBlock, HRESULT result, SIZE_T requiredBuf
     struct x_async_block_guard *impl;
     struct async_state *stateImpl = NULL;
 
-    TRACE( "asyncBlock %p, result %#lx, requiredBufferSize %lld.\n", asyncBlock, result, requiredBufferSize );
+    TRACE( "asyncBlock %p, result %#lx, requiredBufferSize %Id.\n", asyncBlock, result, requiredBufferSize );
 
     if ( result == E_PENDING )
     {
