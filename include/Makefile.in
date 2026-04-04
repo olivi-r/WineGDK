@@ -1265,6 +1265,7 @@ SOURCES = \
 	xpsobjectmodel_1.idl \
 	xspeechsynthesizer.h \
 	xstore.h \
+	xsystem.h \
 	xtaskqueue.h \
 	xuser.h \
 	zmouse.h
