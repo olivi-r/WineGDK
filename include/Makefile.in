@@ -1255,6 +1255,7 @@ SOURCES = \
 	xgameinvite.idl \
 	xgameprotocol.idl \
 	xgameruntime.h \
+	xgameruntimefeature.idl \
 	xgameruntimeinit.h \
 	xgameruntimetypes.h \
 	xinput.h \
