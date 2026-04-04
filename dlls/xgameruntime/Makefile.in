@@ -20,5 +20,6 @@ SOURCES = \
 	xpackage.c \
 	xpersistentlocalstorage.c \
 	xstore.c \
+	xsystem.c \
 	xthreading.c \
 	xuser.c
