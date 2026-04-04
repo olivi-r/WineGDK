@@ -1,0 +1,109 @@
+/*
+ * Copyright (C) the Wine project
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "propidl.idl";
+
+typedef enum XNetworkingConfigurationSetting XNetworkingConfigurationSetting;
+typedef enum XNetworkingConnectivityCostHint XNetworkingConnectivityCostHint;
+typedef enum XNetworkingConnectivityLevelHint XNetworkingConnectivityLevelHint;
+typedef enum XNetworkingStatisticsType XNetworkingStatisticsType;
+typedef enum XNetworkingThumbprintType XNetworkingThumbprintType;
+typedef struct XNetworkingConnectivityHint XNetworkingConnectivityHint;
+typedef struct XNetworkingSecurityInformation XNetworkingSecurityInformation;
+typedef struct XNetworkingTcpQueuedReceivedBufferUsageStatistics XNetworkingTcpQueuedReceivedBufferUsageStatistics;
+typedef struct XNetworkingThumbprint XNetworkingThumbprint;
+typedef union XNetworkingStatisticsBuffer XNetworkingStatisticsBuffer;
+typedef void __stdcall XNetworkingConnectivityHintChangedCallback( void *context, const XNetworkingConnectivityHint *connectivityHint );
+typedef void __stdcall XNetworkingPreferredLocalUdpMultiplayerPortChangedCallback( void *context, UINT64 preferredLocalUdpMultiplayerPort );
+
+enum XNetworkingConfigurationSetting
+{
+    XNetworkingConfigurationSetting_MaxTitleTcpQueuedReceiveBufferSize  = 0,
+    XNetworkingConfigurationSetting_MaxSystemTcpQueuedReceiveBufferSize = 1,
+    XNetworkingConfigurationSetting_MaxToolsTcpQueuedReceiveBufferSize  = 2
+};
+
+enum XNetworkingConnectivityCostHint
+{
+    XNetworkingConnectivityCostHint_Unknown         = 0,
+    XNetworkingConnectivityCostHint_Unrestricted    = 1,
+    XNetworkingConnectivityCostHint_Fixed           = 2,
+    XNetworkingConnectivityCostHint_Varialbe        = 3
+};
+
+enum XNetworkingConnectivityLevelHint
+{
+    XNetworkingConnectivityLevelHint_Unknown                    = 0,
+    XNetworkingConnectivityLevelHint_None                       = 1,
+    XNetworkingConnectivityLevelHint_LocalAccess                = 2,
+    XNetworkingConnectivityLevelHint_InternetAccess             = 3,
+    XNetworkingConnectivityLevelHint_ConstrainedInternetAccess  = 4
+};
+
+enum XNetworkingStatisticsType
+{
+    XNetworkingStatisticsType_TitleTcpQueuedReceivedBufferUsage     = 0,
+    XNetworkingStatisticsType_SystemTcpQueuedReceivedBufferUsage    = 1,
+    XNetworkingStatisticsType_ToolsTcpQueuedReceivedBufferUsage     = 2
+};
+
+enum XNetworkingThumbprintType
+{
+    XNetworkingThumbprintType_Leaf      = 0,
+    XNetworkingThumbprintType_Issuer    = 1,
+    XNetworkingThumbprintType_Root      = 2
+};
+
+struct XNetworkingConnectivityHint
+{
+    XNetworkingConnectivityLevelHint connectivityLevel;
+    XNetworkingConnectivityCostHint connectivityCost;
+    UINT32 ianaInterfaceType;
+    BOOLEAN networkInitialized;
+    BOOLEAN approachingDataLimit;
+    BOOLEAN overDataLimit;
+    BOOLEAN roaming;
+};
+
+struct XNetworkingSecurityInformation
+{
+    UINT32 enabledHttpSecurityProtocolFlags;
+    SIZE_T thumbprintCount;
+    XNetworkingThumbprint *thumbprints;
+};
+
+struct XNetworkingTcpQueuedReceivedBufferUsageStatistics
+{
+    UINT64 numBytesCurrentlyQueued;
+    UINT64 peakNumBytesEverQueued;
+    UINT64 totalNumBytesQueued;
+    UINT64 numBytesDroppedForExceedingConfiguredMax;
+    UINT64 numBytesDroppedDueToAnyFailure;
+};
+
+struct XNetworkingThumbprint
+{
+    XNetworkingThumbprintType thumbprintType;
+    SIZE_T thumbprintBufferByteCount;
+    UINT8 *thumbprintBuffer;
+};
+
+union XNetworkingStatisticsBuffer
+{
+    XNetworkingTcpQueuedReceivedBufferUsageStatistics tcpQueuedReceiveBufferUsage;
+};
