@@ -1,0 +1,47 @@
+/*
+ * Copyright (C) the Wine project
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "propidl.idl";
+
+typedef enum XGameRuntimeFeature XGameRuntimeFeature;
+
+enum XGameRuntimeFeature
+{
+    XGameRuntimeFeature_XAccessibility          = 0,
+    XGameRuntimeFeature_XAppCapture             = 1,
+    XGameRuntimeFeature_XAsync                  = 2,
+    XGameRuntimeFeature_XAsyncProvider          = 3,
+    XGameRuntimeFeature_XDisplay                = 4,
+    XGameRuntimeFeature_XGame                   = 5,
+    XGameRuntimeFeature_XGameInvite             = 6,
+    XGameRuntimeFeature_XGameSave               = 7,
+    XGameRuntimeFeature_XGameUI                 = 8,
+    XGameRuntimeFeature_XLauncher               = 9,
+    XGameRuntimeFeature_XNetworking             = 10,
+    XGameRuntimeFeature_XPackage                = 11,
+    XGameRuntimeFeature_XPersistentLocalStorage = 12,
+    XGameRuntimeFeature_XSpeechSynthesizer      = 13,
+    XGameRuntimeFeature_XStore                  = 14,
+    XGameRuntimeFeature_XSystem                 = 15,
+    XGameRuntimeFeature_XTaskQueue              = 16,
+    XGameRuntimeFeature_XThread                 = 17,
+    XGameRuntimeFeature_XUser                   = 18,
+    XGameRuntimeFeature_XError                  = 19,
+    XGameRuntimeFeature_XGameEvent              = 20,
+    XGameRuntimeFeature_XGameStreaming          = 21
+};
