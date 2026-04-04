@@ -13,5 +13,6 @@ SOURCES = \
 	xgameevent.c \
 	xgameinvite.c \
 	xgameprotocol.c \
+	xgameruntimefeature.c \
 	xthreading.c \
 	xuser.c

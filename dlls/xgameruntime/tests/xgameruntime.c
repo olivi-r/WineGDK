@@ -275,6 +275,26 @@ static void test_XGameProtocol( void )
     IXGameProtocol_Release( xgameprotocol );
 }
 
+static void test_XGameRuntimeFeature( void )
+{
+    IXGameRuntimeFeature *xgameruntimefeature = NULL;
+    HRESULT hr;
+
+    hr = QueryApiImpl( &CLSID_XGameRuntimeFeatureImpl, &IID_IXGameRuntimeFeature, (void **)&xgameruntimefeature );
+    ok( hr == S_OK || broken( hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) ), "got hr %#lx.\n", hr );
+    if (hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) )
+    {
+        win_skip( "clsid %s not supported, skipping tests.\n", debugstr_guid( &CLSID_XGameRuntimeFeatureImpl ) );
+        return;
+    }
+    if (!xgameruntimefeature) return;
+
+    check_interface( xgameruntimefeature, &IID_IUnknown );
+    check_interface( xgameruntimefeature, &IID_IXGameRuntimeFeature );
+
+    IXGameRuntimeFeature_Release( xgameruntimefeature );
+}
+
 static void test_XLauncher( void )
 {
     IXLauncher *xlauncher = NULL;
@@ -381,6 +401,7 @@ START_TEST(xgameruntime)
     test_XGameEvent();
     test_XGameInvite();
     test_XGameProtocol();
+    test_XGameRuntimeFeature();
     test_XLauncher();
     test_XThreading();
     test_XUser();
