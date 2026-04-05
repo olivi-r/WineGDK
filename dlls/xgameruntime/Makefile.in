@@ -1,4 +1,6 @@
 MODULE	= xgameruntime.dll
+IMPORTS	= advapi32
 
 SOURCES = \
+	gdkc.c \
 	main.c
