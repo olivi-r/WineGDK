@@ -1,5 +1,7 @@
 /*
- * Copyright (C) the Wine project
+ * Xbox Game runtime Library
+ *
+ * Copyright 2026 Olivia Ryan
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,15 +18,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __WINE_XGAMERUNTIME_H
-#define __WINE_XGAMERUNTIME_H
+#ifndef __WINE_XGAMERUNTIME_PRIVATE_H
+#define __WINE_XGAMERUNTIME_PRIVATE_H
 
-/* April 2026 Release of GDK */
-#define GDKC_VERSION 10002L
-#define GAMING_SERVICES_VERSION 7822L
+#include <stdlib.h>
+#include <windows.h>
+#include <wine/debug.h>
+#include <xgameruntime.h>
 
-#include <xgameerr.h>
-#include <xgameruntimeinit.h>
-#include <xgameruntimetypes.h>
+/* Deference is for other modules to communicate with eachother through the same binary. */
+HRESULT WINAPI QueryApiImpl( const GUID *classId, REFIID interfaceId, void **out );
 
 #endif

@@ -1,0 +1,4 @@
+STATICLIB = libxgameruntime.a
+
+SOURCES = \
+	xgameruntimeinit.c

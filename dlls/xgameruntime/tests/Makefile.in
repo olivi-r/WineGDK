@@ -1,0 +1,4 @@
+TESTDLL = xgameruntime.dll
+
+SOURCES = \
+	xgameruntime.c

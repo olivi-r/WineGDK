@@ -1,5 +1,7 @@
 /*
- * Copyright (C) the Wine project
+ * Xbox Game runtime Library
+ *
+ * Copyright 2026 Olivia Ryan
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,15 +18,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __WINE_XGAMERUNTIME_H
-#define __WINE_XGAMERUNTIME_H
+#include <wtypes.h>
+#include <xgameruntime.h>
 
-/* April 2026 Release of GDK */
-#define GDKC_VERSION 10002L
-#define GAMING_SERVICES_VERSION 7822L
+HRESULT WINAPI XGameRuntimeInitialize()
+{
+    return E_NOTIMPL;
+}
 
-#include <xgameerr.h>
-#include <xgameruntimeinit.h>
-#include <xgameruntimetypes.h>
+HRESULT WINAPI XGameRuntimeInitializeWithOptions( const XGameRuntimeOptions *options )
+{
+    return E_NOTIMPL;
+}
 
-#endif
+void WINAPI XGameRuntimeUninitialize()
+{
+}
