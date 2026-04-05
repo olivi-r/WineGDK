@@ -19,6 +19,7 @@
  */
 
 #include "private.h"
+#include "GDKComponent/InitInternalGDKC.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(xgameruntime);
 
@@ -50,8 +51,15 @@ BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, void *reserved )
 
 HRESULT WINAPI InitializeApiImplEx2( ULONG gdkVer, ULONG gsVer, CHAR mode, INITIALIZE_OPTIONS *options )
 {
-    FIXME( "gdkVer %ld, gsVer %ld, mode %d, options %p stub!\n", gdkVer, gsVer, mode, options );
-    return E_NOTIMPL;
+    /*
+     * Initialization can be done however we want on our side.
+     * You can choose to return `S_OK` once the full SDK is implemented.
+     *
+     * There's no documented information about what `INITIALIZE_OPTIONS` is,
+     * and xgameruntime.lib never utilizes this argument anyway.
+     */
+    TRACE( "gdkVer %ld, gsVer %ld, mode %d, options %p.\n", gdkVer, gsVer, mode, options );
+    return GDKC_InitAPI( gdkVer, gsVer, mode, options );
 }
 
 HRESULT WINAPI InitializeApiImplEx( ULONG gdkVer, ULONG gsVer, CHAR mode )

@@ -1,5 +1,6 @@
 /*
  * Xbox Game runtime Library
+ *  GDK Component: Internal Initialization Header
  *
  * Written by Weather
  *
@@ -18,24 +19,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __WINE_XGAMERUNTIME_PRIVATE_H
-#define __WINE_XGAMERUNTIME_PRIVATE_H
+#ifndef GDKC_INIT
+#define GDKC_INIT
 
-#include <stdlib.h>
-#include <windows.h>
-#include <wine/debug.h>
-#include <xgameerr.h>
+#include "../private.h"
 
-/* October 2025 Release of GDK */
-#define GDKC_VERSION 10002L
-#define GAMING_SERVICES_VERSION 4429L
-
-typedef struct _INITIALIZE_OPTIONS
-{
-    int unused;
-} INITIALIZE_OPTIONS;
-
-/* Deference is for other modules to communicate with eachother through the same binary. */
-HRESULT WINAPI QueryApiImpl( const GUID *runtimeClassId, REFIID interfaceId, void **out );
+HRESULT WINAPI GDKC_InitAPI( ULONG gdkVer, ULONG gsVer, CHAR mode, INITIALIZE_OPTIONS *options );
 
 #endif
