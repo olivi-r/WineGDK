@@ -1,5 +1,6 @@
 /*
  * Xbox Game runtime Library
+ *  GDK Component: System API -> XSystem
  *
  * Written by Weather
  *
@@ -18,31 +19,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __WINE_XGAMERUNTIME_PRIVATE_H
-#define __WINE_XGAMERUNTIME_PRIVATE_H
+#ifndef XSYSTEM_H
+#define XSYSTEM_H
 
-#define COBJMACROS
+#include <string.h>
 
-#include <stdlib.h>
-#include <unknwn.h>
-#include <windows.h>
-#include <wine/debug.h>
-#include <xgameerr.h>
+#include "../../private.h"
 
-#include "provider.h"
-
-/* October 2025 Release of GDK */
-#define GDKC_VERSION 10002L
-#define GAMING_SERVICES_VERSION 4429L
-
-extern IXSystem *x_system_impl;
-
-typedef struct _INITIALIZE_OPTIONS
+struct x_system
 {
-    int unused;
-} INITIALIZE_OPTIONS;
+    IXSystem IXSystem_iface;
+    LONG ref;
+};
 
-/* Deference is for other modules to communicate with eachother through the same binary. */
-HRESULT WINAPI QueryApiImpl( const GUID *runtimeClassId, REFIID interfaceId, void **out );
+const SIZE_T XSystemConsoleIdBytes = 39;
+const SIZE_T XSystemXboxLiveSandboxIdMaxBytes = 16;
+const SIZE_T XSystemAppSpecificDeviceIdBytes = 45;
 
 #endif

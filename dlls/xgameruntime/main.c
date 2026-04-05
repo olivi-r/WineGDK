@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <initguid.h>
+
 #include "private.h"
 #include "GDKComponent/InitInternalGDKC.h"
 
@@ -76,7 +78,38 @@ HRESULT WINAPI InitializeApiImpl( ULONG gdkVer, ULONG gsVer )
 
 HRESULT WINAPI QueryApiImpl( const GUID *runtimeClassId, REFIID interfaceId, void **out )
 {
-    FIXME( "runtimeClassId %s, interfaceId %s, out %p stub!\n", debugstr_guid( runtimeClassId ), debugstr_guid( interfaceId ), out );
+    /*
+     * Interfaces returned are COM interfaces and inherit IUnknown*
+     *
+     * On MSDN, There's no official documentation on the order of these interfaces and functions.
+     * However, we can hook a dummy `xgameruntime.dll` into test environments and individually query
+     * each class and what signatures they posses. Once we've pass through an empty IUnknown* interface,
+     * we can reconstruct the vtable of each class based on what function gets called.
+     *
+     * Example: (e349bd1a-fc20-4e40-b99c-4178cc6b409f) corresponds to part of the `XSystem` class and implements
+     * these functions in order:
+     *
+     * IUnknown methods:
+     *  IXSystem_QueryInterface,                    (offset 0)
+     *  IXSystem_AddRef,                            (offset 8)
+     *  IXSystem_Release,                           (offset 16)
+     * IXSystem methods:
+     *  IXSystem_XSystemGetConsoleId                (offset 24)
+     *  IXSystem_XSystemGetXboxLiveSandboxId        (offset 32)
+     *  IXSystem_XSystemGetAppSpecificDeviceId      (offset 40)
+     *  IXSystem_XSystemHandleTrack                 (offset 48)
+     *  IXSystem_XSystemIsHandleValid               (offset 56)
+     *  IXSystem_XSystemAllowFullDownloadBandwidth  (offset 64)
+     */
+
+    TRACE( "runtimeClassId %s, interfaceId %s, out %p.\n", debugstr_guid( runtimeClassId ), debugstr_guid( interfaceId ), out );
+
+    if (IsEqualGUID( runtimeClassId, &CLSID_XSystemImpl ))
+    {
+        return IXSystem_QueryInterface( x_system_impl, interfaceId, out );
+    }
+
+    FIXME( "%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid( runtimeClassId ) );
     return E_NOINTERFACE;
 }
 

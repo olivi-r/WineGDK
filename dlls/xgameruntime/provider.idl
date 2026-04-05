@@ -1,0 +1,47 @@
+/*
+ * xgameruntime.dll implementation
+ *
+ * Written by Weather
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#pragma makedep header
+
+import "propidl.idl";
+import "xsystem.idl";
+
+/* --- xgameruntime --- */
+
+interface IXSystem;
+
+coclass XSystemImpl;
+
+[ local, object, uuid(dadc2895-34b0-4ef5-a83e-45114d629b80) ]
+interface IXSystem : IUnknown
+{
+    HRESULT XSystemGetConsoleId( [in] INT32 consoleIdSize, [out, size_is(consoleIdSize)] CHAR *consoleId, [out, optional] SIZE_T *consoleIdUsed );
+    HRESULT XSystemGetXboxLiveSandboxId( [in] INT32 sandboxIdSize, [out, size_is(sandboxIdSize)] CHAR *sandboxId, [out] SIZE_T *sandboxIdUsed );
+    HRESULT XSystemGetAppSpecificDeviceId( [in] INT32 appSpecificDeviceIdSize, [out, size_is(appSpecificDeviceIdSize)] CHAR *appSpecificDeviceId, [out, optional] SIZE_T *appSpecificDeviceIdUsed );
+    HRESULT XSystemHandleTrack( [in] XSystemHandleCallback callback, [in, optional] void *context );
+    BOOLEAN XSystemIsHandleValid( [in] XSystemHandle handle );
+    HRESULT XSystemAllowFullDownloadBandwidth( [in] BOOLEAN enable );
+}
+
+[ uuid(e349bd1a-fc20-4e40-b99c-4178cc6b409f) ]
+coclass XSystemImpl
+{
+    [default] interface IXSystem;
+}

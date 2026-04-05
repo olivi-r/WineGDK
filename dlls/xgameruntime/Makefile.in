@@ -3,4 +3,6 @@ MODULE	= xgameruntime.dll
 
 SOURCES	= \
 	GDKComponent/InitInternalGDKC.c \
-	main.c
+	GDKComponent/System/XSystem.c \
+	main.c \
+	provider.idl
