@@ -43,8 +43,8 @@ BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, void *reserved )
 
 HRESULT WINAPI InitializeApiImplEx2( ULONG gdkVer, ULONG gsVer, char mode, const XGameRuntimeOptions *options )
 {
-    FIXME( "gdkVer %ld, gsVer %ld, mode %d, options %p stub!\n", gdkVer, gsVer, mode, options );
-    return E_NOTIMPL;
+    TRACE( "gdkVer %ld, gsVer %ld, mode %d, options %p.\n", gdkVer, gsVer, mode, options );
+    return GDKC_InitAPI( gdkVer, gsVer, mode, options );
 }
 
 HRESULT WINAPI InitializeApiImplEx( ULONG gdkVer, ULONG gsVer, char mode )

@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <windows.h>
 #include <wine/debug.h>
+#include <xgameerr.h>
 #include <xgameruntimeinit.h>
 
 /* April 2026 Release of GDK */
@@ -32,5 +33,7 @@
 
 /* Deference is for other modules to communicate with eachother through the same binary. */
 HRESULT WINAPI QueryApiImpl( const GUID *runtimeClassId, REFIID interfaceId, void **out );
+
+HRESULT WINAPI GDKC_InitAPI( ULONG gdkVer, ULONG gsVer, char mode, const XGameRuntimeOptions *options );
 
 #endif
