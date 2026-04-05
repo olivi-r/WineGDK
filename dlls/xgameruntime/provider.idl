@@ -32,7 +32,6 @@ typedef enum XGameRuntimeFeature XGameRuntimeFeature;
 typedef struct XVersion XVersion;
 typedef struct XSystemAnalyticsInfo XSystemAnalyticsInfo;
 
-interface IWineAsyncWorkImpl;
 interface IXSystemImpl;
 interface IXSystemAnalyticsImpl;
 interface IXGameRuntimeFeatureImpl;
@@ -117,15 +116,6 @@ struct XSystemAnalyticsInfo
 
 [
     object,
-    uuid(7664288b-54e9-45f9-af0b-b4ad047fa194)
-]
-interface IWineAsyncWorkImpl : IUnknown
-{
-
-}
-
-[
-    object,
     uuid(dadc2895-34b0-4ef5-a83e-45114d629b80)
 ]
 interface IXSystemImpl : IUnknown
@@ -185,4 +175,3 @@ coclass XGameRuntimeFeatureImpl
 {
     [default] interface IXGameRuntimeFeatureImpl;
 }
-

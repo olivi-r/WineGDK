@@ -954,13 +954,14 @@ SOURCES = \
 	windows.ui.idl \
 	windows.ui.input.idl \
 	windows.ui.notifications.idl \
+	windows.ui.text.core.idl \
+	windows.ui.text.idl \
 	windows.ui.viewmanagement.core.idl \
 	windows.ui.viewmanagement.idl \
 	windows.ui.windowmanagement.idl \
 	windows.ui.xaml.hosting.desktopwindowxamlsource.idl \
 	windows.ui.xaml.idl \
 	windows.ui.xaml.interop.idl \
-	windows.ui.text.core.idl \
 	windowscontracts.idl \
 	windowsx.h \
 	wine/afd.h \
@@ -1092,9 +1093,12 @@ SOURCES = \
 	xamlom.idl \
 	xapo.idl \
 	xapofx.h \
+	xasync.h \
+	xasyncprovider.h \
 	xaudio2.idl \
 	xaudio2fx.idl \
 	xcmc.h \
+	xgameerr.h \
 	xinput.h \
 	xmldom.h \
 	xmldom.idl \
@@ -1102,8 +1106,10 @@ SOURCES = \
 	xmldso.idl \
 	xmldsodid.h \
 	xmllite.idl \
+	xnetworking.h \
 	xpsobjectmodel.idl \
 	xpsobjectmodel_1.idl \
+	xtaskqueue.h \
 	zmouse.h
 
 INSTALL_LIB = \
