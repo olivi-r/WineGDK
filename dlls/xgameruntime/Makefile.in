@@ -1,0 +1,4 @@
+MODULE	= xgameruntime.dll
+
+SOURCES	= \
+	main.c

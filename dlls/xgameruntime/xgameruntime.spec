@@ -1,0 +1,9 @@
+1 stdcall -private DllCanUnloadNow()
+2 stdcall InitializeApiImpl(long long)
+3 stdcall InitializeApiImplEx(long long long)
+4 stdcall InitializeApiImplEx2(long long long ptr)
+5 stdcall QueryApiImpl(ptr long long)
+6 stdcall UninitializeApiImpl()
+7 stdcall XErrorReport(long ptr)
+
+@ stdcall -private DllMain(long long ptr)
