@@ -36,26 +36,22 @@ coclass XSystemAnalyticsImpl;
 coclass XGameRuntimeFeatureImpl;
 
 [
+    local,
     object,
     uuid(dadc2895-34b0-4ef5-a83e-45114d629b80)
 ]
 interface IXSystemImpl : IUnknown
 {
-    HRESULT XSystemGetConsoleId( [in] INT32 consoleIdSize, [out, size_is(consoleIdSize)] LPSTR consoleId, [out] SIZE_T *consoleIdUsed );
-    HRESULT XSystemGetXboxLiveSandboxId( [in] INT32 sandboxIdSize, [out, size_is(sandboxIdSize)] LPSTR sandboxId, [out] SIZE_T *sandboxIdUsed );
-    HRESULT XSystemGetAppSpecificDeviceId( [in] INT32 appSpecificDeviceIdSize, [out, size_is(appSpecificDeviceIdSize)] LPSTR appSpecificDeviceId, [out] SIZE_T *appSpecificDeviceIdUsed );
-    /*
-     *  BUG: You cannot have function pointer parameters within COM declared interfaces,
-     * yet Microsoft, in their infinite wisdom, declared function pointers within the 2 
-     * functions below, within a COM interface. Unfortunately no workaround can be found 
-     * unless we transition to a WinRT codebase.
-     */
-    HRESULT XSystemHandleTrack( /* [in] XSystemHandleCallback callback, [in] void *context */ );
-    BOOLEAN XSystemIsHandleValid( /* [in] XSystemHandleCallback callback */ );
-    HRESULT XSystemAllowFullDownloadBandwidth( [in] boolean enable );
+    HRESULT XSystemGetConsoleId( [in] SIZE_T consoleIdSize, [out, size_is(consoleIdSize)] CHAR *consoleId, [out, optional] SIZE_T *consoleIdUsed );
+    HRESULT XSystemGetXboxLiveSandboxId( [in] SIZE_T sandboxIdSize, [out, size_is(sandboxIdSize)] CHAR *sandboxId, [out, optional] SIZE_T *sandboxIdUsed );
+    HRESULT XSystemGetAppSpecificDeviceId( [in] SIZE_T appSpecificDeviceIdSize, [out, size_is(appSpecificDeviceIdSize)] CHAR *appSpecificDeviceId, [out, optional] SIZE_T *appSpecificDeviceIdUsed );
+    HRESULT XSystemHandleTrack( [in] XSystemHandleCallback callback, [in, optional] void *context );
+    BOOLEAN XSystemIsHandleValid( [in] XSystemHandle handle );
+    void    XSystemAllowFullDownloadBandwidth( [in] BOOLEAN enable );
 }
 
 [
+    local,
     object,
     uuid(b884675d-b738-4a9c-815d-9a9a1e0c6c9b)
 ]
@@ -65,6 +61,7 @@ interface IXSystemAnalyticsImpl : IUnknown
 }
 
 [
+    local,
     object,
     uuid(8836fe87-edb9-4fe3-8dad-05f0d2cd5b40)
 ]

@@ -63,12 +63,12 @@ static ULONG WINAPI x_system_Release( IXSystemImpl *iface )
     return ref;
 }
 
-static HRESULT WINAPI x_system_XSystemGetConsoleId( IXSystemImpl *iface, INT32 consoleIdSize, LPSTR consoleId, SIZE_T *consoleIdUsed )
+static HRESULT WINAPI x_system_XSystemGetConsoleId( IXSystemImpl *iface, SIZE_T consoleIdSize, LPSTR consoleId, SIZE_T *consoleIdUsed )
 {    
     // For Windows, Console ID is always `00000000.00000000.00000000.00000000.00
     LPCSTR Id = "00000000.00000000.00000000.00000000.00";
 
-    TRACE( "iface %p, consoleIdSize %d, consoleId %p, consoleIdUsed %p\n", iface, consoleIdSize, consoleId, consoleIdUsed );
+    TRACE( "iface %p, consoleIdSize %Id, consoleId %p, consoleIdUsed %p\n", iface, consoleIdSize, consoleId, consoleIdUsed );
 
     if ( !consoleId || !consoleIdUsed )
         return E_POINTER;
@@ -81,12 +81,12 @@ static HRESULT WINAPI x_system_XSystemGetConsoleId( IXSystemImpl *iface, INT32 c
     return S_OK;
 }
 
-static HRESULT WINAPI x_system_XSystemGetXboxLiveSandboxId( IXSystemImpl *iface, INT32 sandboxIdSize, LPSTR sandboxId, SIZE_T *sandboxIdUsed )
+static HRESULT WINAPI x_system_XSystemGetXboxLiveSandboxId( IXSystemImpl *iface, SIZE_T sandboxIdSize, LPSTR sandboxId, SIZE_T *sandboxIdUsed )
 {    
     // Always assume RETAIL environment for Wine
     LPCSTR Id = "RETAIL";
 
-    TRACE( "iface %p, sandboxIdSize %d, sandboxId %p, sandboxIdUsed %p\n", iface, sandboxIdSize, sandboxId, sandboxIdUsed );
+    TRACE( "iface %p, sandboxIdSize %Id, sandboxId %p, sandboxIdUsed %p\n", iface, sandboxIdSize, sandboxId, sandboxIdUsed );
 
     if ( !sandboxId || !sandboxIdUsed )
         return E_POINTER;
@@ -99,29 +99,28 @@ static HRESULT WINAPI x_system_XSystemGetXboxLiveSandboxId( IXSystemImpl *iface,
     return S_OK;
 }
 
-static HRESULT WINAPI x_system_XSystemGetAppSpecificDeviceId( IXSystemImpl *iface, INT32 appSpecificDeviceIdSize, LPSTR appSpecificDeviceId, SIZE_T *appSpecificDeviceIdUsed )
+static HRESULT WINAPI x_system_XSystemGetAppSpecificDeviceId( IXSystemImpl *iface, SIZE_T appSpecificDeviceIdSize, LPSTR appSpecificDeviceId, SIZE_T *appSpecificDeviceIdUsed )
 {    
-    FIXME( "iface %p, appSpecificDeviceIdSize %d, appSpecificDeviceId %p, appSpecificDeviceIdUsed %p stub!\n", iface, appSpecificDeviceIdSize, appSpecificDeviceId, appSpecificDeviceIdUsed );
+    FIXME( "iface %p, appSpecificDeviceIdSize %Id, appSpecificDeviceId %p, appSpecificDeviceIdUsed %p stub!\n", iface, appSpecificDeviceIdSize, appSpecificDeviceId, appSpecificDeviceIdUsed );
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI x_system_XSystemHandleTrack( IXSystemImpl *iface )
+static HRESULT WINAPI x_system_XSystemHandleTrack( IXSystemImpl *iface, XSystemHandleCallback callback, void *context )
 {
-    FIXME( "iface %p stub!\n", iface );
+    FIXME( "iface %p, callback %p, context %p stub!\n", iface, callback, context );
     return E_NOTIMPL;
 }
 
-static BOOLEAN WINAPI x_system_XSystemIsHandleValid( IXSystemImpl *iface )
+static BOOLEAN WINAPI x_system_XSystemIsHandleValid( IXSystemImpl *iface, XSystemHandle handle )
 {
     // always assume it's valid.
-    FIXME( "iface %p stub!\n", iface );
+    FIXME( "iface %p, handle %p stub!\n", iface, handle );
     return TRUE;
 }
 
-static HRESULT WINAPI x_system_XSystemAllowFullDownloadBandwidth( IXSystemImpl *iface, boolean enable )
+static void WINAPI x_system_XSystemAllowFullDownloadBandwidth( IXSystemImpl *iface, BOOLEAN enable )
 {
     FIXME( "iface %p, enable %d stub!\n", iface, enable );
-    return E_NOTIMPL;
 }
 
 static const struct IXSystemImplVtbl x_system_vtbl =

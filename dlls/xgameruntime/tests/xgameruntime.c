@@ -152,6 +152,7 @@ static void test_XSystem(void)
     SIZE_T consoleIdUsed;
     SIZE_T sandboxIdUsed;
     LPSTR consoleId;
+    LPSTR deviceId;
     LPSTR sandboxId;
 
     hr = QueryApiImpl_fun( &CLSID_XSystemImpl, &IID_IXSystemImpl, (void **)&xsystem );
@@ -183,26 +184,22 @@ static void test_XSystem(void)
     /**
      * xgameruntime.lib::XSystemGetAppSpecificDeviceId
      */
-    hr = IXSystemImpl_XSystemGetAppSpecificDeviceId( xsystem, XSystemAppSpecificDeviceIdBytes, NULL, NULL );
+    deviceId = (LPSTR)malloc( XSystemAppSpecificDeviceIdBytes * sizeof( CHAR ) );
+
+    hr = IXSystemImpl_XSystemGetAppSpecificDeviceId( xsystem, XSystemAppSpecificDeviceIdBytes, deviceId, NULL );
     todo_wine ok( hr == S_OK, "got error %#lx.\n", hr );
 
     /**
      * xgameruntime.lib::XSystemHandleTrack
      */
-    hr = IXSystemImpl_XSystemHandleTrack( xsystem );
+    hr = IXSystemImpl_XSystemHandleTrack( xsystem, NULL, NULL );
     todo_wine ok( hr == S_OK, "got error %#lx.\n", hr );
 
     /**
      * xgameruntime.lib::XSystemIsHandleValid
      */
-    validHandle = IXSystemImpl_XSystemIsHandleValid( xsystem );
+    validHandle = IXSystemImpl_XSystemIsHandleValid( xsystem, NULL );
     ok( validHandle, "got validHandle %d\n", validHandle );
-
-    /**
-     * xgameruntime.lib::XSystemAllowFullDownloadBandwidth
-     */
-    hr = IXSystemImpl_XSystemAllowFullDownloadBandwidth( xsystem, TRUE );
-    todo_wine ok( hr == S_OK, "got error %#lx.\n", hr );
 
     IXSystemImpl_Release( xsystem );
     free( consoleId );
