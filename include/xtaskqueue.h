@@ -19,43 +19,44 @@
 #ifndef __WINE_XTASKQUEUE_H
 #define __WINE_XTASKQUEUE_H
 
-#include <stdint.h>
-#include <winerror.h>
-#include <windef.h>
+typedef enum XTaskQueueDispatchMode XTaskQueueDispatchMode;
+typedef enum XTaskQueuePort XTaskQueuePort;
+typedef enum XTaskQueuePortStatus XTaskQueuePortStatus;
 
-typedef struct XTaskQueueObject* XTaskQueueHandle;
+typedef struct XTaskQueueObject *XTaskQueueHandle;
+typedef struct XTaskQueuePortObject *XTaskQueuePortHandle;
 
-typedef struct XTaskQueuePortObject* XTaskQueuePortHandle;
+typedef struct XTaskQueueRegistrationToken XTaskQueueRegistrationToken;
 
-typedef enum XTaskQueueDispatchMode
+typedef void __stdcall XTaskQueueCallback( void *context, BOOLEAN canceled );
+typedef void __stdcall XTaskQueueMonitorCallback( void *context, XTaskQueueHandle queue, XTaskQueuePort port );
+typedef void __stdcall XTaskQueueTerminatedCallback( void *context );
+
+enum XTaskQueueDispatchMode
 {
-    Manual,
-    ThreadPool,
-    SerializedThreadPool,
-    Immediate
-} XTaskQueueDispatchMode;
+    XTaskQueueDispatchMode_Manual,
+    XTaskQueueDispatchMode_ThreadPool,
+    XTaskQueueDispatchMode_SerializedThreadPool,
+    XTaskQueueDispatchMode_Immediate,
+};
 
-typedef enum XTaskQueuePort
+enum XTaskQueuePort
 {
-    Work,
-    Completion
-} XTaskQueuePort;
+    XTaskQueuePort_Work,
+    XTaskQueuePort_Completion,
+};
 
-typedef enum XTaskQueuePortStatus
+enum XTaskQueuePortStatus
 {
-    PortStatus_Active,
-    PortStatus_Canceled,
-    PortStatus_Terminating,
-    PortStatus_Terminated
-} XTaskQueuePortStatus;
+    XTaskQueuePortStatus_Active,
+    XTaskQueuePortStatus_Canceled,
+    XTaskQueuePortStatus_Terminating,
+    XTaskQueuePortStatus_Terminated,
+};
 
-typedef struct XTaskQueueRegistrationToken
+struct XTaskQueueRegistrationToken
 {
-    uint64_t token;
-} XTaskQueueRegistrationToken;
-
-typedef void CALLBACK XTaskQueueCallback(_In_opt_ void* context, _In_ BOOL canceled);
-typedef void CALLBACK XTaskQueueMonitorCallback(_In_opt_ void* context, _In_ XTaskQueueHandle queue, _In_ XTaskQueuePort port);
-typedef void CALLBACK XTaskQueueTerminatedCallback(_In_opt_ void* context);
+    UINT64 token;
+};
 
 #endif
