@@ -34,7 +34,6 @@
 #include <unknwn.h>
 #include "provider.h"
 #include "wine/debug.h"
-#include "xthread.h"
 #include "xnetwork.h"
 
 #define WIDL_using_Windows_Foundation

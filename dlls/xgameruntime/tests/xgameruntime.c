@@ -33,7 +33,6 @@
 
 #include "provider.h"
 #include "wine/test.h"
-#include "xthread.h"
 
 #define WIDL_using_Windows_Foundation
 #define WIDL_using_Windows_Foundation_Collections

@@ -795,7 +795,7 @@ HRESULT XAsyncRun( XAsyncBlock* asyncBlock, XAsyncWork* work )
     return hr;
 }
 
-HRESULT XAsyncBegin( XAsyncBlock* asyncBlock, PVOID context, PVOID identity, LPCSTR identityName, XAsyncProvider* provider )
+HRESULT XAsyncBegin( XAsyncBlock* asyncBlock, PVOID context, const void *identity, LPCSTR identityName, XAsyncProvider* provider )
 {
     HRESULT hr;
     IAsyncState *state;
