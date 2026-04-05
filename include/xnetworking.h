@@ -19,47 +19,60 @@
 #ifndef __WINE_XNETWORKING_H
 #define __WINE_XNETWORKING_H
 
-#include "xasync.h"
+typedef enum XNetworkingConfigurationSetting XNetworkingConfigurationSetting;
+typedef enum XNetworkingConnectivityCostHint XNetworkingConnectivityCostHint;
+typedef enum XNetworkingConnectivityLevelHint XNetworkingConnectivityLevelHint;
+typedef enum XNetworkingStatisticsType XNetworkingStatisticsType;
+typedef enum XNetworkingThumbprintType XNetworkingThumbprintType;
 
-typedef enum XNetworkingThumbprintType
-{  
-    ThumbprintType_Leaf = 0,  
-    ThumbprintType_Issuer = 1,  
-    ThumbprintType_Root = 2,  
-} XNetworkingThumbprintType;
+typedef struct XNetworkingConnectivityHint XNetworkingConnectivityHint;
+typedef struct XNetworkingSecurityInformation XNetworkingSecurityInformation;
+typedef struct XNetworkingTcpQueuedReceivedBufferUsageStatistics XNetworkingTcpQueuedReceivedBufferUsageStatistics;
+typedef struct XNetworkingThumbprint XNetworkingThumbprint;
+typedef union XNetworkingStatisticsBuffer XNetworkingStatisticsBuffer;
 
-typedef enum XNetworkingConnectivityLevelHint
+typedef void XNetworkingConnectivityHintChangedCallback( void *context, const XNetworkingConnectivityHint *connectivityHint );
+typedef void XNetworkingPreferredLocalUdpMultiplayerPortChangedCallback( void *context, UINT64 preferredLocalUdpMultiplayerPort );
+
+enum XNetworkingConfigurationSetting
 {
-    ConnectivityLevelHintUnknown = 0,
-    ConnectivityLevelHintNone = 1,
-    ConnectivityLevelHintLocalAccess = 2,
-    ConnectivityLevelHintInternetAccess = 3,
-    ConnectivityLevelHintConstrainedInternetAccess = 4,
-} XNetworkingConnectivityLevelHint;
+    XNetworkingConfigurationSetting_MaxTitleTcpQueuedReceiveBufferSize,
+    XNetworkingConfigurationSetting_MaxSystemTcpQueuedReceiveBufferSize,
+    XNetworkingConfigurationSetting_MaxToolsTcpQueuedReceiveBufferSize,
+};
 
-typedef enum XNetworkingConnectivityCostHint
+enum XNetworkingConnectivityCostHint
 {
-    ConnectivityCostHintUnknown = 0,
-    ConnectivityCostHintUnrestricted = 1,
-    ConnectivityCostHintFixed = 2,
-    ConnectivityCostHintVariable = 3,
-} XNetworkingConnectivityCostHint;
+    XNetworkingConnectivityCostHint_Unknown,
+    XNetworkingConnectivityCostHint_Unrestricted,
+    XNetworkingConnectivityCostHint_Fixed,
+    XNetworkingConnectivityCostHint_Varialbe,
+};
 
-typedef struct XNetworkingThumbprint 
-{  
-    XNetworkingThumbprintType thumbprintType;  
-    SIZE_T thumbprintBufferByteCount;  
-    UINT8* thumbprintBuffer;  
-} XNetworkingThumbprint;
-
-typedef struct XNetworkingSecurityInformation 
+enum XNetworkingConnectivityLevelHint
 {
-    UINT32 enabledHttpSecurityProtocolFlags;
-    SIZE_T thumbprintCount;
-    XNetworkingThumbprint* thumbprints;
-} XNetworkingSecurityInformation;
+    XNetworkingConnectivityLevelHint_Unknown,
+    XNetworkingConnectivityLevelHint_None,
+    XNetworkingConnectivityLevelHint_LocalAccess,
+    XNetworkingConnectivityLevelHint_InternetAccess,
+    XNetworkingConnectivityLevelHint_ConstrainedInternetAccess,
+};
 
-typedef struct XNetworkingConnectivityHint 
+enum XNetworkingStatisticsType
+{
+    XNetworkingStatisticsType_TitleTcpQueuedReceivedBufferUsage,
+    XNetworkingStatisticsType_SystemTcpQueuedReceivedBufferUsage,
+    XNetworkingStatisticsType_ToolsTcpQueuedReceivedBufferUsage,
+};
+
+enum XNetworkingThumbprintType
+{
+    XNetworkingThumbprintType_Leaf,
+    XNetworkingThumbprintType_Issuer,
+    XNetworkingThumbprintType_Root,
+};
+
+struct XNetworkingConnectivityHint
 {
     XNetworkingConnectivityLevelHint connectivityLevel;
     XNetworkingConnectivityCostHint connectivityCost;
@@ -68,36 +81,34 @@ typedef struct XNetworkingConnectivityHint
     BOOLEAN approachingDataLimit;
     BOOLEAN overDataLimit;
     BOOLEAN roaming;
-} XNetworkingConnectivityHint;
+};
 
-typedef enum XNetworkingConfigurationSetting
-{  
-    MaxTitleTcpQueuedReceiveBufferSize = 0,  
-    MaxSystemTcpQueuedReceiveBufferSize = 1,  
-    MaxToolsTcpQueuedReceiveBufferSize = 2,  
-} XNetworkingConfigurationSetting;
+struct XNetworkingSecurityInformation
+{
+    UINT32 enabledHttpSecurityProtocolFlags;
+    SIZE_T thumbprintCount;
+    XNetworkingThumbprint *thumbprints;
+};
 
-typedef enum XNetworkingStatisticsType  
-{  
-    TitleTcpQueuedReceivedBufferUsage = 0,  
-    SystemTcpQueuedReceivedBufferUsage = 1,  
-    ToolsTcpQueuedReceivedBufferUsage = 2,  
-} XNetworkingStatisticsType;
+struct XNetworkingTcpQueuedReceivedBufferUsageStatistics
+{
+    UINT64 numBytesCurrentlyQueued;
+    UINT64 peakNumBytesEverQueued;
+    UINT64 totalNumBytesQueued;
+    UINT64 numBytesDroppedForExceedingConfiguredMax;
+    UINT64 numBytesDroppedDueToAnyFailure;
+};
 
-typedef struct XNetworkingTcpQueuedReceivedBufferUsageStatistics 
-{  
-    UINT64 numBytesCurrentlyQueued;  
-    UINT64 peakNumBytesEverQueued;  
-    UINT64 totalNumBytesQueued;  
-    UINT64 numBytesDroppedForExceedingConfiguredMax;  
-    UINT64 numBytesDroppedDueToAnyFailure;  
-} XNetworkingTcpQueuedReceivedBufferUsageStatistics;
+struct XNetworkingThumbprint
+{
+    XNetworkingThumbprintType thumbprintType;
+    SIZE_T thumbprintBufferByteCount;
+    UINT8 *thumbprintBuffer;
+};
 
-typedef union XNetworkingStatisticsBuffer 
-{  
-    XNetworkingTcpQueuedReceivedBufferUsageStatistics tcpQueuedReceiveBufferUsage;  
-} XNetworkingStatisticsBuffer;
+union XNetworkingStatisticsBuffer
+{
+    XNetworkingTcpQueuedReceivedBufferUsageStatistics tcpQueuedReceiveBufferUsage;
+};
 
-typedef void CALLBACK XNetworkingPreferredLocalUdpMultiplayerPortChangedCallback(_In_opt_ PVOID context, _In_ UINT16 preferredLocalUdpMultiplayerPort);
-typedef void CALLBACK XNetworkingConnectivityHintChangedCallback(_In_opt_ PVOID context, _In_ const XNetworkingConnectivityHint* connectivityHint);
 #endif
