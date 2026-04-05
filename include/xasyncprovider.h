@@ -19,28 +19,29 @@
 #ifndef __WINE_XASYNCPROVIDER_H
 #define __WINE_XASYNCPROVIDER_H
 
-#include <stdint.h>
-#include "xasync.h"
+#include <xasync.h>
 
-typedef enum XAsyncOp 
+typedef enum XAsyncOp XAsyncOp;
+
+typedef struct XAsyncProviderData XAsyncProviderData;
+
+typedef HRESULT __stdcall XAsyncProvider( XAsyncOp op, const XAsyncProviderData *data );
+
+enum XAsyncOp
 {
-    Begin,
-    DoWork,
-    GetResult,
-    Cancel,
-    Cleanup
-} XAsyncOp;
+    XAsyncOp_Begin,
+    XAsyncOp_DoWork,
+    XAsyncOp_GetResult,
+    XAsyncOp_Cancel,
+    XAsyncOp_Cleanup,
+};
 
-typedef struct XAsyncProviderData
+struct XAsyncProviderData
 {
-    XAsyncBlock* async;
-    size_t bufferSize;
-    void* buffer;
-    void* context;
-} XAsyncProviderData;
-
-typedef HRESULT CALLBACK XAsyncProviderCallback(_In_ XAsyncOp op, _Inout_ const XAsyncProviderData* data);
-
-#define XASYNC_IDENTITY(method) #method
+    XAsyncBlock *async;
+    SIZE_T bufferSize;
+    void *buffer;
+    void *context;
+};
 
 #endif

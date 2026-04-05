@@ -34,7 +34,7 @@ typedef struct IXThreadingImplVtbl {
     HRESULT (STDMETHODCALLTYPE *XAsyncGetResultSize)(IXThreadingImpl* This, XAsyncBlock* asyncBlock, SIZE_T *bufferSize);
     VOID    (STDMETHODCALLTYPE *XAsyncCancel)(IXThreadingImpl* This, XAsyncBlock* asyncBlock);
     HRESULT (STDMETHODCALLTYPE *XAsyncRun)(IXThreadingImpl* This, XAsyncBlock* asyncBlock, XAsyncWork* work);
-    HRESULT (STDMETHODCALLTYPE *XAsyncBegin)(IXThreadingImpl* This, XAsyncBlock* asyncBlock, PVOID context, const PVOID identity, LPCSTR identityName, XAsyncProviderCallback* provider);
+    HRESULT (STDMETHODCALLTYPE *XAsyncBegin)(IXThreadingImpl* This, XAsyncBlock* asyncBlock, PVOID context, const PVOID identity, LPCSTR identityName, XAsyncProvider* provider);
     HRESULT (STDMETHODCALLTYPE *__PADDING__)(IXThreadingImpl* This);
     HRESULT (STDMETHODCALLTYPE *XAsyncSchedule)(IXThreadingImpl* This, XAsyncBlock* asyncBlock, UINT32 delayInMs);
     VOID    (STDMETHODCALLTYPE *XAsyncComplete)(IXThreadingImpl* This, XAsyncBlock* asyncBlock, HRESULT result, SIZE_T requiredBufferSize);
@@ -122,7 +122,7 @@ static inline VOID STDMETHODCALLTYPE IXThreadingImpl_XAsyncCancel(IXThreadingImp
 static inline HRESULT STDMETHODCALLTYPE IXThreadingImpl_XAsyncRun(IXThreadingImpl* This,XAsyncBlock* asyncBlock,XAsyncWork* work) {
     return This->lpVtbl->XAsyncRun(This,asyncBlock,work);
 }
-static inline HRESULT STDMETHODCALLTYPE IXThreadingImpl_XAsyncBegin(IXThreadingImpl* This,XAsyncBlock* asyncBlock,PVOID context,const PVOID identity,LPCSTR identityName,XAsyncProviderCallback* provider) {
+static inline HRESULT STDMETHODCALLTYPE IXThreadingImpl_XAsyncBegin(IXThreadingImpl* This,XAsyncBlock* asyncBlock,PVOID context,const PVOID identity,LPCSTR identityName,XAsyncProvider* provider) {
     return This->lpVtbl->XAsyncBegin(This,asyncBlock,context,identity,identityName,provider);
 }
 static inline HRESULT STDMETHODCALLTYPE IXThreadingImpl_XAsyncSchedule(IXThreadingImpl* This,XAsyncBlock* asyncBlock,UINT32 delayInMs) {
