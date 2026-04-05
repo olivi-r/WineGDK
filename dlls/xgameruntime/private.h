@@ -29,4 +29,6 @@
 /* Deference is for other modules to communicate with eachother through the same binary. */
 HRESULT WINAPI QueryApiImpl( const GUID *classId, REFIID interfaceId, void **out );
 
+HRESULT WINAPI GDKC_InitAPI( ULONG gdkVer, ULONG gsVer, char mode, const XGameRuntimeOptions *options );
+
 #endif
