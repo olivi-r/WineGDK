@@ -38,7 +38,7 @@ static HRESULT WINAPI x_threading_QueryInterface( IXThreading *iface, REFIID iid
         IsEqualGUID( iid, &IID_IXThreading ))
     {
         *out = &impl->IXThreading_iface;
-        impl->IXThreading_iface.lpVtbl->AddRef( *out );
+        IXThreading_AddRef( *out );
         return S_OK;
     }
 
