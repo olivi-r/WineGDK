@@ -54,6 +54,7 @@ interface IStoreImpl3;
 interface IStoreImpl4;
 interface IStoreImpl5;
 interface IStoreImpl6;
+interface IXSystem;
 
 coclass XAccessibilityImpl;
 coclass XAppCaptureImpl;
@@ -71,6 +72,7 @@ coclass XLauncherImpl;
 coclass XPackageImpl;
 coclass XPersistentLocalStorageImpl;
 coclass XStoreImpl;
+coclass XSystemImpl;
 
 [
     local,
@@ -489,6 +491,21 @@ interface IStoreImpl6 : IStoreImpl5
 }
 
 [
+    local,
+    object,
+    uuid(dadc2895-34b0-4ef5-a83e-45114d629b80)
+]
+interface IXSystem : IUnknown
+{
+    HRESULT XSystemGetConsoleId( [in] INT32 consoleIdSize, [out, size_is(consoleIdSize)] char *consoleId, [out, optional] SIZE_T *consoleIdUsed );
+    HRESULT XSystemGetXboxLiveSandboxId( [in] INT32 sandboxIdSize, [out, size_is(sandboxIdSize)] char *sandboxId, [out] SIZE_T *sandboxIdUsed );
+    HRESULT XSystemGetAppSpecificDeviceId( [in] INT32 appSpecificDeviceIdSize, [out, size_is(appSpecificDeviceIdSize)] char *appSpecificDeviceId, [out, optional] SIZE_T *appSpecificDeviceIdUsed );
+    HRESULT XSystemHandleTrack( [in] XSystemHandleCallback callback, [in, optional] void *context );
+    BOOLEAN XSystemIsHandleValid( [in] XSystemHandle handle );
+    HRESULT XSystemAllowFullDownloadBandwidth( [in] BOOLEAN enable );
+}
+
+[
     uuid(3e241977-6237-41e9-8559-102c2d9983f1)
 ]
 coclass XAccessibilityImpl
@@ -614,4 +631,12 @@ coclass XPersistentLocalStorageImpl
 coclass XStoreImpl
 {
     [default] interface IStoreImpl6;
+}
+
+[
+    uuid(e349bd1a-fc20-4e40-b99c-4178cc6b409f)
+]
+coclass XSystemImpl
+{
+    [default] interface IXSystem;
 }

@@ -51,6 +51,7 @@ extern IXLauncher *x_launcher_impl;
 extern IXPackage *x_package_impl;
 extern IXPersistentLocalStorage *x_persistent_local_storage_impl;
 extern IStoreImpl6 *x_store_impl;
+extern IXSystem *x_system_impl;
 
 /* Deference is for other modules to communicate with eachother through the same binary. */
 HRESULT WINAPI QueryApiImpl( const GUID *runtimeClassId, REFIID interfaceId, void **out );

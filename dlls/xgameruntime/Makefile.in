@@ -19,4 +19,5 @@ SOURCES = \
 	provider.idl \
 	save.c \
 	storage.c \
-	store.c
+	store.c \
+	system.c
