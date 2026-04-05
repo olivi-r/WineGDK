@@ -95,6 +95,8 @@ HRESULT WINAPI QueryApiImpl( const GUID *runtimeClassId, REFIID interfaceId, voi
         return IXPackage_QueryInterface( x_package_impl, interfaceId, out );
     if (IsEqualGUID( runtimeClassId, &CLSID_XPersistentLocalStorageImpl ))
         return IXPersistentLocalStorage_QueryInterface( x_persistent_local_storage_impl, interfaceId, out );
+    if (IsEqualGUID( runtimeClassId, &CLSID_XStoreImpl ))
+        return IStoreImpl6_QueryInterface( x_store_impl, interfaceId, out );
 
     FIXME( "%s not implemented, returning ERROR_NOT_SUPPORTED.\n", debugstr_guid( runtimeClassId ) );
     return HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED );

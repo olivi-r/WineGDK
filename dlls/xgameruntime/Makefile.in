@@ -18,4 +18,5 @@ SOURCES = \
 	protocol.c \
 	provider.idl \
 	save.c \
-	storage.c
+	storage.c \
+	store.c
