@@ -1665,6 +1665,7 @@ enable_xaudio2_6
 enable_xaudio2_7
 enable_xaudio2_8
 enable_xaudio2_9
+enable_xgameruntime
 enable_xinput1_1
 enable_xinput1_2
 enable_xinput1_3
@@ -23986,6 +23987,8 @@ wine_fn_config_makefile dlls/xaudio2_7/tests enable_tests
 wine_fn_config_makefile dlls/xaudio2_8 enable_xaudio2_8
 wine_fn_config_makefile dlls/xaudio2_8/tests enable_tests
 wine_fn_config_makefile dlls/xaudio2_9 enable_xaudio2_9
+wine_fn_config_makefile dlls/xgameruntime enable_xgameruntime
+wine_fn_config_makefile dlls/xgameruntime/tests enable_tests
 wine_fn_config_makefile dlls/xinput1_1 enable_xinput1_1
 wine_fn_config_makefile dlls/xinput1_2 enable_xinput1_2
 wine_fn_config_makefile dlls/xinput1_3 enable_xinput1_3
@@ -24035,6 +24038,7 @@ wine_fn_config_makefile libs/vkd3d enable_vkd3d
 wine_fn_config_makefile libs/wbemuuid enable_wbemuuid
 wine_fn_config_makefile libs/winecrt0 enable_winecrt0
 wine_fn_config_makefile libs/wmcodecdspuuid enable_wmcodecdspuuid
+wine_fn_config_makefile libs/xgameruntime enable_xgameruntime
 wine_fn_config_makefile libs/xml2 enable_xml2
 wine_fn_config_makefile libs/xslt enable_xslt
 wine_fn_config_makefile libs/zlib enable_zlib
