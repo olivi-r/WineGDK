@@ -285,9 +285,9 @@ static HRESULT WINAPI x_networking_XNetworkingSetConfigurationSetting( IXNetwork
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI x_networking_XNetworkingQueryStatistics( IXNetworkingImpl *iface, XNetworkingStatisticsBuffer *statisticsBuffer )
+static HRESULT WINAPI x_networking_XNetworkingQueryStatistics( IXNetworkingImpl *iface, XNetworkingStatisticsType statisticsType, XNetworkingStatisticsBuffer *statisticsBuffer )
 {
-    FIXME( "iface %p, statisticsBuffer %p stub!\n", iface, statisticsBuffer );
+    FIXME( "iface %p, statisticsType %d, statisticsBuffer %p stub!\n", iface, statisticsType, statisticsBuffer );
     return E_NOTIMPL;
 }
 
