@@ -8,5 +8,6 @@ SOURCES = \
 	xappcapture.c \
 	xdisplay.c \
 	xerror.c \
+	xgame.c \
 	xthreading.c \
 	xuser.c

@@ -172,6 +172,28 @@ static void test_XError( void )
     IXError_Release( xerror );
 }
 
+static void test_XGame( void )
+{
+    IXGame *xgame = NULL;
+    HRESULT hr;
+
+    hr = QueryApiImpl( &CLSID_XGameImpl, &IID_IXGame, (void **)&xgame );
+    ok( hr == S_OK || broken( hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) ), "got hr %#lx.\n", hr );
+    if (hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) )
+    {
+        win_skip( "clsid %s not supported, skipping tests.\n", debugstr_guid( &CLSID_XGameImpl ) );
+        return;
+    }
+    if (!xgame) return;
+
+    check_interface( xgame, &IID_IUnknown );
+    check_interface( xgame, &IID_IXGame );
+    flaky check_interface( xgame, &IID_IXGame2 );
+    flaky check_interface( xgame, &IID_IXGame3 );
+
+    IXGame_Release( xgame );
+}
+
 static void test_XLauncher( void )
 {
     IXLauncher *xlauncher = NULL;
@@ -273,6 +295,7 @@ START_TEST(xgameruntime)
     test_XAppCapture();
     test_XDisplay();
     test_XError();
+    test_XGame();
     test_XLauncher();
     test_XThreading();
     test_XUser();
