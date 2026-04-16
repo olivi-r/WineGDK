@@ -6,6 +6,7 @@ SOURCES = \
 	capture.c \
 	display.c \
 	error.c \
+	game.c \
 	gdkc.c \
 	launcher.c \
 	main.c \

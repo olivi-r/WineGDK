@@ -38,6 +38,7 @@ interface IXAppCapture;
 interface IXAppCapture2;
 interface IXDisplay;
 interface IErrorImpl1;
+interface IXGame;
 interface IXLauncher;
 
 coclass XAccessibilityImpl;
@@ -45,6 +46,7 @@ coclass XAppCaptureImpl;
 coclass XAppCaptureImpl2;
 coclass XDisplayImpl;
 coclass XErrorImpl;
+coclass XGameImpl;
 coclass XLauncherImpl;
 
 [
@@ -150,6 +152,18 @@ interface IErrorImpl1 : IUnknown
 [
     local,
     object,
+    uuid(2549f142-6419-4a06-97b5-931aab7c2f34)
+]
+interface IXGame : IUnknown
+{
+    HRESULT XGameGetXboxTitleId( [out] UINT32 *titleId );
+    void    XLaunchNewGame( [in] const char *exePath, [in, optional] const char *args, [in, optional] XUserHandle defaultUser );
+    HRESULT XLaunchRestartOnCrash( [in, optional] const char *args, [in] UINT32 reserved );
+}
+
+[
+    local,
+    object,
     uuid(1b339674-328d-4283-a200-3171f18d3639)
 ]
 interface IXLauncher : IUnknown
@@ -197,6 +211,14 @@ coclass XDisplayImpl
 coclass XErrorImpl
 {
     [default] interface IErrorImpl1;
+}
+
+[
+    uuid(973a344e-24bf-4d0f-8457-56c534892b29)
+]
+coclass XGameImpl
+{
+    [default] interface IXGame;
 }
 
 [
