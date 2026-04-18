@@ -23,6 +23,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(gdkc);
 
+const char msaAppId[] = "0000000040159362";
+
 struct XUser
 {
     IUser IUser_iface;

@@ -48,6 +48,8 @@
 #define GDKC_VERSION 10002L
 #define GAMING_SERVICES_VERSION 4429L
 
+extern const char msaAppId[];
+
 extern IXSystemImpl *x_system_impl;
 extern IXSystemAnalyticsImpl *x_system_analytics_impl;
 extern IXThreadingImpl *x_threading_impl;
