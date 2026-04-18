@@ -20,6 +20,7 @@
  */
 
 #include "../../private.h"
+#include <time.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(gdkc);
 
@@ -48,6 +49,25 @@ static HRESULT MultiByteToHSTRING( const char *str, UINT32 str_size, HSTRING *hs
     hr = WindowsCreateString( wstr, wstr_size, hstr );
     free( wstr );
     return hr;
+}
+
+static HRESULT HSTRINGToMultiByte( HSTRING hstr, char **str, UINT32 *str_size )
+{
+    UINT32 wstr_size;
+    const WCHAR *wstr = WindowsGetStringRawBuffer( hstr, &wstr_size );
+
+    if (!(*str_size = WideCharToMultiByte( CP_UTF8, WC_ERR_INVALID_CHARS, wstr, wstr_size, NULL, 0, NULL, NULL )))
+        return HRESULT_FROM_WIN32( GetLastError() );
+
+    if (!(*str = calloc( 1, *str_size ))) return E_OUTOFMEMORY;
+
+    if (!(*str_size = WideCharToMultiByte( CP_UTF8, WC_ERR_INVALID_CHARS, wstr, wstr_size, *str, *str_size, NULL, NULL )))
+    {
+        free( *str );
+        return HRESULT_FROM_WIN32( GetLastError() );
+    }
+
+    return S_OK;
 }
 
 #define GetJsonValue_( obj_type, ret_type )                                                                 \
@@ -97,7 +117,10 @@ struct XUser
     LONG ref;
 
     DOUBLE interval;
+    time_t oauth_expiry;
     HSTRING device_code;
+    HSTRING access_token;
+    HSTRING refresh_token;
 };
 
 static inline struct XUser *impl_from_IUser( IUser *iface )
@@ -139,6 +162,8 @@ static ULONG WINAPI user_Release( IUser *iface )
     if (!ref)
     {
         if (impl->device_code) WindowsDeleteString( impl->device_code );
+        if (impl->access_token) WindowsDeleteString( impl->access_token );
+        if (impl->refresh_token) WindowsDeleteString( impl->refresh_token );
         free( impl );
     }
     return ref;
@@ -183,8 +208,63 @@ cleanup:
 
 static HRESULT WINAPI user_RequestOAuthToken( IUser *iface )
 {
-    FIXME( "iface %p stub!\n", iface );
-    return E_NOTIMPL;
+    static const char template[] = "grant_type=device_code&device_code=";
+    HSTRING access = NULL, refresh = NULL;
+    struct XUser *impl = impl_from_IUser( iface );
+    char *data, *deviceCode = NULL;
+    IJsonObject *object = NULL;
+    UINT32 deviceCodeSize = 0;
+    char *buffer = NULL;
+    DOUBLE delta = 0;
+    SIZE_T size = 0;
+    time_t expiry;
+    HRESULT hr;
+
+    TRACE( "iface %p.\n", iface );
+
+    if (FAILED(hr = HSTRINGToMultiByte( impl->device_code, &deviceCode, &deviceCodeSize ))) return hr;
+
+    if (!(data = calloc( ARRAY_SIZE( template ) + deviceCodeSize + strlen( "&client_id=" ) + ARRAY_SIZE( msaAppId ) - 1, sizeof(char) )))
+    {
+        hr = E_OUTOFMEMORY;
+        goto cleanup;
+    }
+
+    strcpy( data, template );
+    strncat( data, deviceCode, deviceCodeSize );
+    strcat( data, "&client_id=" );
+    strcat( data, msaAppId );
+
+    while (TRUE)
+    {
+        if (SUCCEEDED(hr = HttpRequest( L"POST", L"login.live.com", L"/oauth20_token.srf", data, CT_FORM_URLENCODED, ACCEPT_JSON, (UCHAR **)&buffer, &size ))) break;
+        Sleep( impl->interval * 1000 );
+    }
+
+    if (FAILED(hr = ParseJsonObject( buffer, size, &object ))) goto cleanup;
+    if (FAILED(hr = GetJsonStringValue( object, L"refresh_token", &refresh ))) goto cleanup;
+    if (FAILED(hr = GetJsonStringValue( object, L"access_token", &access ))) goto cleanup;
+    if (FAILED(hr = GetJsonNumberValue( object, L"expires_in", &delta ))) goto cleanup;
+
+    if ((expiry = time(NULL)) == -1) hr = E_FAIL;
+    else impl->oauth_expiry = expiry + delta;
+
+cleanup:
+    if (data) free( data );
+    if (buffer) free( buffer );
+    if (deviceCode) free( deviceCode );
+    if (object) IJsonObject_Release( object );
+    if (SUCCEEDED(hr))
+    {
+        if (impl->refresh_token) WindowsDeleteString( impl->refresh_token );
+        if (impl->access_token) WindowsDeleteString( impl->access_token );
+        impl->refresh_token = refresh;
+        impl->access_token = access;
+        return hr;
+    }
+    if (refresh) WindowsDeleteString( refresh );
+    if (access) WindowsDeleteString( access );
+    return hr;
 }
 
 static HRESULT WINAPI user_RefreshOAuthToken( IUser *iface )
