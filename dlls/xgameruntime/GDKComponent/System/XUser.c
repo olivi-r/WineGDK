@@ -20,6 +20,7 @@
  */
 
 #include "../../private.h"
+#include <errno.h>
 #include <ntdef.h>
 #include <time.h>
 #include <wincrypt.h>
@@ -31,6 +32,53 @@ const char msaAppId[] = "0000000040159362";
 static const WCHAR *ACCEPT_JSON[] = { L"application/json", NULL };
 static const WCHAR CT_JSON[] = L"Content-Type: application/json";
 static const WCHAR CT_FORM_URLENCODED[] = L"Content-Type: application/x-www-form-urlencoded";
+
+static HRESULT encode_base64url( const UINT32 dataSize, const BYTE *data, const UINT32 base64Size, char *base64 )
+{
+    static const char b64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+    const UINT32 size = (dataSize * 8 + 5) / 6, rem = (size % 4) ? 4 - (size % 4) : 0;
+    UINT32 div = dataSize / 3; /* 3 bytes of in, 4 chars out */
+    const BYTE *cur = data;
+    char *ptr = base64;
+
+    TRACE( "dataSize %u, data %p, base64Size %u, base64 %p.\n", dataSize, data, base64Size, base64 );
+
+    if (size > base64Size) return HRESULT_FROM_WIN32( ERROR_INSUFFICIENT_BUFFER );
+    while (div > 0)
+    {
+        /* first 6 bits of byte 0 */
+        *ptr++ = b64[ (cur[0] >> 2) & 0x3f ];
+        /* last 2 bits of byte 0, first 4 bits of byte 1 */
+        *ptr++ = b64[ ((cur[0] << 4) & 0x30) | ((cur[1] >> 4) & 0x0f) ];
+        /* last 4 bits of byte 1, first 2 bits of byte 2 */
+        *ptr++ = b64[ ((cur[1] << 2) & 0x3c) | ((cur[2] >> 6) & 0x03) ];
+        /* last 6 bits of byte 2 */
+        *ptr++ = b64[ cur[2] & 0x3f ];
+        cur += 3;
+        div--;
+    }
+
+    switch (rem)
+    {
+        case 1:
+            /* first 6 bits of byte 0 */
+            *ptr++ = b64[ (cur[0] >> 2) & 0x3f ];
+            /* last 2 bits of byte 0, first 4 bits of byte 1 */
+            *ptr++ = b64[ ((cur[0] << 4) & 0x30) | ((cur[1] >> 4) & 0x0f) ];
+            /* last 4 bits of byte 1, rest 0 */
+            *ptr++ = b64[ ((cur[1] << 2) & 0x3c) ];
+            /* no padding */
+            break;
+        case 2:
+            /* first 6 bits of byte 0 */
+            *ptr++ = b64[ (cur[0] >> 2) & 0x3f ];
+            /* last 2 bits of byte 0, rest 0 */
+            *ptr++ = b64[ ((cur[0] << 4) & 0x30) ];
+            /* no padding */
+            break;
+    }
+    return S_OK;
+}
 
 static HRESULT MultiByteToHSTRING( const char *str, UINT32 str_size, HSTRING *hstr )
 {
@@ -84,6 +132,8 @@ static inline HRESULT GetJson##obj_type##Value( IJsonObject *object, const WCHAR
     return IJsonObject_GetNamed##obj_type( object, key_hstr, value );                                       \
 }
 
+GetJsonValue_( Object, IJsonObject** )
+GetJsonValue_( Array, IJsonArray** )
 GetJsonValue_( String, HSTRING* )
 GetJsonValue_( Number, DOUBLE* )
 
@@ -119,12 +169,16 @@ struct XUser
     IUser IUser_iface;
     LONG ref;
 
+    UINT64 xuid;
+    HSTRING user_hash;
+
     DOUBLE interval;
     time_t oauth_expiry;
     HSTRING device_code;
     HSTRING access_token;
     HSTRING refresh_token;
     HSTRING user_token;
+    HSTRING xsts_token;
 
     BCRYPT_KEY_HANDLE key;
 };
@@ -167,10 +221,12 @@ static ULONG WINAPI user_Release( IUser *iface )
     TRACE( "iface %p decreasing refcount to %lu.\n", iface, ref );
     if (!ref)
     {
+        if (impl->user_hash) WindowsDeleteString( impl->user_hash );
         if (impl->device_code) WindowsDeleteString( impl->device_code );
         if (impl->access_token) WindowsDeleteString( impl->access_token );
         if (impl->refresh_token) WindowsDeleteString( impl->refresh_token );
         if (impl->user_token) WindowsDeleteString( impl->user_token );
+        if (impl->xsts_token) WindowsDeleteString( impl->xsts_token );
         if (impl->key) BCryptDestroyKey( impl->key );
         free( impl );
     }
@@ -369,8 +425,71 @@ cleanup:
 
 static HRESULT WINAPI user_RefreshXstsToken( IUser *iface )
 {
-    FIXME( "iface %p stub!\n", iface );
-    return E_NOTIMPL;
+    const char *template = "{\"TokenType\":\"JWT\",\"RelyingParty\":\"http://xboxlive.com\",\"Properties\":{\"SandboxId\":\"RETAIL\",\"ProofKey\":{\"alg\":\"ES256\",\"kty\":\"EC\",\"use\":\"sig\",\"crv\":\"P-256\",\"x\":\"";
+    IJsonObject *child = NULL, *claims = NULL, *object = NULL;
+    UCHAR blob[sizeof(BCRYPT_ECCKEY_BLOB) + 64], *buf = NULL;
+    struct XUser *impl = impl_from_IUser( iface );
+    char *body = NULL, *token, *x, *y;
+    UINT32 tokenLen, wTokenLen;
+    IJsonArray *array = NULL;
+    HSTRING xuid = NULL;
+    const WCHAR *wToken;
+    NTSTATUS status;
+    SIZE_T bufSize;
+    ULONG dummy;
+    HRESULT hr;
+
+    TRACE( "iface %p.\n", iface );
+
+    wToken = WindowsGetStringRawBuffer( impl->user_token, &wTokenLen );
+    if (!(tokenLen = WideCharToMultiByte( CP_UTF8, WC_ERR_INVALID_CHARS, wToken, wTokenLen, NULL, 0, NULL, NULL ))) goto error_win32;
+    if (!(body = calloc( strlen( template ) + strlen( "\",\"y\":\"\"},\"UserTokens\":[\"\"]}}" ) + tokenLen + 87, sizeof(char) )))
+    {
+        hr = E_OUTOFMEMORY;
+        goto cleanup;
+    }
+
+    /* 32 bytes -> 43 base64url chars without padding */
+    x = body + strlen( template );
+    y = x + 43 + strlen( "\",\"y\":\"" );
+    token = y + 43 + strlen( "\"},\"UserTokens\":[\"" );
+
+    /* construct request body */
+    strcpy( body, template );
+    if (!NT_SUCCESS(status = BCryptExportKey( impl->key, NULL, BCRYPT_ECCPUBLIC_BLOB, blob, sizeof(blob), &dummy, 0 ))) goto error_nt;
+    if (FAILED(hr = encode_base64url( 32, blob + sizeof(BCRYPT_ECCKEY_BLOB), 44, x ))) goto cleanup;
+    strcat( body, "\",\"y\":\"" );
+    if (FAILED(hr = encode_base64url( 32, blob + sizeof(BCRYPT_ECCKEY_BLOB) + 32, 44, y ))) goto cleanup;
+    strcat( body, "\"},\"UserTokens\":[\"" );
+    if (!WideCharToMultiByte( CP_UTF8, WC_ERR_INVALID_CHARS, wToken, wTokenLen, token, tokenLen, NULL, NULL )) goto error_win32;
+    strcat( body, "\"]}}" );
+
+    if (FAILED(hr = HttpRequest( L"POST", L"xsts.auth.xboxlive.com", L"/xsts/authorize", body, CT_JSON, ACCEPT_JSON, &buf, &bufSize ))) goto cleanup;
+    if (FAILED(hr = ParseJsonObject( (char *)buf, bufSize, &object ))) goto cleanup;
+    if (FAILED(hr = GetJsonStringValue( object, L"Token", &impl->xsts_token ))) goto cleanup;
+    if (FAILED(hr = GetJsonObjectValue( object, L"DisplayClaims", &claims ))) goto cleanup;
+    if (FAILED(hr = GetJsonArrayValue( claims, L"xui", &array ))) goto cleanup;
+    if (FAILED(hr = IJsonArray_GetObjectAt( array, 0, &child ))) goto cleanup;
+    if (FAILED(hr = GetJsonStringValue( child, L"uhs", &impl->user_hash ))) goto cleanup;
+    if (FAILED(hr = GetJsonStringValue( child, L"xid", &xuid ))) goto cleanup;
+    impl->xuid = wcstoull( WindowsGetStringRawBuffer( xuid, NULL ), NULL, 10 );
+    if (errno == ERANGE) hr = E_UNEXPECTED;
+    goto cleanup;
+
+error_nt:
+    hr = HRESULT_FROM_NT( status );
+    goto cleanup;
+error_win32:
+    hr = HRESULT_FROM_WIN32( GetLastError() );
+cleanup:
+    if (buf) free( buf );
+    if (body) free( body );
+    if (xuid) WindowsDeleteString( xuid );
+    if (array) IJsonArray_Release( array );
+    if (child) IJsonObject_Release( child );
+    if (claims) IJsonObject_Release( claims );
+    if (object) IJsonObject_Release( object );
+    return hr;
 }
 
 static HRESULT WINAPI user_FetchProfileSettings( IUser *iface, const WCHAR *settings, IUnknown **result )
@@ -470,7 +589,8 @@ static HRESULT LoadDefaultUser( XUserHandle *user )
     iface = &impl->IUser_iface;
     if (FAILED(hr = IUser_RefreshOAuthToken( iface ))) goto cleanup;
     if (FAILED(hr = IUser_RefreshUserToken( iface ))) goto cleanup;
-    hr = IUser_GenerateKeyPair( iface );
+    if (FAILED(hr = IUser_GenerateKeyPair( iface ))) goto cleanup;
+    hr = IUser_RefreshXstsToken( iface );
 
 cleanup:
     if (SUCCEEDED(hr)) *user = (XUserHandle)impl;
@@ -590,8 +710,9 @@ static HRESULT WINAPI x_user_XUserFindUserByLocalId( IXUserImpl6 *iface, XUserLo
 
 static HRESULT WINAPI x_user_XUserGetId( IXUserImpl6 *iface, XUserHandle user, UINT64 *userId )
 {
-    FIXME( "iface %p, user %p, userId %p stub!\n", iface, user, userId );
-    return E_NOTIMPL;
+    TRACE( "iface %p, user %p, userId %p.\n", iface, user, userId );
+    *userId = user->xuid;
+    return S_OK;
 }
 
 static HRESULT WINAPI x_user_XUserFindUserById( IXUserImpl6 *iface, UINT64 userId, XUserHandle *handle )
