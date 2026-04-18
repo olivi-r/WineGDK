@@ -21,14 +21,175 @@
 
 #include "../../private.h"
 
+#include <winhttp.h>
+
 WINE_DEFAULT_DEBUG_CHANNEL(gdkc);
 
 const CHAR *msaAppId = "0000000040159362";
+
+static const WCHAR *ACCEPT_JSON[] = { L"application/json", NULL };
+static const WCHAR *CT_FORM_URLENCODED = L"Content-Type: application/x-www-form-urlencoded";
+
+static HRESULT HttpRequest( const WCHAR *method, const WCHAR *domain, const WCHAR *object, CHAR *data, const WCHAR *headers, const WCHAR **accept, CHAR **buffer, SIZE_T *used )
+{
+    HINTERNET connection = NULL, request = NULL, session = NULL;
+    DWORD size = sizeof( DWORD ), status;
+    CHAR *temp_buffer = NULL;
+    SIZE_T temp_used = 0;
+    HRESULT hr = S_OK;
+
+    if (!(session = WinHttpOpen( L"curl/1.0", WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0 )))
+    {
+        hr = HRESULT_FROM_WIN32( GetLastError() );
+        goto _CLEANUP;
+    }
+
+    if (!(connection = WinHttpConnect( session, domain, INTERNET_DEFAULT_HTTPS_PORT, 0 )))
+    {
+        hr = HRESULT_FROM_WIN32( GetLastError() );
+        goto _CLEANUP;
+    }
+
+    if (!(request = WinHttpOpenRequest( connection, method, object, NULL, WINHTTP_NO_REFERER, accept, WINHTTP_FLAG_SECURE )))
+    {
+        hr = HRESULT_FROM_WIN32( GetLastError() );
+        goto _CLEANUP;
+    }
+
+
+    if (!WinHttpSendRequest( request, headers, -1, data, strlen( data ), strlen( data ), 0 ))
+    {
+        hr = HRESULT_FROM_WIN32( GetLastError() );
+        goto _CLEANUP;
+    }
+
+    if (!WinHttpReceiveResponse( request, NULL ))
+    {
+        hr = HRESULT_FROM_WIN32( GetLastError() );
+        goto _CLEANUP;
+    }
+
+    if (!WinHttpQueryHeaders( request, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, WINHTTP_HEADER_NAME_BY_INDEX, &status, &size, WINHTTP_NO_HEADER_INDEX ))
+    {
+        hr = HRESULT_FROM_WIN32( GetLastError() );
+        goto _CLEANUP;
+    }
+
+    if (status != 200)
+    {
+        hr = E_FAIL;
+        goto _CLEANUP;
+    }
+
+    /* buffer response data */
+    do
+    {
+        if (!WinHttpQueryDataAvailable( request, &size ))
+        {
+            hr = HRESULT_FROM_WIN32( GetLastError() );
+            goto _CLEANUP;
+        }
+
+        if (!size) break;
+        if (!(temp_buffer = realloc( temp_buffer, temp_used + size )))
+        {
+            hr = E_OUTOFMEMORY;
+            goto _CLEANUP;
+        }
+
+        if (!WinHttpReadData( request, temp_buffer + temp_used, size, &size ))
+        {
+            hr = HRESULT_FROM_WIN32( GetLastError() );
+            goto _CLEANUP;
+        }
+
+        temp_used += size;
+    }
+    while (size);
+
+    *buffer = temp_buffer;
+    *used = temp_used;
+
+_CLEANUP:
+
+    if (request) WinHttpCloseHandle( request );
+    if (session) WinHttpCloseHandle( session );
+    if (connection) WinHttpCloseHandle( connection );
+    if (SUCCEEDED(hr)) return hr;
+    if (temp_buffer) free( temp_buffer );
+    return hr;
+}
+
+static HRESULT MultiByteToHSTRING( const CHAR *str, UINT32 str_size, HSTRING *hstr )
+{
+    UINT32 wstr_size;
+    WCHAR *wstr;
+    HRESULT hr;
+
+    if (!(wstr_size = MultiByteToWideChar( CP_UTF8, MB_ERR_INVALID_CHARS, str, str_size, NULL, 0 )))
+        return HRESULT_FROM_WIN32( GetLastError() );
+
+    if (!(wstr = calloc( wstr_size, sizeof(WCHAR) ))) return E_OUTOFMEMORY;
+
+    if (!(wstr_size = MultiByteToWideChar( CP_UTF8, MB_ERR_INVALID_CHARS, str, str_size, wstr, wstr_size )))
+    {
+        free( wstr );
+        return HRESULT_FROM_WIN32( GetLastError() );
+    }
+
+    hr = WindowsCreateString( wstr, wstr_size, hstr );
+    free( wstr );
+    return hr;
+}
+
+#define GetJsonValue_( obj_type, ret_type )                                                                 \
+static inline HRESULT GetJson##obj_type##Value( IJsonObject *object, const WCHAR *key, ret_type value )     \
+{                                                                                                           \
+    HSTRING_HEADER key_hdr;                                                                                 \
+    HSTRING key_hstr;                                                                                       \
+    HRESULT hr;                                                                                             \
+                                                                                                            \
+    if (FAILED(hr = WindowsCreateStringReference( key, wcslen( key ), &key_hdr, &key_hstr ))) return hr;    \
+    return IJsonObject_GetNamed##obj_type( object, key_hstr, value );                                       \
+}
+
+GetJsonValue_( String, HSTRING* )
+GetJsonValue_( Number, DOUBLE* )
+
+static HRESULT ParseJsonObject( const CHAR *str, SIZE_T str_size, IJsonObject **object )
+{
+    const WCHAR *class_name = RuntimeClass_Windows_Data_Json_JsonValue;
+    IJsonValueStatics *statics;
+    HSTRING_HEADER class_hdr;
+    HSTRING class, content;
+    IJsonValue *value;
+    HRESULT hr;
+
+    if (FAILED(hr = WindowsCreateStringReference( class_name, wcslen( class_name ), &class_hdr, &class ))) return hr;
+    if (FAILED(hr = RoGetActivationFactory( class, &IID_IJsonValueStatics, (void **)&statics ))) return hr;
+    if (FAILED(hr = MultiByteToHSTRING( str, str_size, &content )))
+    {
+        IJsonValueStatics_Release( statics );
+        return hr;
+    }
+
+    hr = IJsonValueStatics_Parse( statics, content, &value );
+    IJsonValueStatics_Release( statics );
+    WindowsDeleteString( content );
+    if (FAILED(hr)) return hr;
+
+    hr = IJsonValue_GetObject( value, object );
+    IJsonValue_Release( value );
+    return hr;
+}
 
 struct user
 {
     IUser IUser_iface;
     LONG ref;
+
+    DOUBLE interval;
+    HSTRING device_code;
 };
 
 static inline struct user *impl_from_IUser( IUser *iface )
@@ -67,14 +228,57 @@ static ULONG WINAPI user_Release( IUser *iface )
     struct user *impl = impl_from_IUser( iface );
     ULONG ref = InterlockedDecrement( &impl->ref );
     TRACE( "iface %p decreasing refcount to %lu.\n", iface, ref );
-    if (!ref) free( impl );
+    if (!ref)
+    {
+        if (impl->device_code) WindowsDeleteString( impl->device_code );
+        free( impl );
+    }
     return ref;
 }
 
 static HRESULT WINAPI user_RequestOAuthCode( IUser *iface, HSTRING *user, HSTRING *uri )
 {
-    FIXME( "iface %p, user %p, uri %p stub!\n", iface, user, uri );
-    return E_NOTIMPL;
+    const CHAR *template = "scope=service::user.auth.xboxlive.com::MBI_SSL&response_type=device_code&client_id=";
+    struct user *impl = impl_from_IUser( iface );
+    CHAR *buffer = NULL, *data;
+    IJsonObject *object = NULL;
+    SIZE_T size = 0;
+    HRESULT hr;
+
+    TRACE( "iface %p, user %p, uri %p.\n", iface, user, uri );
+
+    data = calloc( strlen( template ) + strlen( msaAppId ) + 1, sizeof( CHAR ) );
+    strcpy( data, template );
+    strcat( data, msaAppId );
+
+    hr = HttpRequest(
+        L"POST", L"login.live.com", L"/oauth20_connect.srf", data, CT_FORM_URLENCODED, ACCEPT_JSON, &buffer, &size
+    );
+
+    free( data );
+    if (FAILED(hr)) return hr;
+
+    hr = ParseJsonObject( buffer, size, &object );
+    free( buffer );
+    if (FAILED(hr)) return hr;
+
+    impl->device_code = NULL;
+    *user = NULL;
+    *uri = NULL;
+
+    if (FAILED(hr = GetJsonStringValue( object, L"device_code", &impl->device_code ))) goto _CLEANUP;
+    if (FAILED(hr = GetJsonStringValue( object, L"verification_uri", uri ))) goto _CLEANUP;
+    if (FAILED(hr = GetJsonNumberValue( object, L"interval", &impl->interval ))) goto _CLEANUP;
+    hr = GetJsonStringValue( object, L"user_code", user );
+
+_CLEANUP:
+
+    IJsonObject_Release( object );
+    if (SUCCEEDED(hr)) return hr;
+    if (*uri) WindowsDeleteString( *uri );
+    if (*user) WindowsDeleteString( *user );
+    if (impl->device_code) WindowsDeleteString( impl->device_code );
+    return hr;
 }
 
 static HRESULT WINAPI user_RequestOAuthToken( IUser *iface )
@@ -138,6 +342,8 @@ static HRESULT LoadDefaultUser( XUserHandle *user )
 
     impl->IUser_iface.lpVtbl = &user_vtbl;
     impl->ref = 1;
+
+    impl->device_code = NULL;
 
     *user = (XUserHandle)impl;
     return S_OK;

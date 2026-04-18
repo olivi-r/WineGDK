@@ -1,4 +1,4 @@
-IMPORTS = advapi32 combase user32
+IMPORTS = advapi32 combase user32 winhttp
 MODULE  = xgameruntime.dll
 
 SOURCES	= \
