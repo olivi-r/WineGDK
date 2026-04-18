@@ -399,8 +399,61 @@ static HRESULT WINAPI user_RequestXToken( IUser *iface, const WCHAR *domain, con
 
 static HRESULT WINAPI user_RefreshOAuthToken( IUser *iface )
 {
-    TRACE( "iface %p, stub!\n", iface );
-    return E_NOTIMPL;
+    const CHAR *template = "grant_type=refresh_token&scope=service::user.auth.xboxlive.com::MBI_SSL&client_id=";
+    CHAR *buffer = NULL, *data, *refresh_str = NULL;
+    HSTRING new_access = NULL, new_refresh = NULL;
+    struct user *impl = impl_from_IUser( iface );
+    IJsonObject *object = NULL;
+    UINT32 refresh_size = 0;
+    DOUBLE delta = 0;
+    SIZE_T size = 0;
+    time_t expiry;
+    HRESULT hr;
+
+    TRACE( "iface %p.\n", iface );
+
+    if (FAILED(hr = HSTRINGToMultiByte( impl->refresh_token, &refresh_str, &refresh_size ))) return hr;
+
+    if (!(data = calloc(
+        strlen( template ) + strlen( msaAppId ) + strlen( "&refresh_token=" ) + refresh_size + 1, sizeof(CHAR)
+    ))) return E_OUTOFMEMORY;
+
+    strcpy( data, template );
+    strcat( data, msaAppId );
+    strcat( data, "&refresh_token=" );
+    strncat( data, refresh_str, refresh_size );
+
+    hr = HttpRequest(
+        L"POST", L"login.live.com", L"/oauth20_token.srf", data, CT_FORM_URLENCODED, ACCEPT_JSON, &buffer, &size
+    );
+
+    free(data);
+    if (FAILED(hr)) return hr;
+
+    hr = ParseJsonObject( buffer, size, &object );
+    free( buffer );
+    if (FAILED(hr)) return hr;
+
+    if (FAILED(hr = GetJsonStringValue( object, L"refresh_token", &new_refresh ))) goto _CLEANUP;
+    if (FAILED(hr = GetJsonStringValue( object, L"access_token", &new_access ))) goto _CLEANUP;
+    if (FAILED(hr = GetJsonNumberValue( object, L"expires_in", &delta ))) goto _CLEANUP;
+
+    if ((expiry = time(NULL)) == -1) hr = E_FAIL;
+    else impl->oauth_expiry = expiry + delta;
+
+_CLEANUP:
+
+    IJsonObject_Release( object );
+    if (SUCCEEDED(hr))
+    {
+        impl->refresh_token = new_refresh;
+        impl->access_token = new_access;
+        return hr;
+    }
+
+    if (new_refresh) WindowsDeleteString( new_refresh );
+    if (new_access) WindowsDeleteString( new_access );
+    return hr;
 }
 
 static HRESULT WINAPI user_RefreshUserToken( IUser *iface )
@@ -439,6 +492,8 @@ static const struct IUserVtbl user_vtbl =
 static HRESULT LoadDefaultUser( XUserHandle *user )
 {
     struct user *impl;
+    IUser *iface;
+    HRESULT hr;
 
     TRACE( "user %p.\n", user );
 
@@ -451,8 +506,13 @@ static HRESULT LoadDefaultUser( XUserHandle *user )
     impl->access_token = NULL;
     impl->refresh_token = NULL;
 
-    *user = (XUserHandle)impl;
-    return S_OK;
+    iface = &impl->IUser_iface;
+
+    hr = IUser_RefreshOAuthToken( iface );
+
+    if (SUCCEEDED(hr)) *user = (XUserHandle)impl;
+    else IUser_Release( iface );
+    return hr;
 }
 
 struct x_user
