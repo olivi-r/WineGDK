@@ -21,6 +21,7 @@
 #pragma makedep header
 
 import "propidl.idl";
+import "hstring.idl";
 
 cpp_quote("#if 0")
 typedef struct APP_LOCAL_DEVICE_ID
@@ -45,6 +46,7 @@ interface IXUserImpl5;
 interface IXUserImpl6;
 interface IXUserGamertagImpl;
 interface IXUserDeviceImpl;
+interface IUser;
 
 coclass XSystemImpl;
 coclass XSystemAnalyticsImpl;
@@ -225,6 +227,23 @@ interface IXUserDeviceImpl : IUnknown
     BOOLEAN XUserUnregisterForDefaultAudioEndpointUtf16Changed( [in] XTaskQueueRegistrationToken token, [in] BOOLEAN wait );
     HRESULT XUserFindControllerForUserWithUiAsync( [in] XUserHandle user, [in, out] XAsyncBlock *async );
     HRESULT XUserFindControllerForUserWithUiResult( [in, out] XAsyncBlock *async, [out] APP_LOCAL_DEVICE_ID *deviceId );
+}
+
+[
+    local,
+    object,
+    uuid(d65e9135-ffc0-40b2-953f-e60e53dfc35c)
+]
+interface IUser : IUnknown
+{
+    HRESULT RequestOAuthCode( [out] HSTRING *userCode, [out] HSTRING *verificationUri );
+    HRESULT RequestOAuthToken();
+    HRESULT RefreshOAuthToken();
+    HRESULT RefreshUserToken();
+    HRESULT RefreshXstsToken();
+    HRESULT FetchProfileSettings( [in, string] const WCHAR *settings, IUnknown **result );
+    HRESULT GenerateKeyPair();
+    HRESULT SignData( [in] ULONG dataSize, [in, size_is(dataSize)] UCHAR *data, [in] ULONG signatureSize, [out, size_is(signatureSize)] UCHAR *signature );
 }
 
 [
