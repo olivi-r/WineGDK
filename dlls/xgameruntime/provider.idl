@@ -21,6 +21,7 @@
 #pragma makedep header
 
 import "propidl.idl";
+import "hstring.idl";
 import "xasync.idl";
 import "xasyncprovider.idl";
 import "xgameruntimefeature.idl";
@@ -43,6 +44,7 @@ interface IXUser5;
 interface IXUser6;
 interface IXUserGamertag;
 interface IXUserDevice;
+interface IUser;
 
 coclass XGameRuntimeFeatureImpl;
 coclass XSystemImpl;
@@ -205,6 +207,18 @@ interface IXUserDevice : IUnknown
     boolean XUserUnregisterForDefaultAudioEndpointUtf16Changed( [in] XTaskQueueRegistrationToken token, [in] boolean wait );
     HRESULT XUserFindControllerForUserWithUiAsync( [in] XUserHandle user, [in, out] XAsyncBlock *async );
     HRESULT XUserFindControllerForUserWithUiResult( [in, out] XAsyncBlock *async, [out] APP_LOCAL_DEVICE_ID *deviceId );
+}
+
+[ local, object, uuid(d65e9135-ffc0-40b2-953f-e60e53dfc35c) ]
+interface IUser : IUnknown
+{
+    HRESULT RequestOAuthCode( [out] HSTRING *userCode, [out] HSTRING *verificationUri );
+    HRESULT RequestOAuthToken();
+    HRESULT RequestXToken( [in, string] const WCHAR *domain, [in, string] const WCHAR *path, [in, string] const CHAR *relyingParty, [in, string] const CHAR *props, [out] IUnknown **object );
+    HRESULT RefreshOAuthToken();
+    HRESULT RefreshUserToken();
+    HRESULT RefreshXstsToken();
+    [propget] HRESULT Authorization( [out, retval] HSTRING *value );
 }
 
 [ uuid(8836fe87-edb9-4fe3-8dad-05f0d2cd5b40) ]
