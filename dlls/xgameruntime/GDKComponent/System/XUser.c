@@ -21,6 +21,7 @@
 
 #include "../../private.h"
 
+#include <errno.h>
 #include <time.h>
 #include <winhttp.h>
 
@@ -147,6 +148,8 @@ static inline HRESULT GetJson##obj_type##Value( IJsonObject *object, const WCHAR
     return IJsonObject_GetNamed##obj_type( object, key_hstr, value );                                       \
 }
 
+GetJsonValue_( Object, IJsonObject** )
+GetJsonValue_( Array, IJsonArray** )
 GetJsonValue_( String, HSTRING* )
 GetJsonValue_( Number, DOUBLE* )
 
@@ -182,12 +185,16 @@ struct XUser
     IUser IUser_iface;
     LONG ref;
 
+    UINT64 xuid;
+    HSTRING user_hash;
+
     DOUBLE interval;
     time_t oauth_expiry;
     HSTRING device_code;
     HSTRING access_token;
     HSTRING refresh_token;
     HSTRING user_token;
+    HSTRING xsts_token;
 };
 
 static inline struct XUser *impl_from_IUser( IUser *iface )
@@ -228,10 +235,12 @@ static ULONG WINAPI user_Release( IUser *iface )
     TRACE( "iface %p decreasing refcount to %lu.\n", iface, ref );
     if (!ref)
     {
+        if (impl->user_hash) WindowsDeleteString( impl->user_hash );
         if (impl->device_code) WindowsDeleteString( impl->device_code );
         if (impl->access_token) WindowsDeleteString( impl->access_token );
         if (impl->refresh_token) WindowsDeleteString( impl->refresh_token );
         if (impl->user_token) WindowsDeleteString( impl->user_token );
+        if (impl->xsts_token) WindowsDeleteString( impl->xsts_token );
         free( impl );
     }
     return ref;
@@ -461,8 +470,50 @@ static HRESULT WINAPI user_RefreshUserToken( IUser *iface )
 
 static HRESULT WINAPI user_RefreshXstsToken( IUser *iface )
 {
-    FIXME( "iface %p stub!\n", iface );
-    return E_NOTIMPL;
+    const CHAR *template = "{\"SandboxId\":\"RETAIL\",\"UserTokens\":[\"";
+    IJsonObject *child = NULL, *claims = NULL, *object;
+    struct XUser *impl = impl_from_IUser( iface );
+    IJsonArray *array = NULL;
+    CHAR *props, *token_str;
+    HSTRING xuid = NULL;
+    UINT32 token_size;
+    HRESULT hr;
+
+    TRACE( "iface %p.\n", iface );
+
+    if (FAILED(hr = HSTRINGToMultiByte( impl->user_token, &token_str, &token_size ))) return hr;
+    if (!(props = calloc( strlen( template ) + token_size + strlen( "\"]}" ), sizeof(CHAR) )))
+    {
+        free( token_str );
+        return E_OUTOFMEMORY;
+    }
+
+    strcpy( props, template );
+    strncat( props, token_str, token_size );
+    strcat( props, "\"]}" );
+    free( token_str );
+
+    hr = IUser_RequestXToken( iface, L"xsts.auth.xboxlive.com/xsts/authorize", "http://xboxlive.com", props, (IUnknown **)&object );
+    free( props );
+    if (FAILED(hr)) return hr;
+
+    if (FAILED(hr = GetJsonStringValue( object, L"Token", &impl->xsts_token ))) goto _CLEANUP;
+    if (FAILED(hr = GetJsonObjectValue( object, L"DisplayClaims", &claims ))) goto _CLEANUP;
+    if (FAILED(hr = GetJsonArrayValue( claims, L"xui", &array ))) goto _CLEANUP;
+    if (FAILED(hr = IJsonArray_GetObjectAt( array, 0, &child ))) goto _CLEANUP;
+    if (FAILED(hr = GetJsonStringValue( child, L"uhs", &impl->user_hash ))) goto _CLEANUP;
+    if (FAILED(hr = GetJsonStringValue( child, L"xid", &xuid ))) goto _CLEANUP;
+    impl->xuid = wcstoull( WindowsGetStringRawBuffer( xuid, NULL ), NULL, 10 );
+    if (errno == ERANGE) hr = E_UNEXPECTED;
+
+_CLEANUP:
+
+    IJsonObject_Release( object );
+    if (xuid) WindowsDeleteString( xuid );
+    if (array) IJsonArray_Release( array );
+    if (child) IJsonObject_Release( child );
+    if (claims) IJsonObject_Release( claims );
+    return hr;
 }
 
 static HRESULT WINAPI user_get_Authorization( IUser *iface, HSTRING *value )
@@ -499,15 +550,18 @@ static HRESULT LoadDefaultUser( XUserHandle *user )
     impl->IUser_iface.lpVtbl = &user_vtbl;
     impl->ref = 1;
 
+    impl->user_hash = NULL;
     impl->device_code = NULL;
     impl->access_token = NULL;
     impl->refresh_token = NULL;
     impl->user_token = NULL;
+    impl->xsts_token = NULL;
 
     iface = &impl->IUser_iface;
 
     if (FAILED(hr = IUser_RefreshOAuthToken( iface ))) goto _CLEANUP;
-    hr = IUser_RefreshUserToken( iface );
+    if (FAILED(hr = IUser_RefreshUserToken( iface ))) goto _CLEANUP;
+    hr = IUser_RefreshXstsToken( iface );
 
 _CLEANUP:
 
@@ -591,8 +645,9 @@ static void WINAPI x_user_XUserCloseHandle( IXUserImpl6 *iface, XUserHandle user
 
 static INT32 WINAPI x_user_XUserCompare( IXUserImpl6 *iface, XUserHandle user1, XUserHandle user2 )
 {
-    FIXME( "iface %p, user1 %p, user2 %p stub!\n", iface, user1, user2 );
-    return E_NOTIMPL;
+    TRACE( "iface %p, user1 %p, user2 %p.\n", iface, user1, user2 );
+    if (!user1 || !user2) return 1;
+    return user1->xuid == user2->xuid ? 0 : 1;
 }
 
 static HRESULT WINAPI x_user_XUserGetMaxUsers( IXUserImpl6 *iface, UINT32 *maxUsers )
@@ -628,8 +683,10 @@ static HRESULT WINAPI x_user_XUserFindUserByLocalId( IXUserImpl6 *iface, XUserLo
 
 static HRESULT WINAPI x_user_XUserGetId( IXUserImpl6 *iface, XUserHandle user, UINT64 *userId )
 {
-    FIXME( "iface %p, user %p, userId %p stub!\n", iface, user, userId );
-    return E_NOTIMPL;
+    TRACE( "iface %p, user %p, userId %p.\n", iface, user, userId );
+    if (!user || !userId) return E_POINTER;
+    *userId = user->xuid;
+    return S_OK;
 }
 
 static HRESULT WINAPI x_user_XUserFindUserById( IXUserImpl6 *iface, UINT64 userId, XUserHandle *handle )
