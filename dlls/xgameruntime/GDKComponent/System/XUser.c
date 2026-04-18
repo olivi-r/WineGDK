@@ -214,6 +214,7 @@ struct user
     HSTRING device_code;
     HSTRING access_token;
     HSTRING refresh_token;
+    HSTRING user_token;
 };
 
 static inline struct user *impl_from_IUser( IUser *iface )
@@ -257,6 +258,7 @@ static ULONG WINAPI user_Release( IUser *iface )
         if (impl->device_code) WindowsDeleteString( impl->device_code );
         if (impl->access_token) WindowsDeleteString( impl->access_token );
         if (impl->refresh_token) WindowsDeleteString( impl->refresh_token );
+        if (impl->user_token) WindowsDeleteString( impl->user_token );
         free( impl );
     }
     return ref;
@@ -458,8 +460,34 @@ _CLEANUP:
 
 static HRESULT WINAPI user_RefreshUserToken( IUser *iface )
 {
-    FIXME( "iface %p stub!\n", iface );
-    return E_NOTIMPL;
+    const CHAR *template = "{\"AuthMethod\":\"RPS\",\"SiteName\":\"user.auth.xboxlive.com\",\"RpsTicket\":\"";
+    struct user *impl = impl_from_IUser( iface );
+    CHAR *props, *token_str;
+    IJsonObject *object;
+    UINT32 token_size;
+    HRESULT hr;
+
+    TRACE( "iface %p.\n", iface );
+
+    if (FAILED(hr = HSTRINGToMultiByte( impl->access_token, &token_str, &token_size ))) return hr;
+    if (!(props = calloc( strlen( template ) + token_size + strlen( "\"}" ), sizeof(CHAR) )))
+    {
+        free( token_str );
+        return E_OUTOFMEMORY;
+    }
+
+    strcpy( props, template );
+    strncat( props, token_str, token_size );
+    strcat( props, "\"}" );
+    free( token_str );
+
+    hr = IUser_RequestXToken( iface, L"user.auth.xboxlive.com", L"/user/authenticate", "http://auth.xboxlive.com", props, (IUnknown **)&object );
+    free( props );
+    if (FAILED(hr)) return hr;
+
+    hr = GetJsonStringValue( object, L"Token", &impl->user_token );
+    IJsonObject_Release( object );
+    return hr;
 }
 
 static HRESULT WINAPI user_RefreshXstsToken( IUser *iface )
@@ -505,10 +533,14 @@ static HRESULT LoadDefaultUser( XUserHandle *user )
     impl->device_code = NULL;
     impl->access_token = NULL;
     impl->refresh_token = NULL;
+    impl->user_token = NULL;
 
     iface = &impl->IUser_iface;
 
-    hr = IUser_RefreshOAuthToken( iface );
+    if (FAILED(hr = IUser_RefreshOAuthToken( iface ))) goto _CLEANUP;
+    hr = IUser_RefreshUserToken( iface );
+
+_CLEANUP:
 
     if (SUCCEEDED(hr)) *user = (XUserHandle)impl;
     else IUser_Release( iface );
