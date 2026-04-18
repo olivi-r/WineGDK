@@ -23,6 +23,124 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(gdkc);
 
+struct XUser
+{
+    IUser IUser_iface;
+    LONG ref;
+};
+
+static inline struct XUser *impl_from_IUser( IUser *iface )
+{
+    return CONTAINING_RECORD( iface, struct XUser, IUser_iface );
+}
+
+static HRESULT WINAPI user_QueryInterface( IUser *iface, REFIID iid, void **out )
+{
+    struct XUser *impl = impl_from_IUser( iface );
+
+    TRACE( "iface %p, iid %s, out %p.\n", iface, debugstr_guid( iid ), out );
+
+    if (IsEqualGUID( iid, &IID_IUnknown ) ||
+        IsEqualGUID( iid, &IID_IUser    ))
+    {
+        IUser_AddRef( *out = &impl->IUser_iface );
+        return S_OK;
+    }
+
+    FIXME( "%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid( iid ) );
+    *out = NULL;
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI user_AddRef( IUser *iface )
+{
+    struct XUser *impl = impl_from_IUser( iface );
+    ULONG ref = InterlockedIncrement( &impl->ref );
+    TRACE( "iface %p increasing refcount to %lu.\n", iface, ref );
+    return ref;
+}
+
+static ULONG WINAPI user_Release( IUser *iface )
+{
+    struct XUser *impl = impl_from_IUser( iface );
+    ULONG ref = InterlockedDecrement( &impl->ref );
+    TRACE( "iface %p decreasing refcount to %lu.\n", iface, ref );
+    if (!ref) free( impl );
+    return ref;
+}
+
+static HRESULT WINAPI user_RequestOAuthCode( IUser *iface, HSTRING *user, HSTRING *uri )
+{
+    FIXME( "iface %p, user %p, uri %p stub!\n", iface, user, uri );
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI user_RequestOAuthToken( IUser *iface )
+{
+    FIXME( "iface %p stub!\n", iface );
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI user_RequestXToken( IUser *iface, const WCHAR *url, const CHAR *relyingParty, const CHAR *props, IUnknown **object )
+{
+    FIXME( "iface %p, url %s, relyingParty %s, props %s, object %p stub!\n", iface, debugstr_w( url ), debugstr_a( relyingParty ), debugstr_a( props ), object );
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI user_RefreshOAuthToken( IUser *iface )
+{
+    TRACE( "iface %p, stub!\n", iface );
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI user_RefreshUserToken( IUser *iface )
+{
+    FIXME( "iface %p stub!\n", iface );
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI user_RefreshXstsToken( IUser *iface )
+{
+    FIXME( "iface %p stub!\n", iface );
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI user_get_Authorization( IUser *iface, HSTRING *value )
+{
+    FIXME( "iface %p, value %p stub!\n", iface, value );
+    return E_NOTIMPL;
+}
+
+static const struct IUserVtbl user_vtbl =
+{
+    user_QueryInterface,
+    user_AddRef,
+    user_Release,
+    /* IUser methods */
+    user_RequestOAuthCode,
+    user_RequestOAuthToken,
+    user_RequestXToken,
+    user_RefreshOAuthToken,
+    user_RefreshUserToken,
+    user_RefreshXstsToken,
+    user_get_Authorization,
+};
+
+static HRESULT LoadDefaultUser( XUserHandle *user )
+{
+    struct XUser *impl;
+
+    TRACE( "user %p.\n", user );
+
+    if (!(impl = calloc( 1, sizeof(*impl) ))) return E_OUTOFMEMORY;
+
+    impl->IUser_iface.lpVtbl = &user_vtbl;
+    impl->ref = 1;
+
+    *user = (XUserHandle)impl;
+    return S_OK;
+}
+
 struct x_user
 {
     IXUserImpl6 IXUserImpl_iface;
@@ -82,13 +200,18 @@ static ULONG WINAPI x_user_Release( IXUserImpl6 *iface )
 
 static HRESULT WINAPI x_user_XUserDuplicateHandle( IXUserImpl6 *iface, XUserHandle handle, XUserHandle *duplicatedHandle )
 {
-    FIXME( "iface %p, handle %p, duplicatedHandle %p stub!\n", iface, handle, duplicatedHandle );
-    return E_NOTIMPL;
+    TRACE( "iface %p, handle %p, duplicatedHandle %p.\n", iface, handle, duplicatedHandle );
+    if (!handle || !duplicatedHandle) return E_POINTER;
+    IUser_AddRef( &handle->IUser_iface );
+    *duplicatedHandle = handle;
+    return S_OK;
 }
 
 static void WINAPI x_user_XUserCloseHandle( IXUserImpl6 *iface, XUserHandle user )
 {
-    FIXME( "iface %p, user %p stub!\n", iface, user );
+    TRACE( "iface %p, user %p.\n", iface, user );
+    if (!user) return;
+    IUser_Release( &user->IUser_iface );
 }
 
 static INT32 WINAPI x_user_XUserCompare( IXUserImpl6 *iface, XUserHandle user1, XUserHandle user2 )
