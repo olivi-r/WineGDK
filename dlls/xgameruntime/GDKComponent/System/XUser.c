@@ -518,8 +518,28 @@ _CLEANUP:
 
 static HRESULT WINAPI user_get_Authorization( IUser *iface, HSTRING *value )
 {
-    FIXME( "iface %p, value %p stub!\n", iface, value );
-    return E_NOTIMPL;
+    struct XUser *impl = impl_from_IUser( iface );
+    UINT32 token_len, user_hash_len, len;
+    const WCHAR *token, *user_hash;
+    WCHAR *buffer;
+    HRESULT hr;
+
+    TRACE( "iface %p, value %p.\n", iface, value );
+
+    if (!value) return E_POINTER;
+    token = WindowsGetStringRawBuffer( impl->xsts_token, &token_len );
+    user_hash = WindowsGetStringRawBuffer( impl->user_hash, &user_hash_len );
+    len = wcslen( L"XBL3.0 x=;" ) + user_hash_len + token_len;
+    if (!(buffer = calloc( len + 1, sizeof(WCHAR) ))) return E_OUTOFMEMORY;
+
+    wcscpy( buffer, L"XBL3.0 x=" );
+    wcsncat( buffer, user_hash, user_hash_len );
+    wcscat( buffer, L";" );
+    wcsncat( buffer, token, token_len );
+
+    hr = WindowsCreateString( buffer, len, value );
+    free( buffer );
+    return hr;
 }
 
 static const struct IUserVtbl user_vtbl =
