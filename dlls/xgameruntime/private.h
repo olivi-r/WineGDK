@@ -39,6 +39,8 @@
 #define WIDL_using_Windows_Foundation
 #define WIDL_using_Windows_Foundation_Collections
 #include "windows.foundation.h"
+#define WIDL_using_Windows_Data_Json
+#include "windows.data.json.h"
 #define WIDL_using_Windows_Globalization
 #include "windows.globalization.h"
 #define WIDL_using_Windows_System_Profile
@@ -47,6 +49,8 @@
 // October 2025 Release of GDK
 #define GDKC_VERSION 10002L
 #define GAMING_SERVICES_VERSION 4429L
+
+extern const CHAR *msaAppId;
 
 extern IXSystemImpl *x_system_impl;
 extern IXSystemAnalyticsImpl *x_system_analytics_impl;
