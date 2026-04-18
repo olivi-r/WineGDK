@@ -27,6 +27,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(gdkc);
 const char msaAppId[] = "0000000040159362";
 
 static const WCHAR *ACCEPT_JSON[] = { L"application/json", NULL };
+static const WCHAR CT_JSON[] = L"Content-Type: application/json";
 static const WCHAR CT_FORM_URLENCODED[] = L"Content-Type: application/x-www-form-urlencoded";
 
 static HRESULT MultiByteToHSTRING( const char *str, UINT32 str_size, HSTRING *hstr )
@@ -121,6 +122,7 @@ struct XUser
     HSTRING device_code;
     HSTRING access_token;
     HSTRING refresh_token;
+    HSTRING user_token;
 };
 
 static inline struct XUser *impl_from_IUser( IUser *iface )
@@ -164,6 +166,7 @@ static ULONG WINAPI user_Release( IUser *iface )
         if (impl->device_code) WindowsDeleteString( impl->device_code );
         if (impl->access_token) WindowsDeleteString( impl->access_token );
         if (impl->refresh_token) WindowsDeleteString( impl->refresh_token );
+        if (impl->user_token) WindowsDeleteString( impl->user_token );
         free( impl );
     }
     return ref;
@@ -320,8 +323,43 @@ cleanup:
 
 static HRESULT WINAPI user_RefreshUserToken( IUser *iface )
 {
-    FIXME( "iface %p stub!\n", iface );
-    return E_NOTIMPL;
+    const char *template = "{\"TokenType\":\"JWT\",\"RelyingParty\":\"http://auth.xboxlive.com\",\"Properties\":{\"AuthMethod\":\"RPS\",\"SiteName\":\"user.auth.xboxlive.com\",\"RpsTicket\":\"";
+    struct XUser *impl = impl_from_IUser( iface );
+    UINT32 tokenLen, wTokenLen;
+    IJsonObject *object = NULL;
+    const WCHAR *wToken;
+    UCHAR *buf = NULL;
+    char *body = NULL;
+    SIZE_T bufSize;
+    HRESULT hr;
+
+    TRACE( "iface %p.\n", iface );
+
+    wToken = WindowsGetStringRawBuffer( impl->access_token, &wTokenLen );
+    if (!(tokenLen = WideCharToMultiByte( CP_UTF8, WC_ERR_INVALID_CHARS, wToken, wTokenLen, NULL, 0, NULL, NULL ))) goto error;
+    if (!(body = calloc( strlen( template ) + tokenLen + strlen( "\"}}" ), sizeof(char) )))
+    {
+        hr = E_OUTOFMEMORY;
+        goto cleanup;
+    }
+
+    /* construct request body */
+    strcpy( body, template );
+    if (!WideCharToMultiByte( CP_UTF8, WC_ERR_INVALID_CHARS, wToken, wTokenLen, body + strlen( template ), tokenLen, NULL, NULL )) goto error;
+    strcat( body, "\"}}" );
+
+    if (FAILED(hr = HttpRequest( L"POST", L"user.auth.xboxlive.com", L"/user/authenticate", body, CT_JSON, ACCEPT_JSON, &buf, &bufSize ))) goto cleanup;
+    if (FAILED(hr = ParseJsonObject( (char *)buf, bufSize, &object ))) goto cleanup;
+    hr = GetJsonStringValue( object, L"Token", &impl->user_token );
+    goto cleanup;
+
+error:
+    hr = HRESULT_FROM_WIN32( GetLastError() );
+cleanup:
+    if (buf) free( buf );
+    if (body) free( body );
+    if (object) IJsonObject_Release( object );
+    return hr;
 }
 
 static HRESULT WINAPI user_RefreshXstsToken( IUser *iface )
@@ -378,8 +416,10 @@ static HRESULT LoadDefaultUser( XUserHandle *user )
     impl->ref = 1;
 
     iface = &impl->IUser_iface;
-    hr = IUser_RefreshOAuthToken( iface );
+    if (FAILED(hr = IUser_RefreshOAuthToken( iface ))) goto cleanup;
+    hr = IUser_RefreshUserToken( iface );
 
+cleanup:
     if (SUCCEEDED(hr)) *user = (XUserHandle)impl;
     else IUser_Release( iface );
     return hr;
