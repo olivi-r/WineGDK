@@ -575,9 +575,12 @@ static const struct IUserVtbl user_vtbl =
 
 static HRESULT LoadDefaultUser( XUserHandle *user )
 {
+    char *buffer = NULL;
     struct XUser *impl;
+    LSTATUS status;
     IUser *iface;
     HRESULT hr;
+    DWORD size;
 
     TRACE( "user %p.\n", user );
 
@@ -587,12 +590,28 @@ static HRESULT LoadDefaultUser( XUserHandle *user )
     impl->ref = 1;
 
     iface = &impl->IUser_iface;
+
+    status = RegGetValueA( HKEY_LOCAL_MACHINE, "Software\\Wine\\WineGDK", "RefreshToken", RRF_RT_REG_SZ, NULL, NULL, &size );
+    if (status != ERROR_SUCCESS) goto error;
+    if (!(buffer = calloc( 1, size )))
+    {
+        hr = E_OUTOFMEMORY;
+        goto cleanup;
+    }
+
+    status = RegGetValueA( HKEY_LOCAL_MACHINE, "Software\\Wine\\WineGDK", "RefreshToken", RRF_RT_REG_SZ, NULL, buffer, &size );
+    if (status != ERROR_SUCCESS) goto error;
+    if (FAILED(hr = MultiByteToHSTRING( buffer, size, &impl->refresh_token ))) goto cleanup;
     if (FAILED(hr = IUser_RefreshOAuthToken( iface ))) goto cleanup;
     if (FAILED(hr = IUser_RefreshUserToken( iface ))) goto cleanup;
     if (FAILED(hr = IUser_GenerateKeyPair( iface ))) goto cleanup;
     hr = IUser_RefreshXstsToken( iface );
+    goto cleanup;
 
+error:
+    hr = HRESULT_FROM_WIN32( status );
 cleanup:
+    if (buffer) free( buffer );
     if (SUCCEEDED(hr)) *user = (XUserHandle)impl;
     else IUser_Release( iface );
     return hr;
