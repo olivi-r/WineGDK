@@ -29,6 +29,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(gdkc);
 const CHAR *msaAppId = "0000000040159362";
 
 static const WCHAR *ACCEPT_JSON[] = { L"application/json", NULL };
+static const WCHAR *CT_JSON = L"Content-Type: application/json";
 static const WCHAR *CT_FORM_URLENCODED = L"Content-Type: application/x-www-form-urlencoded";
 
 static HRESULT HttpRequest( const WCHAR *method, const WCHAR *domain, const WCHAR *object, CHAR *data, const WCHAR *headers, const WCHAR **accept, CHAR **buffer, SIZE_T *used )
@@ -372,8 +373,28 @@ _CLEANUP:
 
 static HRESULT WINAPI user_RequestXToken( IUser *iface, const WCHAR *domain, const WCHAR *path, const CHAR *relyingParty, const CHAR *props, IUnknown **object )
 {
-    FIXME( "iface %p, domain %s, path %s, relyingParty %s, props %s, object %p stub!\n", iface, debugstr_w( domain ), debugstr_w( path ), debugstr_a( relyingParty ), debugstr_a( props ), object );
-    return E_NOTIMPL;
+    const CHAR *template = "{\"TokenType\":\"JWT\",\"RelyingParty\":\"";
+    CHAR *buffer, *data;
+    SIZE_T size;
+    HRESULT hr;
+
+    TRACE( "iface %p, domain %s, path %s, relyingParty %s, props %s, object %p.\n", iface, debugstr_w( domain ), debugstr_w( path ), debugstr_a( relyingParty ), debugstr_a( props ), object );
+
+    if (!(data = calloc(
+        strlen( template ) + strlen( relyingParty ) + strlen( "\",\"Properties\":}" ) + strlen( props ) + 1, sizeof(CHAR)
+    ))) return E_OUTOFMEMORY;
+
+    strcpy( data, template );
+    strcat( data, relyingParty );
+    strcat( data, "\",\"Properties\":" );
+    strcat( data, props );
+    strcat( data, "}" );
+
+    if (FAILED(hr = HttpRequest( L"POST", domain, path, data, CT_JSON, ACCEPT_JSON, &buffer, &size ))) return hr;
+
+    hr = ParseJsonObject( buffer, size, (IJsonObject **)object );
+    free( buffer );
+    return hr;
 }
 
 static HRESULT WINAPI user_RefreshOAuthToken( IUser *iface )
