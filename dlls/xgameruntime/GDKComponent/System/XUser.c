@@ -21,6 +21,7 @@
 
 #include "../../private.h"
 
+#include <time.h>
 #include <winhttp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(gdkc);
@@ -115,6 +116,25 @@ static HRESULT MultiByteToHSTRING( const CHAR *str, UINT32 str_size, HSTRING *hs
     return hr;
 }
 
+static HRESULT HSTRINGToMultiByte( HSTRING hstr, CHAR **str, UINT32 *str_size )
+{
+    UINT32 wstr_size;
+    const WCHAR *wstr = WindowsGetStringRawBuffer( hstr, &wstr_size );
+
+    if (!(*str_size = WideCharToMultiByte( CP_UTF8, WC_ERR_INVALID_CHARS, wstr, wstr_size, NULL, 0, NULL, NULL )))
+        return HRESULT_FROM_WIN32( GetLastError() );
+
+    if (!(*str = calloc( 1, *str_size ))) return E_OUTOFMEMORY;
+
+    if (!(*str_size = WideCharToMultiByte( CP_UTF8, WC_ERR_INVALID_CHARS, wstr, wstr_size, *str, *str_size, NULL, NULL )))
+    {
+        free( *str );
+        return HRESULT_FROM_WIN32( GetLastError() );
+    }
+
+    return S_OK;
+}
+
 #define GetJsonValue_( obj_type, ret_type )                                                                 \
 static inline HRESULT GetJson##obj_type##Value( IJsonObject *object, const WCHAR *key, ret_type value )     \
 {                                                                                                           \
@@ -162,7 +182,10 @@ struct XUser
     LONG ref;
 
     DOUBLE interval;
+    time_t oauth_expiry;
     HSTRING device_code;
+    HSTRING access_token;
+    HSTRING refresh_token;
 };
 
 static inline struct XUser *impl_from_IUser( IUser *iface )
@@ -204,6 +227,8 @@ static ULONG WINAPI user_Release( IUser *iface )
     if (!ref)
     {
         if (impl->device_code) WindowsDeleteString( impl->device_code );
+        if (impl->access_token) WindowsDeleteString( impl->access_token );
+        if (impl->refresh_token) WindowsDeleteString( impl->refresh_token );
         free( impl );
     }
     return ref;
@@ -254,8 +279,65 @@ _CLEANUP:
 
 static HRESULT WINAPI user_RequestOAuthToken( IUser *iface )
 {
-    FIXME( "iface %p stub!\n", iface );
-    return E_NOTIMPL;
+    const CHAR *template = "grant_type=device_code&device_code=";
+    HSTRING new_access = NULL, new_refresh = NULL;
+    struct XUser *impl = impl_from_IUser( iface );
+    CHAR *data, *device_code = NULL;
+    UINT32 device_code_size = 0;
+    void *buffer = NULL;
+    IJsonObject *object;
+    DOUBLE delta = 0;
+    SIZE_T size = 0;
+    time_t expiry;
+    HRESULT hr;
+
+    TRACE( "iface %p.\n", iface );
+
+    if (FAILED(hr = HSTRINGToMultiByte( impl->device_code, &device_code, &device_code_size ))) return hr;
+
+    if (!(data = calloc( strlen( template ) + device_code_size + strlen( "&client_id=" ) + strlen( msaAppId ) + 1, sizeof(CHAR) )))
+    {
+        free( device_code );
+        return E_OUTOFMEMORY;
+    }
+
+    strcpy( data, template );
+    strncat( data, device_code, device_code_size );
+    strcat( data, "&client_id=" );
+    strcat( data, msaAppId );
+    free( device_code );
+
+    while (TRUE)
+    {
+        if (SUCCEEDED(hr = HttpRequest( L"POST", L"login.live.com/oauth20_token.srf", data, CT_FORM_URLENCODED, ACCEPT_JSON, &buffer, &size ))) break;
+        Sleep( impl->interval * 1000 );
+    }
+
+    free( data );
+    hr = ParseJsonObject( buffer, size, &object );
+    free( buffer );
+    if (FAILED(hr)) return hr;
+
+    if (FAILED(hr = GetJsonStringValue( object, L"refresh_token", &new_refresh ))) goto _CLEANUP;
+    if (FAILED(hr = GetJsonStringValue( object, L"access_token", &new_access ))) goto _CLEANUP;
+    if (FAILED(hr = GetJsonNumberValue( object, L"expires_in", &delta ))) goto _CLEANUP;
+
+    if ((expiry = time(NULL)) == -1) hr = E_FAIL;
+    else impl->oauth_expiry = expiry + delta;
+
+_CLEANUP:
+
+    IJsonObject_Release( object );
+    if (SUCCEEDED(hr))
+    {
+        impl->refresh_token = new_refresh;
+        impl->access_token = new_access;
+        return hr;
+    }
+
+    if (new_refresh) WindowsDeleteString( new_refresh );
+    if (new_access) WindowsDeleteString( new_access );
+    return hr;
 }
 
 static HRESULT WINAPI user_RequestXToken( IUser *iface, const WCHAR *url, const CHAR *relyingParty, const CHAR *props, IUnknown **object )
@@ -315,6 +397,8 @@ static HRESULT LoadDefaultUser( XUserHandle *user )
     impl->ref = 1;
 
     impl->device_code = NULL;
+    impl->access_token = NULL;
+    impl->refresh_token = NULL;
 
     *user = (XUserHandle)impl;
     return S_OK;
