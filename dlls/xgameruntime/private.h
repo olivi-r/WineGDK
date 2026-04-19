@@ -50,6 +50,7 @@ extern IXSystem *x_system_impl;
 extern IXSystemAnalytics *x_system_analytics_impl;
 extern IXThreading *x_threading_impl;
 extern IXUser6 *x_user_impl;
+extern IXUserDevice *x_user_device_impl;
 
 typedef struct _INITIALIZE_OPTIONS
 {
