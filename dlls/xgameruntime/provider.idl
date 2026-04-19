@@ -57,11 +57,13 @@ interface IXUserImpl4;
 interface IXUserImpl5;
 interface IXUserImpl6;
 interface IXUserGamertagImpl;
+interface IXUserDeviceImpl;
 
 coclass XSystemImpl;
 coclass XSystemAnalyticsImpl;
 coclass XGameRuntimeFeatureImpl;
 coclass XUserImpl;
+coclass XUserDeviceImpl;
 
 enum XSystemHandleType
 {
@@ -296,6 +298,23 @@ interface IXUserGamertagImpl : IUnknown
 }
 
 [
+    local,
+    object,
+    uuid(0cc6a956-e7e1-4fdf-9341-9d5da649ebc8)
+]
+interface IXUserDeviceImpl : IUnknown
+{
+    HRESULT XUserFindForDevice( [in] const APP_LOCAL_DEVICE_ID *deviceId, [out] XUserHandle *handle );
+    HRESULT XUserRegisterForDeviceAssociationChanged( [in, optional] XTaskQueueHandle queue, [in, optional] void *context, [in] XUserDeviceAssociationChangedCallback *callback, [out] XTaskQueueRegistrationToken *token );
+    boolean XUserUnregisterForDeviceAssociationChanged( [in] XTaskQueueRegistrationToken token, [in] boolean wait );
+    HRESULT XUserGetDefaultAudioEndpointUtf16( [in] XUserLocalId user, [in] XUserDefaultAudioEndpointKind defaultAudioEndpointKind, [in] SIZE_T endpointIdUtf16Count, [out, string, length_is(endpointIdUtf16Count)] WCHAR endpointIdUtf16[*], [out, optional] SIZE_T *endpointIdUtf16Used );
+    HRESULT XUserRegisterForDefaultAudioEndpointUtf16Changed( [in, optional] XTaskQueueHandle queue, [in, optional] void *context, [in] XUserDefaultAudioEndpointUtf16ChangedCallback *callback, [out] XTaskQueueRegistrationToken *token );
+    boolean XUserUnregisterForDefaultAudioEndpointUtf16Changed( [in] XTaskQueueRegistrationToken token, [in] boolean wait );
+    HRESULT XUserFindControllerForUserWithUiAsync( [in] XUserHandle user, [in, out] XAsyncBlock *async );
+    HRESULT XUserFindControllerForUserWithUiResult( [in, out] XAsyncBlock *async, [out] APP_LOCAL_DEVICE_ID *deviceId );
+}
+
+[
     uuid(e349bd1a-fc20-4e40-b99c-4178cc6b409f)
 ]
 coclass XSystemImpl
@@ -326,4 +345,12 @@ coclass XUserImpl
 {
     [default] interface IXUserImpl;
     interface IXUserGamertagImpl;
+}
+
+[
+    uuid(7d824997-10dc-45ab-86b7-2737767c0bf1)
+]
+coclass XUserDeviceImpl
+{
+    [default] interface IXUserDeviceImpl;
 }

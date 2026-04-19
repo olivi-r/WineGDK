@@ -460,6 +460,115 @@ static const struct IXUserGamertagImplVtbl x_user_gamertag_vtbl =
     x_user_gamertag_XUserGetGamertag,
 };
 
+struct x_user_device
+{
+    IXUserDeviceImpl IXUserDeviceImpl_iface;
+    LONG ref;
+};
+
+static inline struct x_user_device *impl_from_IXUserDeviceImpl( IXUserDeviceImpl *iface )
+{
+    return CONTAINING_RECORD( iface, struct x_user_device, IXUserDeviceImpl_iface );
+}
+
+static HRESULT WINAPI x_user_device_QueryInterface( IXUserDeviceImpl *iface, REFIID iid, void **out )
+{
+    struct x_user_device *impl = impl_from_IXUserDeviceImpl( iface );
+
+    TRACE( "iface %p, iid %s, out %p.\n", iface, debugstr_guid( iid ), out );
+
+    if (IsEqualGUID( iid, &IID_IUnknown         ) ||
+        IsEqualGUID( iid, &IID_IXUserDeviceImpl ))
+    {
+        IXUserDeviceImpl_AddRef( *out = &impl->IXUserDeviceImpl_iface );
+        return S_OK;
+    }
+
+    FIXME( "%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid( iid ) );
+    *out = NULL;
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI x_user_device_AddRef( IXUserDeviceImpl *iface )
+{
+    struct x_user_device *impl = impl_from_IXUserDeviceImpl( iface );
+    ULONG ref = InterlockedIncrement( &impl->ref );
+    TRACE( "iface %p increasing refcount to %lu.\n", iface, ref );
+    return ref;
+}
+
+static ULONG WINAPI x_user_device_Release( IXUserDeviceImpl *iface )
+{
+    struct x_user_device *impl = impl_from_IXUserDeviceImpl( iface );
+    ULONG ref = InterlockedDecrement( &impl->ref );
+    TRACE( "iface %p decreasing refcount to %lu.\n", iface, ref );
+    return ref;
+}
+
+static HRESULT WINAPI x_user_device_XUserFindForDevice( IXUserDeviceImpl *iface, const APP_LOCAL_DEVICE_ID *deviceId, XUserHandle *handle )
+{
+    FIXME( "iface %p, deviceId %p, handle %p stub!\n", iface, deviceId, handle );
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI x_user_device_XUserRegisterForDeviceAssociationChanged( IXUserDeviceImpl *iface, XTaskQueueHandle queue, void *context, XUserDeviceAssociationChangedCallback *callback, XTaskQueueRegistrationToken *token )
+{
+    FIXME( "iface %p, queue %p, context %p, callback %p, token %p stub!\n", iface, queue, context, callback, token );
+    return E_NOTIMPL;
+}
+
+static boolean WINAPI x_user_device_XUserUnregisterForDeviceAssociationChanged( IXUserDeviceImpl *iface, XTaskQueueRegistrationToken token, boolean wait )
+{
+    FIXME( "iface %p, token %p, wait %d stub!\n", iface, &token, wait );
+    return FALSE;
+}
+
+static HRESULT WINAPI x_user_device_XUserGetDefaultAudioEndpointUtf16( IXUserDeviceImpl *iface, XUserLocalId user, XUserDefaultAudioEndpointKind defaultAudioEndpointKind, SIZE_T endpointIdUtf16Count, WCHAR *endpointIdUtf16, SIZE_T *endpointIdUtf16Used )
+{
+    FIXME( "iface %p, user %p, defaultAudioEndpointKind %d, endpointIdUtf16Count %Iu, endpointIdUtf16 %p, endpointIdUtf16used %p stub!\n", iface, &user, defaultAudioEndpointKind, endpointIdUtf16Count, endpointIdUtf16, endpointIdUtf16Used );
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI x_user_device_XUserRegisterForDefaultAudioEndpointUtf16Changed( IXUserDeviceImpl *iface, XTaskQueueHandle queue, void *context, XUserDefaultAudioEndpointUtf16ChangedCallback *callback, XTaskQueueRegistrationToken *token )
+{
+    FIXME( "iface %p, queue %p, context %p, callback %p, token %p stub!\n", iface, queue, context, callback, token );
+    return E_NOTIMPL;
+}
+
+static boolean WINAPI x_user_device_XUserUnregisterForDefaultAudioEndpointUtf16Changed( IXUserDeviceImpl *iface, XTaskQueueRegistrationToken token, boolean wait )
+{
+    FIXME( "iface %p, token %p, wait %d stub!\n", iface, &token, wait );
+    return FALSE;
+}
+
+static HRESULT WINAPI x_user_device_XUserFindControllerForUserWithUiAsync( IXUserDeviceImpl *iface, XUserHandle user, XAsyncBlock *async )
+{
+    FIXME( "iface %p, user %p, async %p stub!\n", iface, user, async );
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI x_user_device_XUserFindControllerForUserWithUiResult( IXUserDeviceImpl *iface, XAsyncBlock *async, APP_LOCAL_DEVICE_ID *deviceId )
+{
+    FIXME( "iface %p, async %p, deviceId %p stub!\n", iface, async, deviceId );
+    return E_NOTIMPL;
+}
+
+static const struct IXUserDeviceImplVtbl x_user_device_vtbl =
+{
+    x_user_device_QueryInterface,
+    x_user_device_AddRef,
+    x_user_device_Release,
+    /* IXUserDeviceImpl methods */
+    x_user_device_XUserFindForDevice,
+    x_user_device_XUserRegisterForDeviceAssociationChanged,
+    x_user_device_XUserUnregisterForDeviceAssociationChanged,
+    x_user_device_XUserGetDefaultAudioEndpointUtf16,
+    x_user_device_XUserRegisterForDefaultAudioEndpointUtf16Changed,
+    x_user_device_XUserUnregisterForDefaultAudioEndpointUtf16Changed,
+    x_user_device_XUserFindControllerForUserWithUiAsync,
+    x_user_device_XUserFindControllerForUserWithUiResult,
+};
+
 static struct x_user x_user =
 {
     {&x_user_vtbl},
@@ -467,4 +576,11 @@ static struct x_user x_user =
     0,
 };
 
+static struct x_user_device x_user_device =
+{
+    {&x_user_device_vtbl},
+    0,
+};
+
 IXUserImpl6 *x_user_impl = &x_user.IXUserImpl_iface;
+IXUserDeviceImpl *x_user_device_impl = &x_user_device.IXUserDeviceImpl_iface;

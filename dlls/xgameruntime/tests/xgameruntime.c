@@ -408,6 +408,20 @@ static void test_XUser(void)
     IXUserImpl6_Release( xuser6 );
 }
 
+static void test_XUserDevice(void)
+{
+    IXUserDeviceImpl *xuserdevice;
+    HRESULT hr;
+
+    hr = QueryApiImpl_fun( &CLSID_XUserDeviceImpl, &IID_IXUserDeviceImpl, (void **)&xuserdevice );
+    ok( hr == S_OK, "got hr %#lx.\n", hr );
+
+    check_interface( xuserdevice, &IID_IUnknown, TRUE );
+    check_interface( xuserdevice, &IID_IXUserDeviceImpl, TRUE );
+
+    IXUserDeviceImpl_Release( xuserdevice );
+}
+
 START_TEST(xgameruntime)
 {
     HRESULT hr;
@@ -421,6 +435,7 @@ START_TEST(xgameruntime)
     test_XGameRuntimeFeature();
     test_XThreading();
     test_XUser();
+    test_XUserDevice();
 
     RoUninitialize();
 }
