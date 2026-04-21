@@ -1099,6 +1099,7 @@ SOURCES = \
 	xaudio2fx.idl \
 	xcmc.h \
 	xgameerr.h \
+	xgameruntimefeature.h \
 	xinput.h \
 	xmldom.h \
 	xmldom.idl \
