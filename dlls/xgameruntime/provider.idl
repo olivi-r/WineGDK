@@ -23,15 +23,9 @@
 import "propidl.idl";
 
 import "xgameruntimefeature.h";
-import "xgameruntimetypes.h";
+import "xsystem.h";
 
 // --- xgameruntime --- //
-typedef void* XSystemHandle;
-
-typedef enum XSystemHandleType XSystemHandleType;
-typedef enum XSystemHandleCallbackReason XSystemHandleCallbackReason;
-
-typedef struct XSystemAnalyticsInfo XSystemAnalyticsInfo;
 
 interface IXSystemImpl;
 interface IXSystemAnalyticsImpl;
@@ -40,40 +34,6 @@ interface IXGameRuntimeFeatureImpl;
 coclass XSystemImpl;
 coclass XSystemAnalyticsImpl;
 coclass XGameRuntimeFeatureImpl;
-
-enum XSystemHandleType
-{
-    AppCaptureScreenshotStream = 0x00,
-    DisplayTimeoutDeferral     = 0x01,
-    GameSaveContainer          = 0x02,
-    GameSaveProvider           = 0x03,
-    GameSaveUpdate             = 0x04,
-    PackageInstallationMonitor = 0x05,
-    PackageMount               = 0x06,
-    SpeechSynthesizer          = 0x07,
-    SpeechSynthesizerStream    = 0x08,
-    StoreContext               = 0x09,
-    StoreLicense               = 0x0a,
-    StoreProductQuery          = 0x0b,
-    TaskQueue                  = 0x0c,
-    User                       = 0x0d,
-    UserSignOutDeferral        = 0x0e,
-    GameUiTextEntry            = 0x0f
-};
-
-enum XSystemHandleCallbackReason
-{
-    Created     = 0x00,
-    Destroyed   = 0x01
-};
-
-struct XSystemAnalyticsInfo
-{
-    XVersion osVersion;  
-    XVersion hostingOsVersion;  
-    CHAR family[64];  
-    CHAR form[64];
-};
 
 [
     object,

@@ -1111,6 +1111,7 @@ SOURCES = \
 	xnetworking.h \
 	xpsobjectmodel.idl \
 	xpsobjectmodel_1.idl \
+	xsystem.h \
 	xtaskqueue.h \
 	zmouse.h
 
