@@ -1100,6 +1100,7 @@ SOURCES = \
 	xcmc.h \
 	xgameerr.h \
 	xgameruntimefeature.h \
+	xgameruntimetypes.h \
 	xinput.h \
 	xmldom.h \
 	xmldom.idl \
