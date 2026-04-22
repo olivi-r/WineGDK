@@ -21,4 +21,5 @@ SOURCES = \
 	save.c \
 	storage.c \
 	store.c \
-	system.c
+	system.c \
+	user.c
