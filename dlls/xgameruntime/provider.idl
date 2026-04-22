@@ -21,6 +21,14 @@
 #pragma makedep header
 
 import "propidl.idl";
+
+cpp_quote("#if 0")
+typedef struct APP_LOCAL_DEVICE_ID
+{
+    BYTE value[32];
+} APP_LOCAL_DEVICE_ID;
+cpp_quote("#endif")
+
 import "xgameruntime.h";
 
 interface IXAccessibility;
