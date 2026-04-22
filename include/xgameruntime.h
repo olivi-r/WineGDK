@@ -31,5 +31,6 @@
 #include <xgameruntimetypes.h>
 #include <xspeechsynthesizer.h>
 #include <xtaskqueue.h>
+#include <xuser.h>
 
 #endif

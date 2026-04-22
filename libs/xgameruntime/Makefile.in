@@ -7,4 +7,5 @@ SOURCES = \
 	xgameruntimeinit.c \
 	xspeechsynthesizer.c \
 	xtaskqueue.c \
-	xthread.c
+	xthread.c \
+	xuser.c
