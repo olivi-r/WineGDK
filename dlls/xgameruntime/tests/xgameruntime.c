@@ -361,16 +361,23 @@ static void test_XThreading(void)
 
 START_TEST(xgameruntime)
 {
+    IUnknown *iface;
     HRESULT hr;
 
     hr = RoInitialize(RO_INIT_MULTITHREADED);
     ok(hr == S_OK, "RoInitialize failed, hr %#lx\n", hr);
 
     test_GDKComponentInit();
+    if (!QueryApiImpl_fun) goto _END;
+    hr = QueryApiImpl_fun( &IID_IUnknown, &IID_IUnknown, (void **)&iface );
+    ok( hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ), "got hr %#lx.\n", hr );
+
     test_XSystem();
     test_XSystemAnalytics();
     test_XGameRuntimeFeature();
     test_XThreading();
+
+_END:
 
     RoUninitialize();
 }

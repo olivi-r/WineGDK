@@ -21,8 +21,7 @@
 #pragma makedep header
 
 import "propidl.idl";
-
-cpp_quote("#include <xasync.h>")
+import "xgameruntime.h";
 
 // --- xgameruntime --- //
 typedef void* XSystemHandle;
@@ -33,8 +32,6 @@ typedef enum XGameRuntimeFeature XGameRuntimeFeature;
 
 typedef struct XVersion XVersion;
 typedef struct XSystemAnalyticsInfo XSystemAnalyticsInfo;
-
-/* type-pruning version of XAsyncCompletionRoutine */
 
 interface IWineAsyncWorkImpl;
 interface IXSystemImpl;
@@ -189,4 +186,3 @@ coclass XGameRuntimeFeatureImpl
 {
     [default] interface IXGameRuntimeFeatureImpl;
 }
-

@@ -121,15 +121,12 @@ BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, void *reserved )
     return TRUE;
 }
 
-typedef HRESULT (WINAPI *InitializeApiImplEx2_ext)( ULONG gdkVer, ULONG gsVer, CHAR mode, INITIALIZE_OPTIONS *options );
+typedef HRESULT (WINAPI *InitializeApiImplEx2_ext)( ULONG gdkVer, ULONG gsVer, CHAR mode, const XGameRuntimeOptions *options );
 
-HRESULT WINAPI InitializeApiImplEx2( ULONG gdkVer, ULONG gsVer, CHAR mode, INITIALIZE_OPTIONS *options )
+HRESULT WINAPI InitializeApiImplEx2( ULONG gdkVer, ULONG gsVer, CHAR mode, const XGameRuntimeOptions *options )
 {
     //  Initialization can be done however we want on our side.
     // You can choose to return `S_OK` once the full SDK is implemented.
-    //
-    //  There's no documented information about what `INITIALIZE_OPTIONS` is,
-    // and xgameruntime.lib never utilizes this argument anyway.
     TRACE("gdkVer %ld, gsVer %ld, mode %d, options %p stub!\n", gdkVer, gsVer, mode, options);
     return GDKC_InitAPI( gdkVer, gsVer, mode, options );
 }
@@ -146,7 +143,7 @@ HRESULT WINAPI InitializeApiImpl( ULONG gdkVer, ULONG gsVer )
     return InitializeApiImplEx2( gdkVer, gsVer, 0, NULL );
 }
 
-typedef HRESULT (WINAPI *QueryApiImpl_ext)( GUID *runtimeClassId, REFIID interfaceId, void **out );
+typedef HRESULT (WINAPI *QueryApiImpl_ext)( const GUID *runtimeClassId, REFIID interfaceId, void **out );
 
 HRESULT WINAPI QueryApiImpl( const GUID *runtimeClassId, REFIID interfaceId, void **out )
 {
@@ -210,9 +207,9 @@ HRESULT WINAPI QueryApiImpl( const GUID *runtimeClassId, REFIID interfaceId, voi
     {
         return IXNetworkingImpl_QueryInterface( x_networking_impl, interfaceId, out );
     }
-    
-    FIXME( "%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid( runtimeClassId ) );
-    return E_NOTIMPL;
+
+    FIXME( "%s not implemented, returning ERROR_NOT_SUPPORTED.\n", debugstr_guid( runtimeClassId ) );
+    return HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED );
 }
 
 HRESULT WINAPI UninitializeApiImpl( void )

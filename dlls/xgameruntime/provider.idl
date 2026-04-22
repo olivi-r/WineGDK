@@ -21,6 +21,7 @@
 #pragma makedep header
 
 import "propidl.idl";
+import "xgameruntime.h";
 
 // --- xgameruntime --- //
 typedef void* XSystemHandle;
@@ -185,4 +186,3 @@ coclass XGameRuntimeFeatureImpl
 {
     [default] interface IXGameRuntimeFeatureImpl;
 }
-
