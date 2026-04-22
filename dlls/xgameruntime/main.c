@@ -207,6 +207,10 @@ HRESULT WINAPI QueryApiImpl( const GUID *runtimeClassId, REFIID interfaceId, voi
     {
         return IXNetworkingImpl_QueryInterface( x_networking_impl, interfaceId, out );
     }
+    else if ( IsEqualGUID( runtimeClassId, &CLSID_XUserImpl ) )
+    {
+        return IXUserImpl6_QueryInterface( x_user_impl, interfaceId, out );
+    }
 
     FIXME( "%s not implemented, returning ERROR_NOT_SUPPORTED.\n", debugstr_guid( runtimeClassId ) );
     return HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED );
