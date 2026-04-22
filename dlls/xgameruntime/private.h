@@ -30,6 +30,8 @@
 
 extern IXAccessibility *x_accessibility_impl;
 extern IXThreading *x_threading_impl;
+extern IXUser6 *x_user_impl;
+extern IXUserDevice2 *x_user_device_impl;
 
 /* Deference is for other modules to communicate with eachother through the same binary. */
 HRESULT WINAPI QueryApiImpl( const GUID *classId, REFIID interfaceId, void **out );

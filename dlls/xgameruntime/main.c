@@ -68,6 +68,10 @@ HRESULT WINAPI QueryApiImpl( const GUID *classId, REFIID interfaceId, void **out
         return IXAccessibility_QueryInterface( x_accessibility_impl, interfaceId, out );
     if (IsEqualGUID( classId, &CLSID_XThreadingImpl ))
         return IXThreading_QueryInterface( x_threading_impl, interfaceId, out );
+    if (IsEqualGUID( classId, &CLSID_XUserImpl ))
+        return IXUser6_QueryInterface( x_user_impl, interfaceId, out );
+    if (IsEqualGUID( classId, &CLSID_XUserDeviceImpl ))
+        return IXUserDevice2_QueryInterface( x_user_device_impl, interfaceId, out );
 
     FIXME( "%s not implemented, returning ERROR_NOT_SUPPORTED.\n", debugstr_guid( classId ) );
     return HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED );

@@ -114,6 +114,53 @@ static void test_XThreading( void )
     IXThreading_Release( xthreading );
 }
 
+static void test_XUser( void )
+{
+    IXUser *xuser = NULL;
+    HRESULT hr;
+
+    hr = QueryApiImpl( &CLSID_XUserImpl, &IID_IXUser, (void **)&xuser );
+    ok( hr == S_OK || broken( hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) ), "got hr %#lx.\n", hr );
+    if (hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) )
+    {
+        win_skip( "clsid %s not supported, skipping tests.\n", debugstr_guid( &CLSID_XUserImpl ) );
+        return;
+    }
+    if (!xuser) return;
+
+    check_interface( xuser, &IID_IUnknown );
+    check_interface( xuser, &IID_IXUser );
+    flaky check_interface( xuser, &IID_IXUser2 );
+    flaky check_interface( xuser, &IID_IXUser3 );
+    flaky check_interface( xuser, &IID_IXUser4 );
+    flaky check_interface( xuser, &IID_IXUser5 );
+    flaky check_interface( xuser, &IID_IXUser6 );
+    flaky check_interface( xuser, &IID_IXUserGamertag );
+
+    IXUser_Release( xuser );
+}
+
+static void test_XUserDevice( void )
+{
+    IXUserDevice *xuserdevice = NULL;
+    HRESULT hr;
+
+    hr = QueryApiImpl( &CLSID_XUserDeviceImpl, &IID_IXUserDevice, (void **)&xuserdevice );
+    ok( hr == S_OK || broken( hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) ), "got hr %#lx.\n", hr );
+    if (hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) )
+    {
+        win_skip( "clsid %s not supported, skipping tests.\n", debugstr_guid( &CLSID_XUserDeviceImpl ) );
+        return;
+    }
+    if (!xuserdevice) return;
+
+    check_interface( xuserdevice, &IID_IUnknown );
+    check_interface( xuserdevice, &IID_IXUserDevice );
+    flaky check_interface( xuserdevice, &IID_IXUserDevice2 );
+
+    IXUserDevice_Release( xuserdevice );
+}
+
 START_TEST(xgameruntime)
 {
     HRESULT hr;
@@ -126,6 +173,8 @@ START_TEST(xgameruntime)
 
     test_XAccessibility();
     test_XThreading();
+    test_XUser();
+    test_XUserDevice();
 
     hr = UninitializeApiImpl();
     ok( hr == S_OK, "got hr %#lx.\n", hr );

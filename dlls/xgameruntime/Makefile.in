@@ -5,4 +5,5 @@ SOURCES = \
 	gdkc.c \
 	main.c \
 	xaccessibility.c \
-	xthreading.c
+	xthreading.c \
+	xuser.c
