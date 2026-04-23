@@ -176,6 +176,27 @@ interface IThreadPool : IUnknown
 [
     local,
     object,
+    uuid(a85c3901-18ae-48c9-b066-d368f4523420)
+]
+interface IXTaskQueue : IUnknown
+{
+    HRESULT          Initialize( [in] XTaskQueuePortHandle workPort, XTaskQueuePortHandle completionPort );
+    HRESULT          InitializeOverloadPorts( [in] XTaskQueueDispatchMode workDispatch, [in] XTaskQueueDispatchMode completionDispatch, [in] BOOLEAN allowTermination, [in] BOOLEAN allowClose );
+    XTaskQueueHandle GetHandle();
+    HRESULT          GetPortContext( [in] XTaskQueuePort port, [out] IXTaskQueuePortContext **portContext );
+    HRESULT          RegisterWaitHandle( [in] XTaskQueuePort port, [in] HANDLE waitHandle, [in] void *callbackContext, [in] XTaskQueueCallback *callback, [out] XTaskQueueRegistrationToken *token );
+    void             UnregisterWaitHandle( [in] XTaskQueueRegistrationToken token );
+    HRESULT          RegisterSubmitCallback( [in] void *context, [in] XTaskQueueMonitorCallback *callback, [out] XTaskQueueRegistrationToken *token );
+    void             UnregisterSubmitCallback( [in] XTaskQueueRegistrationToken token );
+    BOOLEAN          get_CanTerminate();
+    BOOLEAN          get_CanClose();
+    HRESULT          Terminate( [in] BOOLEAN wait, [in] void *context, [in] XTaskQueueTerminatedCallback *callback );
+    void             RundownObject();
+}
+
+[
+    local,
+    object,
     uuid(9c4a0e19-10f9-48d7-a547-72f4d5693dcb)
 ]
 interface IXTaskQueueMonitorCallback : IUnknown

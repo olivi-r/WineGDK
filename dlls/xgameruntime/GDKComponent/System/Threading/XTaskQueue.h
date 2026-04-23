@@ -28,7 +28,6 @@
 #include "AtomicVector.h"
 #include "ThreadPool.h"
 
-typedef struct IXTaskQueue IXTaskQueue;
 typedef struct IXTaskQueuePort IXTaskQueuePort;
 
 static const UINT32 TASK_QUEUE_SIGNATURE = 0x41515545;
@@ -236,85 +235,6 @@ typedef struct IXTaskQueuePortVtbl {
         IXTaskQueuePort* This,
         IActionStatus *status);
 } IXTaskQueuePortVtbl;
-
-typedef struct IXTaskQueueVtbl {
-    /* IUnknown methods */
-    HRESULT (STDMETHODCALLTYPE *QueryInterface)(
-        IXTaskQueue* This, 
-        REFIID riid, 
-        void** ppvObject);
-        
-    ULONG   (STDMETHODCALLTYPE *AddRef)(
-        IXTaskQueue* This);
-
-    ULONG   (STDMETHODCALLTYPE *Release)(
-        IXTaskQueue* This);
-
-    /* IXTaskQueue methods */
-    HRESULT (STDMETHODCALLTYPE *Initialize)(
-        IXTaskQueue* This, 
-        XTaskQueuePortHandle workPort, 
-        XTaskQueuePortHandle completionPort);
-
-    HRESULT (STDMETHODCALLTYPE *InitializeOverloadPorts)(
-        IXTaskQueue* This, 
-        XTaskQueueDispatchMode workDispatch, 
-        XTaskQueueDispatchMode completionDispatch,
-        BOOLEAN allowTermination,
-        BOOLEAN allowClose);
-
-    XTaskQueueHandle (STDMETHODCALLTYPE *GetHandle)(
-        IXTaskQueue* This);
-    
-    HRESULT (STDMETHODCALLTYPE *GetPortContext)(
-        IXTaskQueue* This,
-        XTaskQueuePort port,
-        IXTaskQueuePortContext** portContext);
-
-    HRESULT (STDMETHODCALLTYPE *RegisterWaitHandle)(
-        IXTaskQueue* This,
-        XTaskQueuePort port,
-        HANDLE waitHandle,
-        PVOID callbackContext,
-        XTaskQueueCallback* callback,
-        XTaskQueueRegistrationToken* token);
-
-    VOID    (STDMETHODCALLTYPE *UnregisterWaitHandle)(
-        IXTaskQueue* This,
-        XTaskQueueRegistrationToken token);
-
-    HRESULT (STDMETHODCALLTYPE *RegisterSubmitCallback)(
-        IXTaskQueue* This,
-        PVOID context,
-        XTaskQueueMonitorCallback* callback,
-        XTaskQueueRegistrationToken* token);
-
-    VOID    (STDMETHODCALLTYPE *UnregisterSubmitCallback)(
-        IXTaskQueue* This,
-        XTaskQueueRegistrationToken token);
-
-    BOOLEAN (STDMETHODCALLTYPE *get_CanTerminate)(
-        IXTaskQueue* This);
-
-    BOOLEAN (STDMETHODCALLTYPE *get_CanClose)(
-        IXTaskQueue* This);
-
-    HRESULT (STDMETHODCALLTYPE *Terminate)(
-        IXTaskQueue* This,
-        BOOLEAN wait,
-        PVOID callbackContext,
-        XTaskQueueTerminatedCallback* callback);
-
-    VOID    (*RundownObject)(
-        IXTaskQueue* This);
-
-    VOID    (CALLBACK *OnTerminationCallback)(
-        PVOID context);
-} IXTaskQueueVtbl;
-
-struct IXTaskQueue {
-    const IXTaskQueueVtbl* lpVtbl;
-};
 
 struct IXTaskQueuePort {
     const IXTaskQueuePortVtbl* lpVtbl;

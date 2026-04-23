@@ -366,7 +366,7 @@ static HRESULT AllocStateNoCompletion( XAsyncBlock* asyncBlock, AsyncBlockIntern
     }
     else
     {
-        queue->headQueue->lpVtbl->AddRef( queue->headQueue );
+        IXTaskQueue_AddRef( queue->headQueue );
         stateImpl->queue = queue;
     }
 
