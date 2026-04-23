@@ -35,11 +35,16 @@ interface IXGameRuntimeFeatureImpl;
 interface IXThreadingImpl;
 interface IXNetworkingImpl;
 
+interface IActionStatus;
+interface IThreadPool;
+
 coclass XSystemImpl;
 coclass XSystemAnalyticsImpl;
 coclass XGameRuntimeFeatureImpl;
 coclass XThreadingImpl;
 coclass XNetworkingImpl;
+
+typedef void (__stdcall *ThreadPoolCallback)( void *context, IActionStatus *status );
 
 [
     local,
@@ -111,6 +116,28 @@ interface IXThreadingImpl : IUnknown
     HRESULT __PADDING_2__();
     void    XThreadAssertNotTimeSensitive();
     BOOLEAN XThreadIsTimeSensitive();
+}
+
+[
+    local,
+    object
+]
+interface IActionStatus
+{
+    void Complete();
+    void MayRunLong();
+}
+
+[
+    local,
+    object,
+    uuid(1c7e9426-2b0e-4c37-a57a-df7c165a18af)
+]
+interface IThreadPool : IUnknown
+{
+    HRESULT Initialize( [in] void *context, ThreadPoolCallback callback );
+    void    Terminate();
+    void    Submit();
 }
 
 [

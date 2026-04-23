@@ -439,7 +439,7 @@ static HRESULT WINAPI x_task_queue_port_Initialize( IXTaskQueuePort *iface, XTas
 
         case XTaskQueueDispatchMode_ThreadPool:
         case XTaskQueueDispatchMode_SerializedThreadPool:
-            hr = impl->threadPool->lpVtbl->Initialize( impl->threadPool, iface, x_task_queue_port_ThreadPoolOperation );
+            hr = IThreadPool_Initialize( impl->threadPool, iface, x_task_queue_port_ThreadPoolOperation );
             if ( FAILED( hr ) ) return hr;
             break;
 
@@ -1208,7 +1208,7 @@ static VOID x_task_queue_port_ProcessThreadPoolCallback( IXTaskQueuePort *iface,
 
     // Important that this comes before Release; otherwise
     // cleanup may deadlock.
-    status->lpVtbl->Complete( status );
+    IActionStatus_Complete( status );
 
     // When we submitted a request to the thread pool we
     // added a reference to ourself.  Balance it here. This
@@ -1257,7 +1257,7 @@ static VOID x_task_queue_port_NotifyItemQueued( IXTaskQueuePort *iface )
                 // on termination so we need to drain before releasing.
                 iface->lpVtbl->AddRef( iface );
                 
-                impl->threadPool->lpVtbl->Submit( impl->threadPool );
+                IThreadPool_Submit( impl->threadPool );
                 break;
 
             case XTaskQueueDispatchMode_Immediate:

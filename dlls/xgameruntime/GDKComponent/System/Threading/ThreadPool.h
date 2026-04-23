@@ -24,50 +24,6 @@
 
 #include "../../../private.h"
 
-typedef struct IThreadPool IThreadPool;
-typedef struct IActionStatus IActionStatus;
-
-typedef void CALLBACK (*ThreadPoolCallback)(void* context, IActionStatus *status);
-
-typedef struct IActionStatusVtbl {
-    VOID (STDMETHODCALLTYPE *Complete)(IActionStatus *This);
-    VOID (STDMETHODCALLTYPE *MayRunLong)(IActionStatus *This);
-} IActionStatusVtbl;
-
-typedef struct IThreadPoolVtbl {
-    /* IUnknown methods */
-    HRESULT (STDMETHODCALLTYPE *QueryInterface)(
-        IThreadPool* This, 
-        REFIID riid, 
-        void** ppvObject);
-        
-    ULONG   (STDMETHODCALLTYPE *AddRef)(
-        IThreadPool* This);
-
-    ULONG   (STDMETHODCALLTYPE *Release)(
-        IThreadPool* This);
-
-    /* IThreadPool Methods */
-    HRESULT (STDMETHODCALLTYPE *Initialize)(
-        IThreadPool* This,
-        PVOID context,
-        ThreadPoolCallback callback);
-
-    VOID    (STDMETHODCALLTYPE *Terminate)(
-        IThreadPool* This);
-
-    VOID    (STDMETHODCALLTYPE *Submit)(
-        IThreadPool* This);
-} IThreadPoolVtbl;
-
-struct IThreadPool {
-    const IThreadPoolVtbl* lpVtbl;
-};
-
-struct IActionStatus {
-    const IActionStatusVtbl* lpVtbl;
-};
-
 struct ThreadPoolActionStatus {
     IActionStatus IActionStatus_iface;
     

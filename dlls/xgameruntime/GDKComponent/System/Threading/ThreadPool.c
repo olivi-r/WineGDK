@@ -99,15 +99,15 @@ static void CALLBACK TPCallback( PTP_CALLBACK_INSTANCE instance, void* context, 
     status->owner = (IThreadPool *)context;
     status->instance = instance;
 
-    impl->IThreadPool_iface.lpVtbl->AddRef( &impl->IThreadPool_iface );
+    IThreadPool_AddRef( &impl->IThreadPool_iface );
     impl->callback( impl->context, &status->IActionStatus_iface );
 
     if ( !status->IsComplete )
     {
-        status->IActionStatus_iface.lpVtbl->Complete( &status->IActionStatus_iface );
+        IActionStatus_Complete( &status->IActionStatus_iface );
     }
 
-    impl->IThreadPool_iface.lpVtbl->Release( &impl->IThreadPool_iface ); // May delete this
+    IThreadPool_Release( &impl->IThreadPool_iface ); // May delete this
 }
 
 static HRESULT WINAPI thread_pool_QueryInterface( IThreadPool *iface, REFIID iid, void **out )
@@ -119,8 +119,7 @@ static HRESULT WINAPI thread_pool_QueryInterface( IThreadPool *iface, REFIID iid
     if (IsEqualGUID( iid, &IID_IUnknown ) ||
         IsEqualGUID( iid, &IID_IThreadPool ))
     {
-        *out = &impl->IThreadPool_iface;
-        impl->IThreadPool_iface.lpVtbl->AddRef( *out );
+        IThreadPool_AddRef( *out = &impl->IThreadPool_iface );
         return S_OK;
     }
 
@@ -176,7 +175,7 @@ static VOID WINAPI thread_pool_Terminate( IThreadPool *iface )
         impl->work = NULL;
     }
 
-    iface->lpVtbl->Release( iface );
+    IThreadPool_Release( iface );
 
     return;
 }
