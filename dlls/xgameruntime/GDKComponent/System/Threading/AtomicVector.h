@@ -24,44 +24,6 @@
 
 #include "../../../private.h"
 
-typedef BOOLEAN CALLBACK (*AtomicVector_Predicate)( const void *element, void *ctx );
-typedef void CALLBACK (*AtomicVector_Visitor)(void *ctx);
-
-typedef struct IAtomicVector IAtomicVector;
-
-typedef struct IAtomicVectorVtbl {
-    /* IUnknown methods */
-    HRESULT (STDMETHODCALLTYPE *QueryInterface)(
-        IAtomicVector* This, 
-        REFIID riid, 
-        void** ppvObject);
-        
-    ULONG   (STDMETHODCALLTYPE *AddRef)(
-        IAtomicVector* This);
-
-    ULONG   (STDMETHODCALLTYPE *Release)(
-        IAtomicVector* This);
-
-    /* IAtomicVector Methods */
-    HRESULT (STDMETHODCALLTYPE *Add)(
-        IAtomicVector* This,
-        PVOID value);
-
-    VOID    (STDMETHODCALLTYPE *Remove)(
-        IAtomicVector* This,
-        AtomicVector_Predicate predicate,
-        PVOID predicateContext);
-
-    VOID    (STDMETHODCALLTYPE *Visit)(
-        IAtomicVector* This,
-        AtomicVector_Visitor visitor);
-
-} IAtomicVectorVtbl;
-
-struct IAtomicVector {
-    const IAtomicVectorVtbl* lpVtbl;
-};
-
 struct atomic_vector
 {
     IAtomicVector IAtomicVector_iface;

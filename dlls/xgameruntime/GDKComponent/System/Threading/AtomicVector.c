@@ -37,8 +37,7 @@ static HRESULT WINAPI atomic_vector_QueryInterface( IAtomicVector *iface, REFIID
     if (IsEqualGUID( iid, &IID_IUnknown ) ||
         IsEqualGUID( iid, &IID_IAtomicVector ))
     {
-        *out = &impl->IAtomicVector_iface;
-        impl->IAtomicVector_iface.lpVtbl->AddRef( *out );
+        IAtomicVector_AddRef( *out = &impl->IAtomicVector_iface );
         return S_OK;
     }
 

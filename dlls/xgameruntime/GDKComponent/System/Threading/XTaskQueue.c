@@ -650,7 +650,7 @@ static HRESULT WINAPI x_task_queue_port_Attach( IXTaskQueuePort *iface, IXTaskQu
 
     TRACE( "iface %p, portContext %p.\n", iface, portContext );
 
-    return impl->attachedContexts->lpVtbl->Add( impl->attachedContexts, (PVOID)portContext );
+    return IAtomicVector_Add( impl->attachedContexts, (PVOID)portContext );
 }
 
 static VOID WINAPI x_task_queue_port_Detach( IXTaskQueuePort *iface, IXTaskQueuePortContext* portContext )
@@ -660,7 +660,7 @@ static VOID WINAPI x_task_queue_port_Detach( IXTaskQueuePort *iface, IXTaskQueue
     TRACE( "iface %p, portContext %p.\n", iface, portContext );
 
     iface->lpVtbl->CancelPendingEntries( iface, portContext, FALSE );
-    impl->attachedContexts->lpVtbl->Remove( impl->attachedContexts, x_task_queue_port_VectorPredicateOperation, portContext );
+    IAtomicVector_Remove( impl->attachedContexts, x_task_queue_port_VectorPredicateOperation, portContext );
     return;
 }
 
@@ -1266,7 +1266,7 @@ static VOID x_task_queue_port_NotifyItemQueued( IXTaskQueuePort *iface )
                 break;
         }
 
-        impl->attachedContexts->lpVtbl->Visit( impl->attachedContexts, x_task_queue_port_VectorVisitOperation );
+        IAtomicVector_Visit( impl->attachedContexts, x_task_queue_port_VectorVisitOperation );
         // If the queue is immediate, drain the newly queued item
         // now.
 

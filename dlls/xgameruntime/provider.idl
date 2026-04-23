@@ -36,6 +36,7 @@ interface IXThreadingImpl;
 interface IXNetworkingImpl;
 
 interface IActionStatus;
+interface IAtomicVector;
 interface IThreadPool;
 
 coclass XSystemImpl;
@@ -44,7 +45,9 @@ coclass XGameRuntimeFeatureImpl;
 coclass XThreadingImpl;
 coclass XNetworkingImpl;
 
-typedef void (__stdcall *ThreadPoolCallback)( void *context, IActionStatus *status );
+typedef BOOLEAN (__stdcall *AtomicVector_Predicate)( const void *element, void *context );
+typedef void    (__stdcall *AtomicVector_Visitor)( void *context );
+typedef void    (__stdcall *ThreadPoolCallback)( void *context, IActionStatus *status );
 
 [
     local,
@@ -126,6 +129,18 @@ interface IActionStatus
 {
     void Complete();
     void MayRunLong();
+}
+
+[
+    local,
+    object,
+    uuid(c0858629-c135-4774-a8a8-ab3e6969aeeb)
+]
+interface IAtomicVector : IUnknown
+{
+    HRESULT Add( [in] void *value );
+    void    Remove( [in] AtomicVector_Predicate predicate, [in] void *predicateContext );
+    void    Visit( AtomicVector_Visitor visitor );
 }
 
 [
