@@ -30,7 +30,6 @@
 
 typedef struct IXTaskQueue IXTaskQueue;
 typedef struct IXTaskQueuePort IXTaskQueuePort;
-typedef struct IXTaskQueueMonitorCallback IXTaskQueueMonitorCallback;
 typedef struct IXTaskQueuePortContext IXTaskQueuePortContext;
 typedef struct IXTaskQueueWaitCallback IXTaskQueueWaitCallback;
 
@@ -356,39 +355,6 @@ typedef struct IXTaskQueueVtbl {
         PVOID context);
 } IXTaskQueueVtbl;
 
-typedef struct IXTaskQueueMonitorCallbackVtbl {
-    /* IUnknown methods */
-    HRESULT (STDMETHODCALLTYPE *QueryInterface)(
-        IXTaskQueueMonitorCallback* This, 
-        REFIID riid, 
-        void** ppvObject);
-        
-    ULONG   (STDMETHODCALLTYPE *AddRef)(
-        IXTaskQueueMonitorCallback* This);
-
-    ULONG   (STDMETHODCALLTYPE *Release)(
-        IXTaskQueueMonitorCallback* This);
-        
-    /* IXTaskQueueMonitorCallback methods */
-    HRESULT (STDMETHODCALLTYPE *Register)(
-        IXTaskQueueMonitorCallback* This,
-        PVOID context,
-        XTaskQueueMonitorCallback* callback,
-        XTaskQueueRegistrationToken *token
-    );
-
-    VOID    (STDMETHODCALLTYPE *Unregister)(
-        IXTaskQueueMonitorCallback* This,
-        XTaskQueueRegistrationToken token
-    );
-
-    VOID    (STDMETHODCALLTYPE *Invoke)(
-        IXTaskQueueMonitorCallback* This,
-        XTaskQueuePort port
-    );
-    
-} IXTaskQueueMonitorCallbackVtbl;
-
 typedef struct IXTaskQueueWaitCallbackVtbl {
     /* IUnknown methods */
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(
@@ -423,10 +389,6 @@ struct IXTaskQueue {
 
 struct IXTaskQueuePortContext {
     const IXTaskQueuePortContextVtbl* lpVtbl;
-};
-
-struct IXTaskQueueMonitorCallback {
-    const IXTaskQueueMonitorCallbackVtbl* lpVtbl;
 };
 
 struct IXTaskQueuePort {

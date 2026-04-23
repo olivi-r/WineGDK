@@ -39,6 +39,7 @@ interface IActionStatus;
 interface IAsyncState;
 interface IAtomicVector;
 interface IThreadPool;
+interface IXTaskQueueMonitorCallback;
 interface IXWaitTimer;
 
 coclass XSystemImpl;
@@ -166,6 +167,18 @@ interface IThreadPool : IUnknown
     HRESULT Initialize( [in] void *context, ThreadPoolCallback callback );
     void    Terminate();
     void    Submit();
+}
+
+[
+    local,
+    object,
+    uuid(9c4a0e19-10f9-48d7-a547-72f4d5693dcb)
+]
+interface IXTaskQueueMonitorCallback : IUnknown
+{
+    HRESULT Register( [in] void *context, [in] XTaskQueueMonitorCallback *callback, [out] XTaskQueueRegistrationToken *token );
+    void    Unregister( [in] XTaskQueueRegistrationToken token );
+    void    Invoke( [in] XTaskQueuePort port );
 }
 
 [

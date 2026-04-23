@@ -161,7 +161,7 @@ static VOID WINAPI x_task_queue_port_context_ItemQueued( IXTaskQueuePortContext 
     TRACE( "iface %p.\n", iface );
 
     if ( impl->callbackSubmitted->lpVtbl )
-        impl->callbackSubmitted->lpVtbl->Invoke( impl->callbackSubmitted, impl->type );
+        IXTaskQueueMonitorCallback_Invoke( impl->callbackSubmitted, impl->type );
 
     return;
 }
@@ -231,8 +231,7 @@ static HRESULT WINAPI x_task_queue_monitor_callback_QueryInterface( IXTaskQueueM
     if (IsEqualGUID( iid, &IID_IUnknown ) ||
         IsEqualGUID( iid, &IID_IXTaskQueueMonitorCallback ))
     {
-        *out = &impl->IXTaskQueueMonitorCallback_iface;
-        impl->IXTaskQueueMonitorCallback_iface.lpVtbl->AddRef( *out );
+        IXTaskQueueMonitorCallback_AddRef( *out = &impl->IXTaskQueueMonitorCallback_iface );
         return S_OK;
     }
 
@@ -1612,7 +1611,7 @@ static HRESULT WINAPI x_task_queue_RegisterSubmitCallback( IXTaskQueue *iface, P
 
     TRACE( "iface %p, context %p, callback %p, token %p.\n", iface, context, callback, token );
 
-    return impl->callbackSubmitted->lpVtbl->Register( impl->callbackSubmitted, context, callback, token );
+    return IXTaskQueueMonitorCallback_Register( impl->callbackSubmitted, context, callback, token );
 }
 
 static VOID WINAPI x_task_queue_UnregisterSubmitCallback( IXTaskQueue *iface, XTaskQueueRegistrationToken token )
@@ -1621,7 +1620,7 @@ static VOID WINAPI x_task_queue_UnregisterSubmitCallback( IXTaskQueue *iface, XT
 
     TRACE( "iface %p, token %lld.\n", iface, token.token );
 
-    impl->callbackSubmitted->lpVtbl->Unregister( impl->callbackSubmitted, token );
+    IXTaskQueueMonitorCallback_Unregister( impl->callbackSubmitted, token );
 }
 
 static BOOLEAN WINAPI x_task_queue_get_CanTerminate( IXTaskQueue *iface )
