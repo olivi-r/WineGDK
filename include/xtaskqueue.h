@@ -19,43 +19,52 @@
 #ifndef __WINE_XTASKQUEUE_H
 #define __WINE_XTASKQUEUE_H
 
-#include <stdint.h>
-#include <winerror.h>
-#include <windef.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-typedef struct XTaskQueueObject* XTaskQueueHandle;
+#ifndef DECLARE_ENUM_CLASS
+#ifdef __cplusplus
+#define _DECLARE_ENUM_CLASS(e,t) enum class e : t {
+#define END_DECLARE_ENUM_CLASS };
+#define _ENUM_CLASS_MEMBER(e,t,m,v) m,
+#else
+#define _DECLARE_ENUM_CLASS(e,t) typedef t e;
+#define END_DECLARE_ENUM_CLASS
+#define _ENUM_CLASS_MEMBER(e,t,m,v) static const t e##_##m = v;
+#endif
+#define DECLARE_ENUM_CLASS(e) _DECLARE_ENUM_CLASS(e,UINT32)
+#define ENUM_CLASS_MEMBER(e,m,v) _ENUM_CLASS_MEMBER(e,UINT32,m,v)
+#endif
 
-typedef struct XTaskQueuePortObject* XTaskQueuePortHandle;
+DECLARE_ENUM_CLASS( XTaskQueueDispatchMode )
+    ENUM_CLASS_MEMBER( XTaskQueueDispatchMode, Manual,               0 )
+    ENUM_CLASS_MEMBER( XTaskQueueDispatchMode, ThreadPool,           1 )
+    ENUM_CLASS_MEMBER( XTaskQueueDispatchMode, SerializedThreadPool, 2 )
+    ENUM_CLASS_MEMBER( XTaskQueueDispatchMode, Immediate,            3 )
+END_DECLARE_ENUM_CLASS
 
-typedef enum XTaskQueueDispatchMode
+DECLARE_ENUM_CLASS( XTaskQueuePort )
+    ENUM_CLASS_MEMBER( XTaskQueuePort, Work,       0 )
+    ENUM_CLASS_MEMBER( XTaskQueuePort, Completion, 1 )
+END_DECLARE_ENUM_CLASS
+
+typedef struct XTaskQueueObject *XTaskQueueHandle;
+typedef struct XTaskQueuePortObject *XTaskQueuePortHandle;
+
+typedef struct XTaskQueueRegistrationToken XTaskQueueRegistrationToken;
+
+typedef void __stdcall XTaskQueueCallback( void *context, BOOLEAN canceled );
+typedef void __stdcall XTaskQueueMonitorCallback( void *context, XTaskQueueHandle queue, XTaskQueuePort port );
+typedef void __stdcall XTaskQueueTerminatedCallback( void *context );
+
+struct XTaskQueueRegistrationToken
 {
-    Manual,
-    ThreadPool,
-    SerializedThreadPool,
-    Immediate
-} XTaskQueueDispatchMode;
+    UINT64 token;
+};
 
-typedef enum XTaskQueuePort
-{
-    Work,
-    Completion
-} XTaskQueuePort;
-
-typedef enum XTaskQueuePortStatus
-{
-    PortStatus_Active,
-    PortStatus_Canceled,
-    PortStatus_Terminating,
-    PortStatus_Terminated
-} XTaskQueuePortStatus;
-
-typedef struct XTaskQueueRegistrationToken
-{
-    uint64_t token;
-} XTaskQueueRegistrationToken;
-
-typedef void CALLBACK XTaskQueueCallback(_In_opt_ void* context, _In_ BOOL canceled);
-typedef void CALLBACK XTaskQueueMonitorCallback(_In_opt_ void* context, _In_ XTaskQueueHandle queue, _In_ XTaskQueuePort port);
-typedef void CALLBACK XTaskQueueTerminatedCallback(_In_opt_ void* context);
+#ifdef __cplusplus
+}
+#endif
 
 #endif

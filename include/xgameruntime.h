@@ -24,5 +24,6 @@
 #include <xgameruntimeinit.h>
 #include <xgameruntimetypes.h>
 #include <xsystem.h>
+#include <xtaskqueue.h>
 
 #endif
