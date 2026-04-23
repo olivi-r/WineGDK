@@ -39,6 +39,7 @@ interface IActionStatus;
 interface IAsyncState;
 interface IAtomicVector;
 interface IThreadPool;
+interface IXWaitTimer;
 
 coclass XSystemImpl;
 coclass XSystemAnalyticsImpl;
@@ -49,6 +50,8 @@ coclass XNetworkingImpl;
 typedef BOOLEAN (__stdcall *AtomicVector_Predicate)( const void *element, void *context );
 typedef void    (__stdcall *AtomicVector_Visitor)( void *context );
 typedef void    (__stdcall *ThreadPoolCallback)( void *context, IActionStatus *status );
+
+typedef void __stdcall WaitTimerCallback( void *context );
 
 [
     local,
@@ -163,6 +166,20 @@ interface IThreadPool : IUnknown
     HRESULT Initialize( [in] void *context, ThreadPoolCallback callback );
     void    Terminate();
     void    Submit();
+}
+
+[
+    local,
+    object,
+    uuid(15b68a9c-386b-4364-9211-5dd598e6a019)
+]
+interface IXWaitTimer : IUnknown
+{
+    HRESULT Initialize( [in] void *context, [in] WaitTimerCallback *callback );
+    void    Terminate();
+    void    Start( [in] UINT64 absoluteTime );
+    void    Cancel();
+    UINT64  GetAbsoluteTime( UINT32 msFromNow );
 }
 
 [

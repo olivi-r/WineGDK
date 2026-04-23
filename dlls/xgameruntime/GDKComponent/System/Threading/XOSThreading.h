@@ -24,48 +24,6 @@
 
 #include "../../../private.h"
 
-typedef void CALLBACK WaitTimerCallback(void* context);
-
-typedef struct IXWaitTimer IXWaitTimer;
-
-typedef struct IXWaitTimerVtbl {
-    /* IUnknown methods */
-    HRESULT (STDMETHODCALLTYPE *QueryInterface)(
-        IXWaitTimer* This, 
-        REFIID riid, 
-        void** ppvObject);
-        
-    ULONG   (STDMETHODCALLTYPE *AddRef)(
-        IXWaitTimer* This);
-
-    ULONG   (STDMETHODCALLTYPE *Release)(
-        IXWaitTimer* This);
-
-    /* IXWaitTimer methods */
-    HRESULT (STDMETHODCALLTYPE *Initialize)(
-        IXWaitTimer* This,
-        PVOID context,
-        WaitTimerCallback* callback);
-
-    VOID    (STDMETHODCALLTYPE *Terminate)(
-        IXWaitTimer* This);
-
-    VOID    (STDMETHODCALLTYPE *Start)(
-        IXWaitTimer* This,
-        UINT64 absoluteTime);
-
-    VOID    (STDMETHODCALLTYPE *Cancel)(
-        IXWaitTimer* This);
-
-    UINT64  (STDMETHODCALLTYPE *GetAbsoluteTime)(
-        IXWaitTimer* This,
-        UINT32 msFromNow);
-} IXWaitTimerVtbl;
-
-struct IXWaitTimer {
-    const IXWaitTimerVtbl* lpVtbl;
-};
-
 struct x_wait_timer {
     IXWaitTimer IXWaitTimer_iface;
     PTP_TIMER timer;

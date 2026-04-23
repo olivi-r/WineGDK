@@ -47,8 +47,7 @@ static HRESULT WINAPI x_wait_timer_QueryInterface( IXWaitTimer *iface, REFIID ii
     if (IsEqualGUID( iid, &IID_IUnknown ) ||
         IsEqualGUID( iid, &IID_IXWaitTimer ))
     {
-        *out = &impl->IXWaitTimer_iface;
-        impl->IXWaitTimer_iface.lpVtbl->AddRef( *out );
+        IXWaitTimer_AddRef( *out = &impl->IXWaitTimer_iface );
         return S_OK;
     }
 

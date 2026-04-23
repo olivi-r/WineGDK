@@ -429,7 +429,7 @@ static HRESULT WINAPI x_task_queue_port_Initialize( IXTaskQueuePort *iface, XTas
     hr = CreateIThreadPool( &impl->threadPool );
     if ( FAILED( hr ) ) return hr;
 
-    impl->timer->lpVtbl->Initialize( impl->timer, iface, x_task_queue_port_WaitTimerOperation );
+    IXWaitTimer_Initialize( impl->timer, iface, x_task_queue_port_WaitTimerOperation );
 
     switch (mode)
     {
@@ -488,7 +488,7 @@ static HRESULT WINAPI x_task_queue_port_QueueItem( IXTaskQueuePort *iface, IXTas
         if( !(iface->lpVtbl->AppendEntry( iface, queue )) ) return E_OUTOFMEMORY;
     } else
     {
-        queue->enqueueTime = impl->timer->lpVtbl->GetAbsoluteTime( impl->timer, waitMs );
+        queue->enqueueTime = IXWaitTimer_GetAbsoluteTime( impl->timer, waitMs );
         if ( !impl->pendingQueueList_tail )
         {
             //queue list is empty
@@ -506,7 +506,7 @@ static HRESULT WINAPI x_task_queue_port_QueueItem( IXTaskQueuePort *iface, IXTas
             {
                 if ( InterlockedCompareExchange64( &impl->timerDue, queue->enqueueTime, due ) == due )
                 {
-                    impl->timer->lpVtbl->Start( impl->timer, queue->enqueueTime );
+                    IXWaitTimer_Start( impl->timer, queue->enqueueTime );
                     break;
                 }
             }
@@ -984,7 +984,7 @@ static VOID x_task_queue_port_CancelPendingEntries( IXTaskQueuePort *iface, IXTa
 
     TRACE( "iface %p, portContext %p, appendToQueue %d.\n", iface, portContext, appendToQueue );
 
-    impl->timer->lpVtbl->Cancel( impl->timer );
+    IXWaitTimer_Cancel( impl->timer );
     impl->timerDue = UINT64_MAX;
 
     current = impl->pendingQueueList_head;
@@ -1124,7 +1124,7 @@ static BOOLEAN x_task_queue_port_ScheduleNextPendingCallback( IXTaskQueuePort *i
             {
                 if ( InterlockedCompareExchange64( &impl->timerDue, 0, 0 ) == InterlockedCompareExchange64( &impl->timerDue, dueTime, nextItem->enqueueTime ) )
                 {
-                    impl->timer->lpVtbl->Start( impl->timer, nextItem->enqueueTime );
+                    IXWaitTimer_Start( impl->timer, nextItem->enqueueTime );
                     break;
                 }
 
@@ -1151,7 +1151,7 @@ static BOOLEAN x_task_queue_port_ScheduleNextPendingCallback( IXTaskQueuePort *i
     {
         if ( InterlockedCompareExchange64( &impl->timerDue, 0, 0 ) == InterlockedCompareExchange64( &impl->timerDue, dueTime, noDueTime ) )
         {
-            impl->timer->lpVtbl->Cancel( impl->timer );
+            IXWaitTimer_Cancel( impl->timer );
         }
     }
 
