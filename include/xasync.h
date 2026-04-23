@@ -21,18 +21,19 @@
 
 #include "xtaskqueue.h"
 
-struct XAsyncBlock;
+typedef struct XAsyncBlock XAsyncBlock;
 
-typedef void CALLBACK XAsyncCompletionRoutine(_Inout_ struct XAsyncBlock* asyncBlock);
+typedef void    __stdcall XAsyncCompletionRoutine( struct XAsyncBlock *asyncBlock );
+typedef HRESULT __stdcall XAsyncWork( struct XAsyncBlock *asyncBlock );
 
-typedef HRESULT CALLBACK XAsyncWork(_Inout_ struct XAsyncBlock* asyncBlock);
-
-typedef struct XAsyncBlock
+#ifndef __WIDL__
+struct XAsyncBlock
 {
     XTaskQueueHandle queue;
     void* context;
     XAsyncCompletionRoutine* callback;
     unsigned char internal[sizeof(void*) * 4];
-} XAsyncBlock;
+};
+#endif
 
 #endif
