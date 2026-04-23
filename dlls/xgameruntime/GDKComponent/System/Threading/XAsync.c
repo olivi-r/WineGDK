@@ -68,8 +68,7 @@ static HRESULT WINAPI async_state_QueryInterface( IAsyncState *iface, REFIID iid
     if (IsEqualGUID( iid, &IID_IUnknown ) ||
         IsEqualGUID( iid, &IID_IAsyncState ))
     {
-        *out = &impl->IAsyncState_iface;
-        impl->IAsyncState_iface.lpVtbl->AddRef( *out );
+        IAsyncState_AddRef( *out = &impl->IAsyncState_iface );
         return S_OK;
     }
 
@@ -150,7 +149,7 @@ static IAsyncState* WINAPI x_async_block_guard_GetState( IXAsyncBlockInternalGua
     }
 
     if ( impl->internal->state != NULL )
-        impl->internal->state->lpVtbl->AddRef( impl->internal->state );
+        IAsyncState_AddRef( impl->internal->state );
 
     return impl->internal->state;
 }
@@ -245,7 +244,7 @@ static AsyncBlockInternal* x_async_block_guard_DoLock( XAsyncBlock* asyncBlock )
     if ( lockedResult->state == NULL || asyncBlock == &state->providerAsyncBlock )
         return lockedResult;
 
-    lockedResult->state->lpVtbl->AddRef( lockedResult->state );
+    IAsyncState_AddRef( lockedResult->state );
 
     LeaveCriticalSection( &lockedResult->lock );
 
@@ -253,7 +252,7 @@ static AsyncBlockInternal* x_async_block_guard_DoLock( XAsyncBlock* asyncBlock )
     if ( stateAsyncBlockInternal == NULL )
     {
         EnterCriticalSection( &lockedResult->lock );
-        lockedResult->state->lpVtbl->Release( lockedResult->state );
+        IAsyncState_Release( lockedResult->state );
         return lockedResult;
     }
 
@@ -263,11 +262,11 @@ static AsyncBlockInternal* x_async_block_guard_DoLock( XAsyncBlock* asyncBlock )
     {
         LeaveCriticalSection( &stateAsyncBlockInternal->lock );
         EnterCriticalSection( &lockedResult->lock );
-        lockedResult->state->lpVtbl->Release( lockedResult->state );
+        IAsyncState_Release( lockedResult->state );
         return lockedResult;
     }
 
-    lockedResult->state->lpVtbl->Release( lockedResult->state );
+    IAsyncState_Release( lockedResult->state );
     return stateAsyncBlockInternal;
 }
 
@@ -526,12 +525,12 @@ static HRESULT SignalCompletion( IAsyncState *state )
 
     if ( stateImpl->providerData.async->callback != NULL )
     {
-        state->lpVtbl->AddRef( state );
+        IAsyncState_AddRef( state );
         hr = XTaskQueueSubmitDelayedCallback( stateImpl->queue, XTaskQueuePort_Completion, 0, (PVOID)state, CompletionCallback );
 
         if ( SUCCEEDED( hr ) )
         {
-            state->lpVtbl->Release( state );
+            IAsyncState_Release( state );
         }
     }
     else
@@ -551,7 +550,7 @@ static void CleanupState( IAsyncState *state)
     if ( state != NULL )
     {
         stateImpl->valid = FALSE;
-        state->lpVtbl->Release( state );
+        IAsyncState_Release( state );
     }
 }
 
@@ -873,11 +872,11 @@ HRESULT XAsyncSchedule( XAsyncBlock* asyncBlock, UINT32 delayInMs )
         return E_UNEXPECTED;
     }
 
-    state->lpVtbl->AddRef( state );
+    IAsyncState_AddRef( state );
 
     hr = XTaskQueueSubmitDelayedCallback( stateImpl->queue, XTaskQueuePort_Work, delayInMs, (PVOID)state, WorkerCallback );
 
-    state->lpVtbl->Release( state );
+    IAsyncState_Release( state );
 
     free( impl );
 

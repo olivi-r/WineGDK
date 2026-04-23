@@ -29,7 +29,6 @@
 #define ASYNC_STATE_SIG         0x41535445 // ASTE
 
 typedef struct IXAsyncBlockInternalGuard IXAsyncBlockInternalGuard;
-typedef struct IAsyncState IAsyncState;
 
 typedef enum ProviderCleanupLocation
 {
@@ -80,24 +79,6 @@ typedef struct IXAsyncBlockInternalGuardVtbl {
     AsyncBlockInternal* (*DoLock)(
         XAsyncBlock* asyncBlock);
 } IXAsyncBlockInternalGuardVtbl;
-
-typedef struct IAsyncStateVtbl {
-    /* IUnknown methods */
-    HRESULT (STDMETHODCALLTYPE *QueryInterface)(
-        IAsyncState* This, 
-        REFIID riid, 
-        void** ppvObject);
-        
-    ULONG   (STDMETHODCALLTYPE *AddRef)(
-        IAsyncState* This);
-
-    ULONG   (STDMETHODCALLTYPE *Release)(
-        IAsyncState* This);
-} IAsyncStateVtbl;
-
-struct IAsyncState {
-    const IAsyncStateVtbl* lpVtbl;
-};
 
 struct IXAsyncBlockInternalGuard {
     const IXAsyncBlockInternalGuardVtbl* lpVtbl;

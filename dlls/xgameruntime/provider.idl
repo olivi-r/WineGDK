@@ -36,6 +36,7 @@ interface IXThreadingImpl;
 interface IXNetworkingImpl;
 
 interface IActionStatus;
+interface IAsyncState;
 interface IAtomicVector;
 interface IThreadPool;
 
@@ -129,6 +130,15 @@ interface IActionStatus
 {
     void Complete();
     void MayRunLong();
+}
+
+[
+    local,
+    object,
+    uuid(b617596e-fcf5-42c8-bba4-5a91909f3411)
+]
+interface IAsyncState : IUnknown
+{
 }
 
 [
