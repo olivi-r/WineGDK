@@ -1570,7 +1570,7 @@ static HRESULT WINAPI x_task_queue_RegisterWaitHandle( IXTaskQueue *iface, XTask
     hr = portQueue->lpVtbl->RegisterWaitHandle( portQueue, portContext, waitHandle, callbackContext, callback, &portToken );
     if ( FAILED( hr ) ) return hr;
 
-    hr = impl->waitRegistry->lpVtbl->Register( impl->waitRegistry, port, portToken, token );
+    hr = IXTaskQueueWaitCallback_Register( impl->waitRegistry, port, portToken, token );
     if ( FAILED( hr ) )
     {
         portQueue->lpVtbl->UnregisterWaitHandle( portQueue, portToken );
@@ -1593,7 +1593,7 @@ static VOID WINAPI x_task_queue_UnregisterWaitHandle( IXTaskQueue *iface, XTaskQ
 
     TRACE( "iface %p, token %lld.\n", iface, token.token );
 
-    hr = impl->waitRegistry->lpVtbl->Unregister( impl->waitRegistry, token, &port, &portToken );
+    hr = IXTaskQueueWaitCallback_Unregister( impl->waitRegistry, token, &port, &portToken );
     if ( FAILED( hr ) ) return;
 
     hr = iface->lpVtbl->GetPortContext( iface, port, &portContext );

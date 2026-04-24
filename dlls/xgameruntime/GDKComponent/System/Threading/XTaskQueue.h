@@ -31,7 +31,6 @@
 typedef struct IXTaskQueue IXTaskQueue;
 typedef struct IXTaskQueuePort IXTaskQueuePort;
 typedef struct IXTaskQueuePortContext IXTaskQueuePortContext;
-typedef struct IXTaskQueueWaitCallback IXTaskQueueWaitCallback;
 
 static const UINT32 TASK_QUEUE_SIGNATURE = 0x41515545;
 static const UINT32 TASK_QUEUE_PORT_SIGNATURE = 0x41515553;
@@ -355,34 +354,6 @@ typedef struct IXTaskQueueVtbl {
         PVOID context);
 } IXTaskQueueVtbl;
 
-typedef struct IXTaskQueueWaitCallbackVtbl {
-    /* IUnknown methods */
-    HRESULT (STDMETHODCALLTYPE *QueryInterface)(
-        IXTaskQueueWaitCallback* This, 
-        REFIID riid, 
-        void** ppvObject);
-        
-    ULONG   (STDMETHODCALLTYPE *AddRef)(
-        IXTaskQueueWaitCallback* This);
-
-    ULONG   (STDMETHODCALLTYPE *Release)(
-        IXTaskQueueWaitCallback* This);
-
-    /* IXTaskQueueWaitCallback methods */
-    HRESULT (STDMETHODCALLTYPE *Register)(
-        IXTaskQueueWaitCallback* This,
-        XTaskQueuePort port,
-        XTaskQueueRegistrationToken portToken,
-        XTaskQueueRegistrationToken *token);
-    
-    HRESULT (STDMETHODCALLTYPE *Unregister)(
-        IXTaskQueueWaitCallback* This,
-        XTaskQueueRegistrationToken token,
-        XTaskQueuePort *outPort,
-        XTaskQueueRegistrationToken *outPortToken
-    );
-} IXTaskQueueWaitCallbackVtbl;
-
 struct IXTaskQueue {
     const IXTaskQueueVtbl* lpVtbl;
 };
@@ -393,10 +364,6 @@ struct IXTaskQueuePortContext {
 
 struct IXTaskQueuePort {
     const IXTaskQueuePortVtbl* lpVtbl;
-};
-
-struct IXTaskQueueWaitCallback {
-    const IXTaskQueueWaitCallbackVtbl* lpVtbl;
 };
 
 // Backwards decleration of XTaskQueueObject
