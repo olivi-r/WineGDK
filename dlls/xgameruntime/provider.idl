@@ -39,6 +39,7 @@ interface IActionStatus;
 interface IAsyncState;
 interface IAtomicVector;
 interface IThreadPool;
+interface IXAsyncBlockInternalGuard;
 interface IXTaskQueue;
 interface IXTaskQueueMonitorCallback;
 interface IXTaskQueuePort;
@@ -174,6 +175,20 @@ interface IThreadPool : IUnknown
     HRESULT Initialize( [in] void *context, ThreadPoolCallback callback );
     void    Terminate();
     void    Submit();
+}
+
+[
+    local,
+    object,
+    uuid(93134919-80eb-472b-861c-e6c4871e2762)
+]
+interface IXAsyncBlockInternalGuard : IUnknown
+{
+    IAsyncState* GetState();
+    IAsyncState* ExtractState( [in] BOOLEAN resultsRetrieved );
+    HRESULT      GetStatus();
+    BOOLEAN      GetResultsRetrieved();
+    BOOLEAN      TrySetTerminalStatus( [in] HRESULT status );
 }
 
 [

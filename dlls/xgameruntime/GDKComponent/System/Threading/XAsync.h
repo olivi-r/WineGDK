@@ -28,8 +28,6 @@
 #define ASYNC_BLOCK_RESULT_SIG  0x41535242 // ASRB
 #define ASYNC_STATE_SIG         0x41535445 // ASTE
 
-typedef struct IXAsyncBlockInternalGuard IXAsyncBlockInternalGuard;
-
 typedef enum ProviderCleanupLocation
 {
     CleanupLocation_Destructor,
@@ -45,44 +43,6 @@ typedef struct AsyncBlockInternal
     DWORD signature;
     CRITICAL_SECTION lock;
 } AsyncBlockInternal;
-
-typedef struct IXAsyncBlockInternalGuardVtbl {
-    /* IUnknown methods */
-    HRESULT (STDMETHODCALLTYPE *QueryInterface)(
-        IXAsyncBlockInternalGuard* This, 
-        REFIID riid, 
-        void** ppvObject);
-        
-    ULONG   (STDMETHODCALLTYPE *AddRef)(
-        IXAsyncBlockInternalGuard* This);
-
-    ULONG   (STDMETHODCALLTYPE *Release)(
-        IXAsyncBlockInternalGuard* This);
-
-    IAsyncState* (STDMETHODCALLTYPE *GetState)(
-        IXAsyncBlockInternalGuard* This);
-
-    IAsyncState* (STDMETHODCALLTYPE *ExtractState)(
-        IXAsyncBlockInternalGuard* This,
-        BOOLEAN resultsRetrieved);
-
-    HRESULT (STDMETHODCALLTYPE *GetStatus)(
-        IXAsyncBlockInternalGuard* This);
-
-    BOOLEAN (STDMETHODCALLTYPE *GetResultsRetrieved)(
-        IXAsyncBlockInternalGuard* This);
-
-    BOOLEAN (STDMETHODCALLTYPE *TrySetTerminalStatus)(
-        IXAsyncBlockInternalGuard* This,
-        HRESULT status);
-
-    AsyncBlockInternal* (*DoLock)(
-        XAsyncBlock* asyncBlock);
-} IXAsyncBlockInternalGuardVtbl;
-
-struct IXAsyncBlockInternalGuard {
-    const IXAsyncBlockInternalGuardVtbl* lpVtbl;
-};
 
 struct async_state
 {

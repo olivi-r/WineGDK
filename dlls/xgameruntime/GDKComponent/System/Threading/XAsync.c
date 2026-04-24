@@ -110,8 +110,7 @@ static HRESULT WINAPI x_async_block_guard_QueryInterface( IXAsyncBlockInternalGu
     if (IsEqualGUID( iid, &IID_IUnknown ) ||
         IsEqualGUID( iid, &IID_IXAsyncBlockInternalGuard ))
     {
-        *out = &impl->IXAsyncBlockInternalGuard_iface;
-        impl->IXAsyncBlockInternalGuard_iface.lpVtbl->AddRef( *out );
+        IXAsyncBlockInternalGuard_AddRef( *out = &impl->IXAsyncBlockInternalGuard_iface );
         return S_OK;
     }
 
@@ -217,7 +216,21 @@ static BOOLEAN WINAPI x_async_block_guard_TrySetTerminalStatus( IXAsyncBlockInte
     }
 }
 
-static AsyncBlockInternal* x_async_block_guard_DoLock( XAsyncBlock* asyncBlock )
+static const struct IXAsyncBlockInternalGuardVtbl x_async_block_guard_vtbl =
+{
+    /* IUnknown methods */
+    x_async_block_guard_QueryInterface,
+    x_async_block_guard_AddRef,
+    x_async_block_guard_Release,
+    /* IXAsyncBlockInternalGuard methods */
+    x_async_block_guard_GetState,
+    x_async_block_guard_ExtractState,
+    x_async_block_guard_GetStatus,
+    x_async_block_guard_GetResultsRetrieved,
+    x_async_block_guard_TrySetTerminalStatus,
+};
+
+static AsyncBlockInternal* DoLock( XAsyncBlock* asyncBlock )
 {
     AsyncBlockInternal* lockedResult;
     AsyncBlockInternal* stateAsyncBlockInternal;
@@ -270,21 +283,6 @@ static AsyncBlockInternal* x_async_block_guard_DoLock( XAsyncBlock* asyncBlock )
     return stateAsyncBlockInternal;
 }
 
-static const struct IXAsyncBlockInternalGuardVtbl x_async_block_guard_vtbl =
-{
-    /* IUnknown methods */
-    x_async_block_guard_QueryInterface,
-    x_async_block_guard_AddRef,
-    x_async_block_guard_Release,
-    /* IXAsyncBlockInternalGuard methods */
-    x_async_block_guard_GetState,
-    x_async_block_guard_ExtractState,
-    x_async_block_guard_GetStatus,
-    x_async_block_guard_GetResultsRetrieved,
-    x_async_block_guard_TrySetTerminalStatus,
-    x_async_block_guard_DoLock
-};
-
 static VOID InitInternalGuardFromBlock( IXAsyncBlockInternalGuard *iface, XAsyncBlock* asyncBlock )
 {   
     struct async_state *state = NULL;
@@ -292,7 +290,7 @@ static VOID InitInternalGuardFromBlock( IXAsyncBlockInternalGuard *iface, XAsync
 
     TRACE( "iface %p, asyncBlock %p.\n", iface, asyncBlock );
 
-    impl->internal = iface->lpVtbl->DoLock( asyncBlock );
+    impl->internal = DoLock( asyncBlock );
     impl->locked = impl->internal != NULL;
 
     if ( !impl->locked )
@@ -586,7 +584,7 @@ static void CALLBACK WorkerCallback( PVOID context, BOOLEAN canceled )
 
         {
             InitInternalGuardFromBlock( &impl->IXAsyncBlockInternalGuard_iface, stateImpl->userAsyncBlock );
-            callStatus = impl->IXAsyncBlockInternalGuard_iface.lpVtbl->GetStatus( &impl->IXAsyncBlockInternalGuard_iface );
+            callStatus = IXAsyncBlockInternalGuard_GetStatus( &impl->IXAsyncBlockInternalGuard_iface );
         }
 
         if ( callStatus != E_ABORT )
@@ -648,8 +646,8 @@ HRESULT XAsyncGetStatus( XAsyncBlock* asyncBlock, BOOLEAN wait )
 
     {
         InitInternalGuardFromBlock( &impl->IXAsyncBlockInternalGuard_iface, asyncBlock );
-        result = impl->IXAsyncBlockInternalGuard_iface.lpVtbl->GetStatus( &impl->IXAsyncBlockInternalGuard_iface );
-        state = impl->IXAsyncBlockInternalGuard_iface.lpVtbl->GetState( &impl->IXAsyncBlockInternalGuard_iface );
+        result = IXAsyncBlockInternalGuard_GetStatus( &impl->IXAsyncBlockInternalGuard_iface );
+        state = IXAsyncBlockInternalGuard_GetState( &impl->IXAsyncBlockInternalGuard_iface );
         stateImpl = impl_from_IAsyncState( state );
     }
 
@@ -672,7 +670,7 @@ HRESULT XAsyncGetStatus( XAsyncBlock* asyncBlock, BOOLEAN wait )
             {
                 SleepConditionVariableCS( &stateImpl->cv, &stateImpl->cs, INFINITE );
             }
-            result = impl->IXAsyncBlockInternalGuard_iface.lpVtbl->GetStatus( &impl->IXAsyncBlockInternalGuard_iface );    
+            result = IXAsyncBlockInternalGuard_GetStatus( &impl->IXAsyncBlockInternalGuard_iface );
         }
     }
 
@@ -709,8 +707,8 @@ HRESULT XAsyncGetResultSize( XAsyncBlock* asyncBlock, SIZE_T* bufferSize )
     {
         //constructor
         InitInternalGuardFromBlock( &impl->IXAsyncBlockInternalGuard_iface, asyncBlock );
-        result = impl->IXAsyncBlockInternalGuard_iface.lpVtbl->GetStatus( &impl->IXAsyncBlockInternalGuard_iface );
-        state = impl->IXAsyncBlockInternalGuard_iface.lpVtbl->GetState( &impl->IXAsyncBlockInternalGuard_iface );
+        result = IXAsyncBlockInternalGuard_GetStatus( &impl->IXAsyncBlockInternalGuard_iface );
+        state = IXAsyncBlockInternalGuard_GetState( &impl->IXAsyncBlockInternalGuard_iface );
         stateImpl = impl_from_IAsyncState( state );
     }
 
@@ -748,7 +746,7 @@ VOID XAsyncCancel( XAsyncBlock* asyncBlock )
 
     {
         InitInternalGuardFromBlock( &impl->IXAsyncBlockInternalGuard_iface, asyncBlock );
-        state = impl->IXAsyncBlockInternalGuard_iface.lpVtbl->GetState( &impl->IXAsyncBlockInternalGuard_iface );
+        state = IXAsyncBlockInternalGuard_GetState( &impl->IXAsyncBlockInternalGuard_iface );
         stateImpl = impl_from_IAsyncState( state );
     }
 
@@ -815,7 +813,7 @@ HRESULT XAsyncBegin( XAsyncBlock* asyncBlock, PVOID context, const void *identit
 
     {
         InitInternalGuardFromBlock( &impl->IXAsyncBlockInternalGuard_iface, asyncBlock );
-        state = impl->IXAsyncBlockInternalGuard_iface.lpVtbl->GetState( &impl->IXAsyncBlockInternalGuard_iface );
+        state = IXAsyncBlockInternalGuard_GetState( &impl->IXAsyncBlockInternalGuard_iface );
         stateImpl = impl_from_IAsyncState( state );
     }
 
@@ -853,8 +851,8 @@ HRESULT XAsyncSchedule( XAsyncBlock* asyncBlock, UINT32 delayInMs )
 
     {
         InitInternalGuardFromBlock( &impl->IXAsyncBlockInternalGuard_iface, asyncBlock );
-        state = impl->IXAsyncBlockInternalGuard_iface.lpVtbl->GetState( &impl->IXAsyncBlockInternalGuard_iface );
-        exitingStatus = impl->IXAsyncBlockInternalGuard_iface.lpVtbl->GetStatus( &impl->IXAsyncBlockInternalGuard_iface );
+        state = IXAsyncBlockInternalGuard_GetState( &impl->IXAsyncBlockInternalGuard_iface );
+        exitingStatus = IXAsyncBlockInternalGuard_GetStatus( &impl->IXAsyncBlockInternalGuard_iface );
         stateImpl = impl_from_IAsyncState( state );
     }
 
@@ -909,17 +907,17 @@ VOID XAsyncComplete( XAsyncBlock* asyncBlock, HRESULT result, SIZE_T requiredBuf
 
     InitInternalGuardFromBlock( &impl->IXAsyncBlockInternalGuard_iface, asyncBlock );
 
-    completedNow = impl->IXAsyncBlockInternalGuard_iface.lpVtbl->TrySetTerminalStatus( &impl->IXAsyncBlockInternalGuard_iface, result );
+    completedNow = IXAsyncBlockInternalGuard_TrySetTerminalStatus( &impl->IXAsyncBlockInternalGuard_iface, result );
 
     if ( (requiredBufferSize == 0 || FAILED( result )) && completedNow )
     {
         doCleanup = TRUE;
         requiredBufferSize = 0;
-        state = impl->IXAsyncBlockInternalGuard_iface.lpVtbl->ExtractState( &impl->IXAsyncBlockInternalGuard_iface, FALSE );
+        state = IXAsyncBlockInternalGuard_ExtractState( &impl->IXAsyncBlockInternalGuard_iface, FALSE );
     }
     else
     {
-        state = impl->IXAsyncBlockInternalGuard_iface.lpVtbl->GetState( &impl->IXAsyncBlockInternalGuard_iface );
+        state = IXAsyncBlockInternalGuard_GetState( &impl->IXAsyncBlockInternalGuard_iface );
     }
 
     if ( !state )
