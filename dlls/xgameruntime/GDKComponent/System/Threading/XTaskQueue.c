@@ -26,7 +26,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(xtaskqueue);
 static void CALLBACK x_task_queue_port_WaitTimerOperation( void *context )
 {
     IXTaskQueuePort* port = (IXTaskQueuePort *)context;
-    port->lpVtbl->SubmitPendingCallback( port );
+    IXTaskQueuePort_SubmitPendingCallback( port );
 }
 
 static BOOLEAN CALLBACK x_task_queue_port_VectorPredicateOperation( const void *element, void *context )
@@ -42,8 +42,7 @@ static void CALLBACK x_task_queue_port_VectorVisitOperation( void *context )
 
 static void CALLBACK x_task_queue_port_ThreadPoolOperation(void* context, IActionStatus *status)
 {
-    IXTaskQueuePort *impl = (IXTaskQueuePort *)context;
-    impl->lpVtbl->ProcessThreadPoolCallback( context, status );
+    IXTaskQueuePort_ProcessThreadPoolCallback( context, status );
 }
 
 static inline struct x_task_queue_port_context *impl_from_IXTaskQueuePortContext( IXTaskQueuePortContext *iface )
@@ -137,7 +136,7 @@ static IXTaskQueuePort* WINAPI x_task_queue_port_context_get_Port( IXTaskQueuePo
 
     TRACE( "iface %p.\n", iface );
 
-    impl->port->lpVtbl->AddRef( impl->port );
+    IXTaskQueuePort_AddRef( impl->port );
 
     return impl->port;
 }
@@ -378,8 +377,7 @@ static HRESULT WINAPI x_task_queue_port_QueryInterface( IXTaskQueuePort *iface, 
     if (IsEqualGUID( iid, &IID_IUnknown ) ||
         IsEqualGUID( iid, &IID_IXTaskQueuePort ))
     {
-        *out = &impl->IXTaskQueuePort_iface;
-        impl->IXTaskQueuePort_iface.lpVtbl->AddRef( *out );
+        IXTaskQueuePort_AddRef( *out = &impl->IXTaskQueuePort_iface );
         return S_OK;
     }
 
@@ -468,7 +466,7 @@ static HRESULT WINAPI x_task_queue_port_QueueItem( IXTaskQueuePort *iface, IXTas
 
     TRACE( "iface %p, portContext %p, waitMs %d, callbackContext %p, callback %p.\n", iface, portContext, waitMs, callbackContext, callback );
 
-    hr = iface->lpVtbl->VerifyNotTerminated( iface, portContext );
+    hr = IXTaskQueuePort_VerifyNotTerminated( iface, portContext );
     if ( FAILED( hr ) ) return hr;
 
     if (!(queue = calloc( 1, sizeof(*queue) ))) return E_OUTOFMEMORY;
@@ -483,7 +481,7 @@ static HRESULT WINAPI x_task_queue_port_QueueItem( IXTaskQueuePort *iface, IXTas
     if ( waitMs == 0 )
     {
         queue->enqueueTime = 0;
-        if( !(iface->lpVtbl->AppendEntry( iface, queue )) ) return E_OUTOFMEMORY;
+        if( !(IXTaskQueuePort_AppendEntry( iface, queue )) ) return E_OUTOFMEMORY;
     } else
     {
         queue->enqueueTime = IXWaitTimer_GetAbsoluteTime( impl->timer, waitMs );
@@ -518,7 +516,7 @@ static HRESULT WINAPI x_task_queue_port_QueueItem( IXTaskQueuePort *iface, IXTas
     // guard against race condition
     if ( IXTaskQueuePortContext_get_Status( portContext ) != XTaskQueuePortStatus_Active )
     {
-        iface->lpVtbl->CancelPendingEntries( iface, portContext, TRUE );
+        IXTaskQueuePort_CancelPendingEntries( iface, portContext, TRUE );
     }
 
     return S_OK;
@@ -615,13 +613,13 @@ static VOID WINAPI x_task_queue_port_Terminate( IXTaskQueuePort* iface, PVOID to
 
     IXTaskQueuePortContext_SetStatus( terminate->portContext, XTaskQueuePortStatus_Terminating );
 
-    iface->lpVtbl->CancelPendingEntries( iface, terminate->portContext, TRUE );
+    IXTaskQueuePort_CancelPendingEntries( iface, terminate->portContext, TRUE );
 
     // Are there existing suspends? AddSuspend returns
     // true if this is the first suspend added.
     if ( IXTaskQueuePortContext_AddSuspend( terminate->portContext ) )
     {
-        iface->lpVtbl->ScheduleTermination( iface, terminate );
+        IXTaskQueuePort_ScheduleTermination( iface, terminate );
     }
     else
     {
@@ -639,7 +637,7 @@ static VOID WINAPI x_task_queue_port_Terminate( IXTaskQueuePort* iface, PVOID to
     // Balance our add.  Note we must use ResumeTermination
     // here so we schedule the termination if this is the
     // last remove.
-    iface->lpVtbl->ResumeTermination( iface, terminate->portContext );
+    IXTaskQueuePort_ResumeTermination( iface, terminate->portContext );
 }
 
 static HRESULT WINAPI x_task_queue_port_Attach( IXTaskQueuePort *iface, IXTaskQueuePortContext* portContext )
@@ -657,7 +655,7 @@ static VOID WINAPI x_task_queue_port_Detach( IXTaskQueuePort *iface, IXTaskQueue
 
     TRACE( "iface %p, portContext %p.\n", iface, portContext );
 
-    iface->lpVtbl->CancelPendingEntries( iface, portContext, FALSE );
+    IXTaskQueuePort_CancelPendingEntries( iface, portContext, FALSE );
     IAtomicVector_Remove( impl->attachedContexts, x_task_queue_port_VectorPredicateOperation, portContext );
     return;
 }
@@ -670,9 +668,9 @@ static BOOLEAN WINAPI x_task_queue_port_Dispatch( IXTaskQueuePort *iface, IXTask
 
     while ( !found )
     {
-        found = iface->lpVtbl->DrainOneItem( iface );
+        found = IXTaskQueuePort_DrainOneItem( iface );
 
-        if ( !found && iface->lpVtbl->Wait( iface, portContext, timeoutInMs ) )
+        if ( !found && IXTaskQueuePort_Wait( iface, portContext, timeoutInMs ) )
         {
             break;
         }
@@ -681,7 +679,7 @@ static BOOLEAN WINAPI x_task_queue_port_Dispatch( IXTaskQueuePort *iface, IXTask
     return found;
 }
 
-static BOOLEAN x_task_queue_port_DrainOneItem( IXTaskQueuePort *iface )
+static BOOLEAN WINAPI x_task_queue_port_DrainOneItem( IXTaskQueuePort *iface )
 {
     BOOLEAN popped = FALSE;
     BOOLEAN canceled;
@@ -719,7 +717,7 @@ static BOOLEAN x_task_queue_port_DrainOneItem( IXTaskQueuePort *iface )
     if ( popped )
     {
         TRACE("calling %p!\n", front->callback);
-        canceled = iface->lpVtbl->IsCallCanceled( iface, front );
+        canceled = IXTaskQueuePort_IsCallCanceled( iface, front );
         front->callback( front->callbackContext, canceled );
         InterlockedDecrement( &impl->processingCallback );
         WakeAllConditionVariable( &impl->cv );
@@ -734,14 +732,14 @@ static BOOLEAN x_task_queue_port_DrainOneItem( IXTaskQueuePort *iface )
 
     if ( !impl->queueList_head )
     {
-        iface->lpVtbl->SignalTerminations( iface );
-        iface->lpVtbl->SignalQueue( iface );
+        IXTaskQueuePort_SignalTerminations( iface );
+        IXTaskQueuePort_SignalQueue( iface );
     }
 
     return popped;
 }
 
-static BOOLEAN x_task_queue_port_Wait( IXTaskQueuePort *iface, IXTaskQueuePortContext* portContext, UINT32 timeout )
+static BOOLEAN WINAPI x_task_queue_port_Wait( IXTaskQueuePort *iface, IXTaskQueuePortContext* portContext, UINT32 timeout )
 {
     struct x_task_queue_port *impl = impl_from_IXTaskQueuePort( iface );
 
@@ -819,11 +817,11 @@ static HRESULT WINAPI x_task_queue_port_SuspendTermination( IXTaskQueuePort *ifa
 
     // guard against race condition
     IXTaskQueuePortContext_AddSuspend( portContext );
-    hr = iface->lpVtbl->VerifyNotTerminated( iface, portContext );
+    hr = IXTaskQueuePort_VerifyNotTerminated( iface, portContext );
     
     if ( FAILED( hr ) )
     {
-        iface->lpVtbl->ResumeTermination( iface, portContext );
+        IXTaskQueuePort_ResumeTermination( iface, portContext );
         return hr;
     }
 
@@ -855,7 +853,7 @@ static VOID WINAPI x_task_queue_port_ResumeTermination( IXTaskQueuePort *iface, 
             next = current->next;
             if ( current->portContext == portContext )
             {
-                iface->lpVtbl->ScheduleTermination( iface, current );
+                IXTaskQueuePort_ScheduleTermination( iface, current );
 
                 if ( previous )
                 {
@@ -924,15 +922,15 @@ static VOID WINAPI x_task_queue_port_ResumePort( IXTaskQueuePort *iface )
 
     while ( notifyCount )
     {
-        iface->lpVtbl->SignalQueue( iface );
-        iface->lpVtbl->NotifyItemQueued( iface );
+        IXTaskQueuePort_SignalQueue( iface );
+        IXTaskQueuePort_NotifyItemQueued( iface );
         notifyCount--;
     }
 
     return;
 }
 
-static HRESULT x_task_queue_port_VerifyNotTerminated( IXTaskQueuePort *iface, IXTaskQueuePortContext *portContext )
+static HRESULT WINAPI x_task_queue_port_VerifyNotTerminated( IXTaskQueuePort *iface, IXTaskQueuePortContext *portContext )
 {
     TRACE( "iface %p, portContext %p.\n", iface, portContext );
 
@@ -942,13 +940,13 @@ static HRESULT x_task_queue_port_VerifyNotTerminated( IXTaskQueuePort *iface, IX
     return S_OK;
 }
 
-static BOOLEAN x_task_queue_port_IsCallCanceled( IXTaskQueuePort *iface, XQueue *entry )
+static BOOLEAN WINAPI x_task_queue_port_IsCallCanceled( IXTaskQueuePort *iface, XQueue *entry )
 {
     TRACE( "iface %p, entry %p.\n", iface, entry );
     return IXTaskQueuePortContext_get_Status( entry->portContext ) != XTaskQueuePortStatus_Active;
 }
 
-static BOOLEAN x_task_queue_port_AppendEntry( IXTaskQueuePort *iface, XQueue *entry )
+static BOOLEAN WINAPI x_task_queue_port_AppendEntry( IXTaskQueuePort *iface, XQueue *entry )
 {
     struct x_task_queue_port *impl = impl_from_IXTaskQueuePort( iface );
 
@@ -966,13 +964,13 @@ static BOOLEAN x_task_queue_port_AppendEntry( IXTaskQueuePort *iface, XQueue *en
         impl->queueList_tail = entry;
     }
 
-    iface->lpVtbl->SignalQueue( iface );
-    iface->lpVtbl->NotifyItemQueued( iface );
+    IXTaskQueuePort_SignalQueue( iface );
+    IXTaskQueuePort_NotifyItemQueued( iface );
 
     return TRUE;
 }
 
-static VOID x_task_queue_port_CancelPendingEntries( IXTaskQueuePort *iface, IXTaskQueuePortContext* portContext, BOOLEAN appendToQueue )
+static VOID WINAPI x_task_queue_port_CancelPendingEntries( IXTaskQueuePort *iface, IXTaskQueuePortContext* portContext, BOOLEAN appendToQueue )
 {
     XQueue *current;
     XQueue *previous = NULL;
@@ -1007,7 +1005,7 @@ static VOID x_task_queue_port_CancelPendingEntries( IXTaskQueuePort *iface, IXTa
 
             current->next = NULL;
 
-            if ( !appendToQueue || !iface->lpVtbl->AppendEntry( iface, current ) )
+            if ( !appendToQueue || !IXTaskQueuePort_AppendEntry( iface, current ) )
             {
                 IXTaskQueuePortContext_Release( current->portContext );
                 free( current );
@@ -1021,12 +1019,12 @@ static VOID x_task_queue_port_CancelPendingEntries( IXTaskQueuePort *iface, IXTa
         current = next;
     }
 
-    iface->lpVtbl->SubmitPendingCallback( iface );
+    IXTaskQueuePort_SubmitPendingCallback( iface );
 
     return;
 }
 
-static VOID x_task_queue_port_EraseQueue( IXTaskQueuePort *iface, XQueue *queueHead, XQueue *queueTail )
+static VOID WINAPI x_task_queue_port_EraseQueue( IXTaskQueuePort *iface, XQueue *queueHead, XQueue *queueTail )
 {
     XQueue *current;
     XQueue *next;
@@ -1047,7 +1045,7 @@ static VOID x_task_queue_port_EraseQueue( IXTaskQueuePort *iface, XQueue *queueH
     return;
 }
 
-static BOOLEAN x_task_queue_port_ScheduleNextPendingCallback( IXTaskQueuePort *iface, UINT64 dueTime, XQueue **dueEntry )
+static BOOLEAN WINAPI x_task_queue_port_ScheduleNextPendingCallback( IXTaskQueuePort *iface, UINT64 dueTime, XQueue **dueEntry )
 {
     XQueue *current;
     XQueue *previous = NULL;
@@ -1140,7 +1138,7 @@ static BOOLEAN x_task_queue_port_ScheduleNextPendingCallback( IXTaskQueuePort *i
             // when the port is terminated, but if we were iterating above
             // it's possible that we removed an item while the termination was
             // being processed and it got missed.
-            iface->lpVtbl->CancelPendingEntries( iface, nextItem->portContext, TRUE );
+            IXTaskQueuePort_CancelPendingEntries( iface, nextItem->portContext, TRUE );
         }
 
         IXTaskQueuePortContext_Release( nextItem->portContext );
@@ -1156,7 +1154,7 @@ static BOOLEAN x_task_queue_port_ScheduleNextPendingCallback( IXTaskQueuePort *i
     return hasDueEntry;
 }
 
-static VOID x_task_queue_port_SubmitPendingCallback( IXTaskQueuePort *iface )
+static VOID WINAPI x_task_queue_port_SubmitPendingCallback( IXTaskQueuePort *iface )
 {
     XQueue *dueEntry = NULL;
 
@@ -1164,9 +1162,9 @@ static VOID x_task_queue_port_SubmitPendingCallback( IXTaskQueuePort *iface )
 
     TRACE( "iface %p.\n", iface );
     
-    if ( iface->lpVtbl->ScheduleNextPendingCallback( iface, InterlockedCompareExchange64( &impl->timerDue, 0, 0 ), &dueEntry ) )
+    if ( IXTaskQueuePort_ScheduleNextPendingCallback( iface, InterlockedCompareExchange64( &impl->timerDue, 0, 0 ), &dueEntry ) )
     {
-        if ( !iface->lpVtbl->AppendEntry( iface, dueEntry ) )
+        if ( !IXTaskQueuePort_AppendEntry( iface, dueEntry ) )
         {
             IXTaskQueuePortContext_Release( dueEntry->portContext );
             if ( dueEntry )
@@ -1178,7 +1176,7 @@ static VOID x_task_queue_port_SubmitPendingCallback( IXTaskQueuePort *iface )
 }
 
 // Must be called in a thread pool.
-static VOID x_task_queue_port_ProcessThreadPoolCallback( IXTaskQueuePort *iface, IActionStatus *status )
+static VOID WINAPI x_task_queue_port_ProcessThreadPoolCallback( IXTaskQueuePort *iface, IActionStatus *status )
 {
     UINT32 wasProcessing;
 
@@ -1193,12 +1191,12 @@ static VOID x_task_queue_port_ProcessThreadPoolCallback( IXTaskQueuePort *iface,
     {
         if ( wasProcessing == 0 )
         {
-            while ( iface->lpVtbl->DrainOneItem( iface ) );
+            while ( IXTaskQueuePort_DrainOneItem( iface ) );
         }
     }
     else
     {
-        iface->lpVtbl->DrainOneItem( iface );
+        IXTaskQueuePort_DrainOneItem( iface );
     }
 
     InterlockedDecrement( &impl->processingCallback );
@@ -1211,12 +1209,12 @@ static VOID x_task_queue_port_ProcessThreadPoolCallback( IXTaskQueuePort *iface,
     // When we submitted a request to the thread pool we
     // added a reference to ourself.  Balance it here. This
     // may be the final release.
-    iface->lpVtbl->Release( iface );
+    IXTaskQueuePort_Release( iface );
 
     return;
 }
 
-static VOID x_task_queue_port_SignalQueue( IXTaskQueuePort *iface )
+static VOID WINAPI x_task_queue_port_SignalQueue( IXTaskQueuePort *iface )
 {
     struct x_task_queue_port *impl = impl_from_IXTaskQueuePort( iface );
 
@@ -1233,7 +1231,7 @@ static VOID x_task_queue_port_SignalQueue( IXTaskQueuePort *iface )
     return;
 }
 
-static VOID x_task_queue_port_NotifyItemQueued( IXTaskQueuePort *iface )
+static VOID WINAPI x_task_queue_port_NotifyItemQueued( IXTaskQueuePort *iface )
 {
     struct x_task_queue_port *impl = impl_from_IXTaskQueuePort( iface );
 
@@ -1253,7 +1251,7 @@ static VOID x_task_queue_port_NotifyItemQueued( IXTaskQueuePort *iface )
                 // are released while there there are outstanding threadpool
                 // items. The threadpool does not cancel outstanding callbacks
                 // on termination so we need to drain before releasing.
-                iface->lpVtbl->AddRef( iface );
+                IXTaskQueuePort_AddRef( iface );
                 
                 IThreadPool_Submit( impl->threadPool );
                 break;
@@ -1270,12 +1268,12 @@ static VOID x_task_queue_port_NotifyItemQueued( IXTaskQueuePort *iface )
 
         if (impl->dispatchMode == XTaskQueueDispatchMode_Immediate)
         {
-            iface->lpVtbl->DrainOneItem( iface );
+            IXTaskQueuePort_DrainOneItem( iface );
         }
     }
 }
 
-static VOID x_task_queue_port_SignalTerminations( IXTaskQueuePort *iface )
+static VOID WINAPI x_task_queue_port_SignalTerminations( IXTaskQueuePort *iface )
 {
     XTerminateForPort *current;
     XTerminateForPort *previous = NULL;
@@ -1320,7 +1318,7 @@ static VOID x_task_queue_port_SignalTerminations( IXTaskQueuePort *iface )
     return;
 }
 
-static VOID x_task_queue_port_ScheduleTermination( IXTaskQueuePort *iface, XTerminateForPort *entry )
+static VOID WINAPI x_task_queue_port_ScheduleTermination( IXTaskQueuePort *iface, XTerminateForPort *entry )
 {
     struct x_task_queue_port *impl = impl_from_IXTaskQueuePort( iface );
 
@@ -1335,8 +1333,8 @@ static VOID x_task_queue_port_ScheduleTermination( IXTaskQueuePort *iface, XTerm
         impl->terminateList_tail = entry;
     }
 
-    iface->lpVtbl->SignalTerminations( iface );
-    iface->lpVtbl->SignalQueue( iface );
+    IXTaskQueuePort_SignalTerminations( iface );
+    IXTaskQueuePort_SignalQueue( iface );
 
     return;
 }
@@ -1437,10 +1435,10 @@ static HRESULT WINAPI x_task_queue_Initialize( IXTaskQueue *iface, XTaskQueuePor
     impl->terminationData.allowed = TRUE;
     impl->allowClose = TRUE;
 
-    hr = workContext->port->lpVtbl->Attach( workContext->port, &workContext->IXTaskQueuePortContext_iface );
+    hr = IXTaskQueuePort_Attach( workContext->port, &workContext->IXTaskQueuePortContext_iface );
     if ( FAILED( hr ) ) return hr;
 
-    hr = completionContext->port->lpVtbl->Attach( completionContext->port, &completionContext->IXTaskQueuePortContext_iface );
+    hr = IXTaskQueuePort_Attach( completionContext->port, &completionContext->IXTaskQueuePortContext_iface );
     if ( FAILED( hr ) ) return hr;
 
     TRACE( "completionContext->callbackSubmitted is %p, workContext->callbackSubmitted is %p\n", workContext->callbackSubmitted, workContext->callbackSubmitted );
@@ -1480,14 +1478,14 @@ static HRESULT WINAPI x_task_queue_InitializeOverloadPorts( IXTaskQueue *iface, 
     completionContext->port = &completionPort->IXTaskQueuePort_iface;
     completionContext->source = iface;
 
-    hr = workPort->IXTaskQueuePort_iface.lpVtbl->Initialize( &workPort->IXTaskQueuePort_iface, workDispatch );
+    hr = IXTaskQueuePort_Initialize( &workPort->IXTaskQueuePort_iface, workDispatch );
     if ( FAILED( hr ) ) goto _CLEANUP;
 
-    hr = completionPort->IXTaskQueuePort_iface.lpVtbl->Initialize( &completionPort->IXTaskQueuePort_iface, completionDispatch );
+    hr = IXTaskQueuePort_Initialize( &completionPort->IXTaskQueuePort_iface, completionDispatch );
     if ( FAILED( hr ) ) goto _CLEANUP;
 
-    workPort->IXTaskQueuePort_iface.lpVtbl->Attach( &workPort->IXTaskQueuePort_iface, impl->workPort );
-    completionPort->IXTaskQueuePort_iface.lpVtbl->Attach( &completionPort->IXTaskQueuePort_iface, impl->completionPort );
+    IXTaskQueuePort_Attach( &workPort->IXTaskQueuePort_iface, impl->workPort );
+    IXTaskQueuePort_Attach( &completionPort->IXTaskQueuePort_iface, impl->completionPort );
 
     impl->terminationData.allowed = allowTermination;
     impl->allowClose = allowClose;
@@ -1565,13 +1563,13 @@ static HRESULT WINAPI x_task_queue_RegisterWaitHandle( IXTaskQueue *iface, XTask
 
     portQueue = IXTaskQueuePortContext_get_Port( portContext );
 
-    hr = portQueue->lpVtbl->RegisterWaitHandle( portQueue, portContext, waitHandle, callbackContext, callback, &portToken );
+    hr = IXTaskQueuePort_RegisterWaitHandle( portQueue, portContext, waitHandle, callbackContext, callback, &portToken );
     if ( FAILED( hr ) ) return hr;
 
     hr = IXTaskQueueWaitCallback_Register( impl->waitRegistry, port, portToken, token );
     if ( FAILED( hr ) )
     {
-        portQueue->lpVtbl->UnregisterWaitHandle( portQueue, portToken );
+        IXTaskQueuePort_UnregisterWaitHandle( portQueue, portToken );
         return hr;
     }
 
@@ -1598,7 +1596,7 @@ static VOID WINAPI x_task_queue_UnregisterWaitHandle( IXTaskQueue *iface, XTaskQ
     if ( FAILED( hr ) ) return;
 
     queuePort = IXTaskQueuePortContext_get_Port( portContext );
-    queuePort->lpVtbl->UnregisterWaitHandle( queuePort, portToken );
+    IXTaskQueuePort_UnregisterWaitHandle( queuePort, portToken );
 
     return;
 }
@@ -1653,7 +1651,7 @@ static VOID CALLBACK OnTerminationCallback( PVOID context )
         case TerminationLevel_Work:
             terminate->level = TerminationLevel_Completion;
             queuePort = IXTaskQueuePortContext_get_Port( impl->workPort );
-            queuePort->lpVtbl->Terminate( queuePort, terminate->completionPortToken );
+            IXTaskQueuePort_Terminate( queuePort, terminate->completionPortToken );
             break;
 
         case TerminationLevel_Completion:
@@ -1699,21 +1697,21 @@ static HRESULT WINAPI x_task_queue_Terminate( IXTaskQueue* iface, BOOLEAN wait, 
     terminate->callback = callback;
 
     queuePort = IXTaskQueuePortContext_get_Port( impl->workPort );
-    hr = queuePort->lpVtbl->PrepareTerminate( queuePort, impl->workPort, (PVOID)terminate, OnTerminationCallback, &workToken );
+    hr = IXTaskQueuePort_PrepareTerminate( queuePort, impl->workPort, (PVOID)terminate, OnTerminationCallback, &workToken );
     if ( FAILED( hr ) ) goto _CLEANUP;
 
     queuePort = IXTaskQueuePortContext_get_Port( impl->completionPort );
-    hr = queuePort->lpVtbl->PrepareTerminate( queuePort, impl->workPort, (PVOID)terminate, OnTerminationCallback, &terminate->completionPortToken );
+    hr = IXTaskQueuePort_PrepareTerminate( queuePort, impl->workPort, (PVOID)terminate, OnTerminationCallback, &terminate->completionPortToken );
     if ( FAILED( hr ) )
     {
-        queuePort->lpVtbl->CancelTermination( queuePort, workToken );
+        IXTaskQueuePort_CancelTermination( queuePort, workToken );
         goto _CLEANUP;
     }
 
     IXTaskQueue_AddRef( iface );
     if ( wait ) IXTaskQueue_AddRef( iface ); // guard against de-ref
     queuePort = IXTaskQueuePortContext_get_Port( impl->workPort );
-    queuePort->lpVtbl->Terminate( queuePort, workToken );
+    IXTaskQueuePort_Terminate( queuePort, workToken );
 
     if ( wait )
     {
@@ -1725,10 +1723,10 @@ static HRESULT WINAPI x_task_queue_Terminate( IXTaskQueue* iface, BOOLEAN wait, 
         LeaveCriticalSection( &impl->terminationData.cs );
 
         queuePort = IXTaskQueuePortContext_get_Port( impl->workPort );
-        queuePort->lpVtbl->WaitForUnwind( queuePort );
+        IXTaskQueuePort_WaitForUnwind( queuePort );
 
         queuePort = IXTaskQueuePortContext_get_Port( impl->completionPort );
-        queuePort->lpVtbl->WaitForUnwind( queuePort );
+        IXTaskQueuePort_WaitForUnwind( queuePort );
 
         IXTaskQueue_Release( iface );
     }
@@ -1754,12 +1752,12 @@ static VOID WINAPI x_task_queue_RundownObject( IXTaskQueue* iface )
     queuePort = IXTaskQueuePortContext_get_Port( impl->workPort );
 
     if (queuePort != NULL)
-        queuePort->lpVtbl->Detach( queuePort, impl->workPort );
+        IXTaskQueuePort_Detach( queuePort, impl->workPort );
 
     queuePort = IXTaskQueuePortContext_get_Port( impl->workPort );
 
     if (queuePort != NULL)
-       queuePort->lpVtbl->Detach( queuePort, impl->completionPort );
+       IXTaskQueuePort_Detach( queuePort, impl->completionPort );
 
     return;
 }
@@ -1883,7 +1881,7 @@ HRESULT XTaskQueueGetPort( XTaskQueueHandle queue, XTaskQueuePort port, XTaskQue
     if ( FAILED( hr ) ) return hr;
     
     queuePort = IXTaskQueuePortContext_get_Port( portContext );
-    *portHandle = queuePort->lpVtbl->GetHandle( queuePort );
+    *portHandle = IXTaskQueuePort_GetHandle( queuePort );
     
     return S_OK;
 }
@@ -1961,7 +1959,7 @@ BOOLEAN XTaskQueueDispatch( XTaskQueueHandle queue, XTaskQueuePort port, UINT32 
     
     queuePort = IXTaskQueuePortContext_get_Port( portContext );
     
-    return queuePort->lpVtbl->Dispatch( queuePort, portContext, timeoutInMs );
+    return IXTaskQueuePort_Dispatch( queuePort, portContext, timeoutInMs );
 }
 
 VOID XTaskQueueCloseHandle( XTaskQueueHandle queue )
@@ -2020,7 +2018,7 @@ HRESULT XTaskQueueSubmitDelayedCallback( XTaskQueueHandle queue, XTaskQueuePort 
     
     queuePort = IXTaskQueuePortContext_get_Port( portContext );
 
-    return queuePort->lpVtbl->QueueItem( queuePort, portContext, delayMs, callbackContext, callback );
+    return IXTaskQueuePort_QueueItem( queuePort, portContext, delayMs, callbackContext, callback );
 }
 
 HRESULT XTaskQueueDuplicateHandle( XTaskQueueHandle queue, XTaskQueueHandle* duplicatedHandle )
@@ -2083,5 +2081,5 @@ VOID XTaskQueueResumeTermination( XTaskQueueHandle queue )
 
     queuePort = IXTaskQueuePortContext_get_Port( portContext );
 
-    queuePort->lpVtbl->ResumeTermination( queuePort, portContext );
+    IXTaskQueuePort_ResumeTermination( queuePort, portContext );
 }

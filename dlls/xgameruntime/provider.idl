@@ -52,6 +52,9 @@ coclass XGameRuntimeFeatureImpl;
 coclass XThreadingImpl;
 coclass XNetworkingImpl;
 
+typedef struct XQueue XQueue;
+typedef struct XTerminateForPort XTerminateForPort;
+
 typedef BOOLEAN (__stdcall *AtomicVector_Predicate)( const void *element, void *context );
 typedef void    (__stdcall *AtomicVector_Visitor)( void *context );
 typedef void    (__stdcall *ThreadPoolCallback)( void *context, IActionStatus *status );
@@ -204,6 +207,46 @@ interface IXTaskQueueMonitorCallback : IUnknown
     HRESULT Register( [in] void *context, [in] XTaskQueueMonitorCallback *callback, [out] XTaskQueueRegistrationToken *token );
     void    Unregister( [in] XTaskQueueRegistrationToken token );
     void    Invoke( [in] XTaskQueuePort port );
+}
+
+[
+    local,
+    object,
+    uuid(7d2c63a1-77fe-46ab-83f0-dd1ffd46b380)
+]
+interface IXTaskQueuePort : IUnknown
+{
+    HRESULT              Initialize( [in] XTaskQueueDispatchMode mode );
+    XTaskQueuePortHandle GetHandle();
+    HRESULT              QueueItem( [in] IXTaskQueuePortContext *portContext, [in] UINT32 waitMs, [in] void *callbackContext, [in] XTaskQueueCallback *callback );
+    HRESULT              RegisterWaitHandle( [in] IXTaskQueuePortContext *portContext, [in] HANDLE waitHandle, [in] void *callbackContext, [in] XTaskQueueCallback *callback, [out] XTaskQueueRegistrationToken *token );
+    void                 UnregisterWaitHandle( [in] XTaskQueueRegistrationToken token );
+    HRESULT              PrepareTerminate( [in] IXTaskQueuePortContext *portContext, [in] void *callbackContext, [in] XTaskQueueTerminatedCallback *callback, [out] void **outPrepareToken );
+    void                 CancelTermination( [in] void *prepareToken );
+    void                 Terminate( [in] void *prepareToken );
+    HRESULT              Attach( [in] IXTaskQueuePortContext *portContext );
+    void                 Detach( [in] IXTaskQueuePortContext *portContext );
+    BOOLEAN              Dispatch( [in] IXTaskQueuePortContext *portContext, [in] UINT32 timeoutInMs );
+    BOOLEAN              IsEmpty();
+    void                 WaitForUnwind();
+    HRESULT              SuspendTermination( [in] IXTaskQueuePortContext *portContext );
+    void                 ResumeTermination( [in] IXTaskQueuePortContext *portContext );
+    void                 SuspendPort();
+    void                 ResumePort();
+    HRESULT              VerifyNotTerminated( [in] IXTaskQueuePortContext *portContext );
+    BOOLEAN              IsCallCanceled( [in] XQueue *entry );
+    BOOLEAN              AppendEntry( [in] XQueue *entry );
+    void                 CancelPendingEntries( [in] IXTaskQueuePortContext *portContext, [in] BOOLEAN appendToQueue );
+    BOOLEAN              DrainOneItem();
+    BOOLEAN              Wait( [in] IXTaskQueuePortContext *portContext, [in] UINT32 timeout );
+    void                 EraseQueue( [in] XQueue *queueHead, [in] XQueue *queueTail );
+    BOOLEAN              ScheduleNextPendingCallback( [in] UINT64 dueTime, [out] XQueue **dueEntry );
+    void                 SubmitPendingCallback();
+    void                 SignalTerminations();
+    void                 ScheduleTermination( [in] XTerminateForPort *terminate );
+    void                 SignalQueue();
+    void                 NotifyItemQueued();
+    void                 ProcessThreadPoolCallback( IActionStatus *status );
 }
 
 [

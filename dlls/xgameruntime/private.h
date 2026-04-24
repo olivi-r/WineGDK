@@ -61,9 +61,6 @@ typedef struct _INITIALIZE_OPTIONS
 // Deference is for other modules to communicate with eachother through the same binary.
 HRESULT WINAPI QueryApiImpl( const GUID *runtimeClassId, REFIID interfaceId, void **out );
 
-// 7d2c63a1-77fe-46ab-83f0-dd1ffd46b380
-DEFINE_GUID(IID_IXTaskQueuePort, 0x7d2c63a1, 0x77fe, 0x46ab, 0x83, 0xf0, 0xdd, 0x1f, 0xfd, 0x46, 0xb3, 0x80);
-
 // 93134919-80eb-472b-861c-e6c4871e2762
 DEFINE_GUID(IID_IXAsyncBlockInternalGuard, 0x93134919, 0x80eb, 0x472b, 0x86, 0x1c, 0xe6, 0xc4, 0x87, 0x1e, 0x27, 0x62);
 
