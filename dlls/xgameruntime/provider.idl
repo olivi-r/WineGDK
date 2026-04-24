@@ -39,7 +39,10 @@ interface IActionStatus;
 interface IAsyncState;
 interface IAtomicVector;
 interface IThreadPool;
+interface IXTaskQueue;
 interface IXTaskQueueMonitorCallback;
+interface IXTaskQueuePort;
+interface IXTaskQueuePortContext;
 interface IXTaskQueueWaitCallback;
 interface IXWaitTimer;
 
@@ -180,6 +183,23 @@ interface IXTaskQueueMonitorCallback : IUnknown
     HRESULT Register( [in] void *context, [in] XTaskQueueMonitorCallback *callback, [out] XTaskQueueRegistrationToken *token );
     void    Unregister( [in] XTaskQueueRegistrationToken token );
     void    Invoke( [in] XTaskQueuePort port );
+}
+
+[
+    local,
+    object,
+    uuid(a44c19b4-7782-46e9-bbfb-f99608c9535a)
+]
+interface IXTaskQueuePortContext : IUnknown
+{
+    XTaskQueuePort       get_Type();
+    XTaskQueuePortStatus get_Status();
+    IXTaskQueue*         get_Queue();
+    IXTaskQueuePort*     get_Port();
+    void                 SetStatus( [in] XTaskQueuePortStatus status );
+    void                 ItemQueued();
+    BOOLEAN              AddSuspend();
+    BOOLEAN              RemoveSuspend();
 }
 
 [

@@ -30,7 +30,6 @@
 
 typedef struct IXTaskQueue IXTaskQueue;
 typedef struct IXTaskQueuePort IXTaskQueuePort;
-typedef struct IXTaskQueuePortContext IXTaskQueuePortContext;
 
 static const UINT32 TASK_QUEUE_SIGNATURE = 0x41515545;
 static const UINT32 TASK_QUEUE_PORT_SIGNATURE = 0x41515553;
@@ -238,47 +237,6 @@ typedef struct IXTaskQueuePortVtbl {
         IActionStatus *status);
 } IXTaskQueuePortVtbl;
 
-typedef struct IXTaskQueuePortContextVtbl {
-    /* IUnknown methods */
-    HRESULT (STDMETHODCALLTYPE *QueryInterface)(
-        IXTaskQueuePortContext* This, 
-        REFIID riid, 
-        void** ppvObject);
-        
-    ULONG   (STDMETHODCALLTYPE *AddRef)(
-        IXTaskQueuePortContext* This);
-
-    ULONG   (STDMETHODCALLTYPE *Release)(
-        IXTaskQueuePortContext* This);
-
-    /* IXTaskQueuePortContext methods */
-    XTaskQueuePort (STDMETHODCALLTYPE *get_Type)(
-        IXTaskQueuePortContext* This);
-
-    XTaskQueuePortStatus (STDMETHODCALLTYPE *get_Status)(
-        IXTaskQueuePortContext* This);
-
-    IXTaskQueue* (STDMETHODCALLTYPE *get_PartentQueue)(
-        IXTaskQueuePortContext* This);
-
-    IXTaskQueuePort* (STDMETHODCALLTYPE *get_Port)(
-        IXTaskQueuePortContext* This);
-
-    VOID    (STDMETHODCALLTYPE *SetStatus)(
-        IXTaskQueuePortContext* This,
-        XTaskQueuePortStatus status);
-
-    VOID    (STDMETHODCALLTYPE *ItemQueued)(
-        IXTaskQueuePortContext* This);
-
-    BOOLEAN (STDMETHODCALLTYPE *AddSuspend)(
-        IXTaskQueuePortContext* This);
-
-    BOOLEAN (STDMETHODCALLTYPE *RemoveSuspend)(
-        IXTaskQueuePortContext* This);
-
-} IXTaskQueuePortContextVtbl;
-
 typedef struct IXTaskQueueVtbl {
     /* IUnknown methods */
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(
@@ -356,10 +314,6 @@ typedef struct IXTaskQueueVtbl {
 
 struct IXTaskQueue {
     const IXTaskQueueVtbl* lpVtbl;
-};
-
-struct IXTaskQueuePortContext {
-    const IXTaskQueuePortContextVtbl* lpVtbl;
 };
 
 struct IXTaskQueuePort {
