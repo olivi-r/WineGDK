@@ -40,7 +40,7 @@ static void CALLBACK x_task_queue_port_VectorVisitOperation( void *context )
     impl->lpVtbl->ItemQueued( impl );
 }
 
-static void CALLBACK x_task_queue_port_ThreadPoolOperation(void* context, ThreadPoolActionStatus *status)
+static void CALLBACK x_task_queue_port_ThreadPoolOperation(void* context, IActionStatus *status)
 {
     IXTaskQueuePort *impl = (IXTaskQueuePort *)context;
     impl->lpVtbl->ProcessThreadPoolCallback( context, status );
@@ -1180,7 +1180,7 @@ static VOID x_task_queue_port_SubmitPendingCallback( IXTaskQueuePort *iface )
 }
 
 // Must be called in a thread pool.
-static VOID x_task_queue_port_ProcessThreadPoolCallback( IXTaskQueuePort *iface, ThreadPoolActionStatus *status )
+static VOID x_task_queue_port_ProcessThreadPoolCallback( IXTaskQueuePort *iface, IActionStatus *status )
 {
     UINT32 wasProcessing;
 
@@ -1208,7 +1208,7 @@ static VOID x_task_queue_port_ProcessThreadPoolCallback( IXTaskQueuePort *iface,
 
     // Important that this comes before Release; otherwise
     // cleanup may deadlock.
-    status->IActionStatus_iface.lpVtbl->Complete( &status->IActionStatus_iface );
+    status->lpVtbl->Complete( status );
 
     // When we submitted a request to the thread pool we
     // added a reference to ourself.  Balance it here. This

@@ -26,10 +26,8 @@
 
 typedef struct IThreadPool IThreadPool;
 typedef struct IActionStatus IActionStatus;
-typedef struct IActionStatus IActionStatus;
-typedef struct ThreadPoolActionStatus ThreadPoolActionStatus;
 
-typedef void CALLBACK (*ThreadPoolCallback)(void* context, ThreadPoolActionStatus *status);
+typedef void CALLBACK (*ThreadPoolCallback)(void* context, IActionStatus *status);
 
 typedef struct IActionStatusVtbl {
     VOID (STDMETHODCALLTYPE *Complete)(IActionStatus *This);

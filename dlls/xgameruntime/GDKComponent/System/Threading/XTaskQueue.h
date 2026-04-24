@@ -237,7 +237,7 @@ typedef struct IXTaskQueuePortVtbl {
 
     VOID    (*ProcessThreadPoolCallback)(
         IXTaskQueuePort* This,
-        ThreadPoolActionStatus *status);
+        IActionStatus *status);
 } IXTaskQueuePortVtbl;
 
 typedef struct IXTaskQueuePortContextVtbl {

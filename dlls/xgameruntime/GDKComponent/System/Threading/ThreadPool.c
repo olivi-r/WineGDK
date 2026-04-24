@@ -100,7 +100,7 @@ static void CALLBACK TPCallback( PTP_CALLBACK_INSTANCE instance, void* context, 
     status->instance = instance;
 
     impl->IThreadPool_iface.lpVtbl->AddRef( &impl->IThreadPool_iface );
-    impl->callback( impl->context, status );
+    impl->callback( impl->context, &status->IActionStatus_iface );
 
     if ( !status->IsComplete )
     {
