@@ -1260,6 +1260,7 @@ SOURCES = \
 	xmldsodid.h \
 	xmllite.idl \
 	xpackage.h \
+	xpersistentlocalstorage.h \
 	xpsobjectmodel.idl \
 	xpsobjectmodel_1.idl \
 	xspeechsynthesizer.h \
