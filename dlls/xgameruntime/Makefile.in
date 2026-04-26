@@ -7,5 +7,6 @@ SOURCES = \
 	xaccessibility.c \
 	xappcapture.c \
 	xdisplay.c \
+	xerror.c \
 	xthreading.c \
 	xuser.c
