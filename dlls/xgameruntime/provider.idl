@@ -46,6 +46,7 @@ interface IGameProtocolImpl1;
 interface IXGameRuntimeFeature;
 interface IXGameSave;
 interface IXLauncher;
+interface IXPackage;
 
 coclass XAccessibilityImpl;
 coclass XAppCaptureImpl;
@@ -60,6 +61,7 @@ coclass XGameProtocolImpl;
 coclass XGameRuntimeFeatureImpl;
 coclass XGameSaveImpl;
 coclass XLauncherImpl;
+coclass XPackageImpl;
 
 [
     local,
@@ -279,6 +281,55 @@ interface IXLauncher : IUnknown
 }
 
 [
+    local,
+    object,
+    uuid(e2a4734b-2f4a-456d-aa8f-d065e04fb209)
+]
+interface IXPackage : IUnknown
+{
+    HRESULT XPackageGetCurrentProcessPackageIdentifier( [in] SIZE_T bufferSize, [out, size_is(bufferSize)] char *buffer );
+    BOOLEAN XPackageIsPackagedProcess();
+    HRESULT XPackageCreateInstallationMonitor( [in, string] const char *packageIdentifier, [in] UINT32 selectorCount, [in, optional, length_is(selectorCount)] XPackageChunkSelector selectors[*], [in] UINT32 minimumUpdateIntervalMs, [in, optional] XTaskQueueHandle queue, [out] XPackageInstallationMonitorHandle *installationMonitor );
+    void    XPackageCloseInstallationMonitorHandle( [in] XPackageInstallationMonitorHandle installationMonitor );
+    void    XPackageGetInstallationProgress( [in] XPackageInstallationMonitorHandle installationMonitor, [out] XPackageInstallationProgress *progress );
+    BOOLEAN XPackageUpdateInstallationMonitor( [in] XPackageInstallationMonitorHandle installationMonitor );
+    HRESULT XPackageRegisterInstallationProgressChanged( [in] XPackageInstallationMonitorHandle installationMonitor, [in, optional] void *context, [in] XPackageInstallationProgressCallback *callback, [out] XTaskQueueRegistrationToken *token );
+    BOOLEAN XPackageUnregisterInstallationProgressChanged( [in] XPackageInstallationMonitorHandle installationMonitor, [in] XTaskQueueRegistrationToken token, [in] BOOLEAN wait );
+    HRESULT XPackageGetUserLocale( [in] SIZE_T localeSize, [out, size_is(localSize)] char *locale );
+    HRESULT XPackageFindChunkAvailability( [in, string] const char *packageIdentifier, [in] UINT32 selectorCount, [in, optional, length_is(selectorCount)] XPackageChunkSelector selectors[*], [out] XPackageChunkAvailability *availability );
+    HRESULT XPackageEnumerateChunkAvailability( [in, string] const char *packageIdentifier, [in] XPackageChunkSelectorType type, [in] void *context, [in] XPackageChunkAvailabilityCallback *callback );
+    HRESULT XPackageChangeChunkInstallOrder( [in, string] const char *packageIdentifier, [in] UINT32 selectorCount, [in, length_is(selectorCount)] XPackageChunkSelector selectors[*] );
+    HRESULT XPackageInstallChunks( [in, string] const char *packageIdentifier, [in] UINT32 selectorCount, [in, size_is(selectorCount)] XPackageChunkSelector *selectors, [in] UINT32 minimumUpdateIntervalMs, [in] BOOLEAN suppressUserConfirmation, [in, optional] XTaskQueueHandle queue, [out] XPackageInstallationMonitorHandle *installationMonitor );
+    HRESULT XPackageInstallChunksAsync( [in, string] const char *packageIdentifier, [in] UINT32 selectorCount, [in, length_is(selectorCount)] XPackageChunkSelector selectors[*], [in] UINT32 minimumUpdateIntervalMs, [in] BOOLEAN suppressUserConfirmation, [in, out] XAsyncBlock *asyncBlock );
+    HRESULT XPackageInstallChunksResult( [in, out] XAsyncBlock *asyncBlock, [out] XPackageInstallationMonitorHandle *installationMonitor );
+    HRESULT XPackageEstimateDownloadSize( [in, string] const char *packageIdentifier, [in] UINT32 selectorCount, [in, length_is(selectorCount)] XPackageChunkSelector selectors[*], [out] UINT64 *downloadSize, [out, optional] BOOLEAN *shouldPresentUserConfirmation );
+    HRESULT XPackageUninstallChunks( [in, string] const char *packageIdentifier, [in] UINT32 selectorCount, [in, length_is(selectorCount)] XPackageChunkSelector selectors[*] );
+    HRESULT __PADDING__();
+    HRESULT __PADDING_2__();
+    BOOLEAN XPackageUnregisterPackageInstalled( [in] XTaskQueueRegistrationToken token, [in] BOOLEAN wait );
+    HRESULT __PADDING_3__();
+    HRESULT XPackageGetMountPathSize( [in] XPackageMountHandle mount, [out] SIZE_T *pathSize );
+    HRESULT XPackageGetMountPath( [in] XPackageMountHandle mount, [in] SIZE_T pathSize, [out, size_is(pathSize)] char *path );
+    void    XPackageCloseMountHandle( [in] XPackageMountHandle mount );
+    HRESULT __PADDING_4__();
+    HRESULT __PADDING_5__();
+    HRESULT __PADDING_6__();
+    HRESULT XPackageGetWriteStats( [out] XPackageWriteStats *writeStats );
+    HRESULT __PADDING_7__();
+    HRESULT XPackageUninstallUWPInstance( [in, string] const char *packageName );
+    HRESULT XPackageEnumerateFeatures( [in, string] const char *packageIdentifier, [in, optional] void *context, [in] XPackageFeatureEnumerationCallback *callback );
+    BOOLEAN XPackageUninstallPackage( [in, string] const char *packageIdentifier );
+    HRESULT __PADDING_8__();
+    HRESULT __PADDING_9__();
+    HRESULT XPackageMountWithUiAsync( [in, string] const char *packageIdentifier, [in, out] XAsyncBlock *async );
+    HRESULT XPackageMountWithUiResult( [in, out] XAsyncBlock *async, [out] XPackageMountHandle *mount );
+    HRESULT XPackageEnumeratePackages( [in] XPackageKind kind, [in] XPackageEnumerationScope scope, [in, optional] void *context, [in] XPackageEnumerationCallback *callback );
+    HRESULT XPackageRegisterPackageInstalled( [in] XTaskQueueHandle queue, [in, optional] void *context, [in] XPackageInstalledCallback *callback, [out] XTaskQueueRegistrationToken *token );
+
+/*  HRESULT XPackageMount( [in, string] const char *packageIdentifier, [out] XPackageMountHandle *mount ); */
+}
+
+[
     uuid(3e241977-6237-41e9-8559-102c2d9983f1)
 ]
 coclass XAccessibilityImpl
@@ -380,4 +431,12 @@ coclass XGameSaveImpl
 coclass XLauncherImpl
 {
     [default] interface IXLauncher;
+}
+
+[
+    uuid(af406016-e850-4aa8-a88d-2f3dcb9dac7e)
+]
+coclass XPackageImpl
+{
+    [default] interface IXPackage;
 }

@@ -48,6 +48,7 @@ extern IGameProtocolImpl1 *x_game_protocol_impl;
 extern IXGameRuntimeFeature *x_game_runtime_feature_impl;
 extern IXGameSave *x_game_save_impl;
 extern IXLauncher *x_launcher_impl;
+extern IXPackage *x_package_impl;
 
 /* Deference is for other modules to communicate with eachother through the same binary. */
 HRESULT WINAPI QueryApiImpl( const GUID *runtimeClassId, REFIID interfaceId, void **out );
