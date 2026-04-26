@@ -37,12 +37,14 @@ interface IXAccessibility;
 interface IXAppCapture;
 interface IXAppCapture2;
 interface IXDisplay;
+interface IErrorImpl1;
 interface IXLauncher;
 
 coclass XAccessibilityImpl;
 coclass XAppCaptureImpl;
 coclass XAppCaptureImpl2;
 coclass XDisplayImpl;
+coclass XErrorImpl;
 coclass XLauncherImpl;
 
 [
@@ -136,6 +138,18 @@ interface IXDisplay : IUnknown
 [
     local,
     object,
+    uuid(8ca467f7-22e8-4096-8456-bb8aa13f79d8)
+]
+interface IErrorImpl1 : IUnknown
+{
+    HRESULT __PADDING__();
+    void    XErrorSetCallback( [in] XErrorCallback *callback, [in] void *context );
+    void    XErrorSetOptions( XErrorOptions optionsDebuggerPresent, XErrorOptions optionsDebuggerNotPresent );
+}
+
+[
+    local,
+    object,
     uuid(1b339674-328d-4283-a200-3171f18d3639)
 ]
 interface IXLauncher : IUnknown
@@ -175,6 +189,14 @@ coclass XAppCaptureImpl2
 coclass XDisplayImpl
 {
     [default] interface IXDisplay;
+}
+
+[
+    uuid(8ca467f7-22e8-4096-8456-bb8aa13f79d8)
+]
+coclass XErrorImpl
+{
+    [default] interface IErrorImpl1;
 }
 
 [

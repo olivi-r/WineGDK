@@ -5,6 +5,7 @@ SOURCES = \
 	accessibility.c \
 	capture.c \
 	display.c \
+	error.c \
 	gdkc.c \
 	launcher.c \
 	main.c \
