@@ -1252,6 +1252,7 @@ SOURCES = \
 	xpsobjectmodel.idl \
 	xpsobjectmodel_1.idl \
 	xspeechsynthesizer.h \
+	xtaskqueue.h \
 	zmouse.h
 
 INSTALL_LIB = \
