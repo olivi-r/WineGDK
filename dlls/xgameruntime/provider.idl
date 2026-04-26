@@ -47,6 +47,7 @@ interface IXGameRuntimeFeature;
 interface IXGameSave;
 interface IXLauncher;
 interface IXPackage;
+interface IXPersistentLocalStorage;
 
 coclass XAccessibilityImpl;
 coclass XAppCaptureImpl;
@@ -62,6 +63,7 @@ coclass XGameRuntimeFeatureImpl;
 coclass XGameSaveImpl;
 coclass XLauncherImpl;
 coclass XPackageImpl;
+coclass XPersistentLocalStorageImpl;
 
 [
     local,
@@ -330,6 +332,21 @@ interface IXPackage : IUnknown
 }
 
 [
+    local,
+    object,
+    uuid(41a4e10c-5a7e-41d9-8c37-37bde62a07d6)
+]
+interface IXPersistentLocalStorage : IUnknown
+{
+    HRESULT XPersistentLocalStorageGetPathSize( [out] SIZE_T *pathSize );
+    HRESULT XPersistentLocalStorageGetPath( [in] SIZE_T pathSize, [out, string, size_is(pathSize)] char *path, [out, optional] SIZE_T *pathUsed );
+    HRESULT XPersistentLocalStorageGetSpaceInfo( [out] XPersistentLocalStorageSpaceInfo *info );
+    HRESULT XPersistentLocalStoragePromptUserForSpaceAsync( [in] UINT64 requestedBytes, [in, out] XAsyncBlock *asyncBlock );
+    HRESULT XPersistentLocalStoragePromptUserForSpaceResult( [in, out] XAsyncBlock *asyncBlock );
+    HRESULT XPersistentLocalStorageMountForPackage( [in, string] const char *packageIdentifier, [out] XPackageMountHandle *mountHandle );
+}
+
+[
     uuid(3e241977-6237-41e9-8559-102c2d9983f1)
 ]
 coclass XAccessibilityImpl
@@ -439,4 +456,12 @@ coclass XLauncherImpl
 coclass XPackageImpl
 {
     [default] interface IXPackage;
+}
+
+[
+    uuid(f4faf4d4-2d04-4fce-b3e0-474a713a3e84)
+]
+coclass XPersistentLocalStorageImpl
+{
+    [default] interface IXPersistentLocalStorage;
 }
