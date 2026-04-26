@@ -16,17 +16,32 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __WINE_XGAMERUNTIME_H
-#define __WINE_XGAMERUNTIME_H
+#ifndef __WINE_XASYNCPROVIDER_H
+#define __WINE_XASYNCPROVIDER_H
 
-#include <xaccessibility.h>
-#include <xappcapture.h>
 #include <xasync.h>
-#include <xasyncprovider.h>
-#include <xgameruntimeinit.h>
-#include <xgameruntimetypes.h>
-#include <xspeechsynthesizer.h>
-#include <xtaskqueue.h>
-#include <xuser.h>
+
+typedef enum XAsyncOp XAsyncOp;
+
+typedef struct XAsyncProviderData XAsyncProviderData;
+
+typedef HRESULT __stdcall XAsyncProviderCallback( XAsyncOp op, const XAsyncProviderData *data );
+
+enum XAsyncOp
+{
+    Begin,
+    DoWork,
+    GetResult,
+    Cancel,
+    Cleanup,
+};
+
+struct XAsyncProviderData
+{
+    XAsyncBlock *async;
+    SIZE_T *bufferSize;
+    void *buffer;
+    void *context;
+};
 
 #endif
