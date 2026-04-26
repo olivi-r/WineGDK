@@ -16,20 +16,32 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __WINE_XGAMERUNTIME_H
-#define __WINE_XGAMERUNTIME_H
+#ifndef __WINE_XGAMEACTIVATION_H
+#define __WINE_XGAMEACTIVATION_H
 
-#include <xaccessibility.h>
-#include <xappcapture.h>
-#include <xasync.h>
-#include <xasyncprovider.h>
-#include <xdisplay.h>
-#include <xerror.h>
-#include <xgameactivation.h>
-#include <xgameruntimeinit.h>
-#include <xgameruntimetypes.h>
-#include <xspeechsynthesizer.h>
-#include <xtaskqueue.h>
-#include <xuser.h>
+typedef enum XGameActivationType XGameActivationType;
+
+typedef struct XGameActivationInfo XGameActivationInfo;
+
+typedef void __stdcall XGameActivationCallback( void *context, const XGameActivationInfo *activationInfo );
+
+enum XGameActivationType
+{
+    XGameActivationType_Protocol,
+    XGameActivationType_File,
+    XGameActivationType_PendingGameInvite,
+    XGameActivationType_AcceptedGameInvite,
+};
+
+struct XGameActivationInfo
+{
+    XGameActivationType type;
+    union
+    {
+        const char *protocolUri;
+        const char *file;
+        const char *inviteUri;
+    };
+};
 
 #endif
