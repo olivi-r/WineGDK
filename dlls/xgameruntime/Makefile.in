@@ -3,6 +3,7 @@ IMPORTS	= advapi32 shell32
 
 SOURCES = \
 	accessibility.c \
+	activation.c \
 	capture.c \
 	display.c \
 	error.c \

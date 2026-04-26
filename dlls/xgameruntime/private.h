@@ -41,6 +41,7 @@ extern IXAppCapture2 *capture2_impl;
 extern IXDisplay *x_display_impl;
 extern IErrorImpl1 *x_error_impl;
 extern IXGame *x_game_impl;
+extern IGameActivationImpl1 *x_game_activation_impl;
 extern IXLauncher *x_launcher_impl;
 
 /* Deference is for other modules to communicate with eachother through the same binary. */
