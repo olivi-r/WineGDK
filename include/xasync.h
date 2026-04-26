@@ -16,18 +16,35 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __WINE_XGAMERUNTIME_H
-#define __WINE_XGAMERUNTIME_H
+#ifndef __WINE_XASYNC_H
+#define __WINE_XASYNC_H
 
-/* April 2026 Release of GDK */
-#define GDKC_VERSION 10002L
-#define GAMING_SERVICES_VERSION 7822L
-
-#include <xasync.h>
-#include <xasyncprovider.h>
-#include <xgameerr.h>
-#include <xgameruntimeinit.h>
-#include <xgameruntimetypes.h>
 #include <xtaskqueue.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct XAsyncBlock XAsyncBlock;
+
+typedef void    __stdcall XAsyncCompletionRoutine( XAsyncBlock *asyncBlock );
+typedef HRESULT __stdcall XAsyncWork( XAsyncBlock *asyncBlock );
+
+struct XAsyncBlock
+{
+    XTaskQueueHandle queue;
+    void *context;
+    XAsyncCompletionRoutine *callback;
+    void *internal[4];
+};
+
+void    __stdcall XAsyncCancel( XAsyncBlock *asyncBlock );
+HRESULT __stdcall XAsyncGetResultSize( XAsyncBlock *asyncBlock, SIZE_T *bufferSize );
+HRESULT __stdcall XAsyncGetStatus( XAsyncBlock *asyncBlock, BOOLEAN wait );
+HRESULT __stdcall XAsyncRun( XAsyncBlock *asyncBlock, XAsyncWork *work );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
