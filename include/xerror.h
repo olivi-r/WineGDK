@@ -16,19 +16,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __WINE_XGAMERUNTIME_H
-#define __WINE_XGAMERUNTIME_H
+#ifndef __WINE_XERROR_H
+#define __WINE_XERROR_H
 
-#include <xaccessibility.h>
-#include <xappcapture.h>
-#include <xasync.h>
-#include <xasyncprovider.h>
-#include <xdisplay.h>
-#include <xerror.h>
-#include <xgameruntimeinit.h>
-#include <xgameruntimetypes.h>
-#include <xspeechsynthesizer.h>
-#include <xtaskqueue.h>
-#include <xuser.h>
+typedef enum XErrorOptions XErrorOptions;
+
+typedef void __stdcall XErrorCallback( HRESULT hr, const char *msg, void *context );
+
+enum XErrorOptions
+{
+    XErrorOptions_None                      = 0x00,
+    XErrorOptions_OutputDebugStringOnError  = 0x01,
+    XErrorOptions_DebugBreakOnError         = 0x02,
+    XErrorOptions_FailFastOnError           = 0x04,
+};
 
 #endif
