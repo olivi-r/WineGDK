@@ -10,6 +10,7 @@ SOURCES = \
 	event.c \
 	game.c \
 	gdkc.c \
+	invite.c \
 	launcher.c \
 	main.c \
 	provider.idl

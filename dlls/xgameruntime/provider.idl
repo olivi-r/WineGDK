@@ -41,6 +41,7 @@ interface IErrorImpl1;
 interface IXGame;
 interface IGameActivationImpl1;
 interface IXGameEvent;
+interface IXGameInvite;
 interface IXLauncher;
 
 coclass XAccessibilityImpl;
@@ -51,6 +52,7 @@ coclass XErrorImpl;
 coclass XGameImpl;
 coclass XGameActivationImpl;
 coclass XGameEventImpl;
+coclass XGameInviteImpl;
 coclass XLauncherImpl;
 
 [
@@ -190,6 +192,17 @@ interface IXGameEvent : IUnknown
 [
     local,
     object,
+    uuid(0651aae2-4012-4077-bf84-8b9097090e2c)
+]
+interface IXGameInvite : IUnknown
+{
+    HRESULT XGameInviteRegisterForEvent( [in, optional] XTaskQueueHandle queue, [in, optional] void *context, [in] XGameInviteEventCallback *callback, [out] XTaskQueueRegistrationToken *token );
+    BOOLEAN XGameInviteUnregisterForEvent( [in] XTaskQueueRegistrationToken token, [in] BOOLEAN wait );
+}
+
+[
+    local,
+    object,
     uuid(1b339674-328d-4283-a200-3171f18d3639)
 ]
 interface IXLauncher : IUnknown
@@ -261,6 +274,14 @@ coclass XGameActivationImpl
 coclass XGameEventImpl
 {
     [default] interface IXGameEvent;
+}
+
+[
+    uuid(0651aae2-4012-4077-bf84-8b9097090e2c)
+]
+coclass XGameInviteImpl
+{
+    [default] interface IXGameInvite;
 }
 
 [

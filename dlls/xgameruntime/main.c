@@ -81,6 +81,8 @@ HRESULT WINAPI QueryApiImpl( const GUID *runtimeClassId, REFIID interfaceId, voi
         return IGameActivationImpl1_QueryInterface( x_game_activation_impl, interfaceId, out );
     if (IsEqualGUID( runtimeClassId, &CLSID_XGameEventImpl ))
         return IXGameEvent_QueryInterface( x_game_event_impl, interfaceId, out );
+    if (IsEqualGUID( runtimeClassId, &CLSID_XGameInviteImpl ))
+        return IXGameInvite_QueryInterface( x_game_invite_impl, interfaceId, out );
     if (IsEqualGUID( runtimeClassId, &CLSID_XLauncherImpl ))
         return IXLauncher_QueryInterface( x_launcher_impl, interfaceId, out );
 
