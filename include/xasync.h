@@ -16,16 +16,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __WINE_XGAMERUNTIME_H
-#define __WINE_XGAMERUNTIME_H
+#ifndef __WINE_XASYNC_H
+#define __WINE_XASYNC_H
 
-#include <xaccessibility.h>
-#include <xappcapture.h>
-#include <xasync.h>
-#include <xgameruntimeinit.h>
-#include <xgameruntimetypes.h>
-#include <xspeechsynthesizer.h>
 #include <xtaskqueue.h>
-#include <xuser.h>
+
+typedef struct XAsyncBlock XAsyncBlock;
+
+typedef void    __stdcall XAsyncCompletionRoutine( XAsyncBlock *asyncBlock );
+typedef HRESULT __stdcall XAsyncWork( XAsyncBlock *asyncBlock );
+
+struct XAsyncBlock
+{
+    XTaskQueueHandle queue;
+    void *context;
+    XAsyncCompletionRoutine *callback;
+    void *internal[4];
+};
 
 #endif
