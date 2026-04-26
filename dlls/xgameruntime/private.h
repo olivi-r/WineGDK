@@ -36,6 +36,7 @@ extern IXError *x_error_impl;
 extern IXGame3 *x_game_impl;
 extern IXGameActivation *x_game_activation_impl;
 extern IXGameEvent *x_game_event_impl;
+extern IXGameInvite2 *x_game_invite_impl;
 extern IXLauncher *x_launcher_impl;
 extern IXThreading *x_threading_impl;
 extern IXUser6 *x_user_impl;

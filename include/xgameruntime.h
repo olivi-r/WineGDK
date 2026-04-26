@@ -33,6 +33,7 @@
 #include <xgameactivation.h>
 #include <xgameerr.h>
 #include <xgameevent.h>
+#include <xgameinvite.h>
 #include <xgameruntimeinit.h>
 #include <xgameruntimetypes.h>
 #include <xlauncher.h>
