@@ -382,6 +382,28 @@ static void test_XLauncher( void )
     IXLauncher_Release( xlauncher );
 }
 
+static void test_XPackage( void )
+{
+    IXPackage *xpackage = NULL;
+    HRESULT hr;
+
+    hr = QueryApiImpl( &CLSID_XPackageImpl, &IID_IXPackage, (void **)&xpackage );
+    ok( hr == S_OK || broken( hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) ), "got hr %#lx.\n", hr );
+    if (hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) )
+    {
+        win_skip( "clsid %s not supported, skipping tests.\n", debugstr_guid( &CLSID_XPackageImpl ) );
+        return;
+    }
+    if (!xpackage) return;
+
+    check_interface( xpackage, &IID_IUnknown );
+    check_interface( xpackage, &IID_IXPackage );
+    flaky check_interface( xpackage, &IID_IXPackage2 );
+    flaky check_interface( xpackage, &IID_IXPackage3 );
+
+    IXPackage_Release( xpackage );
+}
+
 static void test_XThreading( void )
 {
     IXThreading *xthreading = NULL;
@@ -473,6 +495,7 @@ START_TEST(xgameruntime)
     test_XGameStreaming();
     test_XGameUi();
     test_XLauncher();
+    test_XPackage();
     test_XThreading();
     test_XUser();
     test_XUserDevice();

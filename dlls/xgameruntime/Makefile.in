@@ -17,5 +17,6 @@ SOURCES = \
 	xgamesave.c \
 	xgamestreaming.c \
 	xgameui.c \
+	xpackage.c \
 	xthreading.c \
 	xuser.c

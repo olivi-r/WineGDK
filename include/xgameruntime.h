@@ -42,6 +42,7 @@
 #include <xgamestreaming.h>
 #include <xgameui.h>
 #include <xlauncher.h>
+#include <xpackage.h>
 #include <xspeechsynthesizer.h>
 #include <xtaskqueue.h>
 #include <xuser.h>

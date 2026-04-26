@@ -43,6 +43,7 @@ extern IXGameSave3 *x_game_save_impl;
 extern IXGameStreaming3 *x_game_streaming_impl;
 extern IXGameUi4 *x_game_ui_impl;
 extern IXLauncher *x_launcher_impl;
+extern IXPackage3 *x_package_impl;
 extern IXThreading *x_threading_impl;
 extern IXUser6 *x_user_impl;
 extern IXUserDevice2 *x_user_device_impl;
