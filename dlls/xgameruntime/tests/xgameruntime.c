@@ -18,7 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <initguid.h>
 #include <wine/test.h>
+
+#define COBJMACROS
 #include <xgameruntime.h>
 
 typedef HRESULT (WINAPI *InitializeApiImpl_f)( ULONG gdkVer, ULONG gsVer );
@@ -28,6 +31,17 @@ typedef HRESULT (WINAPI *UninitializeApiImpl_f)( void );
 InitializeApiImpl_f InitializeApiImpl = NULL;
 QueryApiImpl_f QueryApiImpl = NULL;
 UninitializeApiImpl_f UninitializeApiImpl = NULL;
+
+#define check_interface( obj, iid ) check_interface_( __LINE__, obj, iid )
+static void check_interface_( unsigned int line, void *obj, const IID *iid )
+{
+    IUnknown *iface = obj, *unknown;
+    HRESULT hr;
+
+    hr = IUnknown_QueryInterface( iface, iid, (void **)&unknown );
+    ok_(__FILE__, line)( hr == S_OK, "got hr %#lx.\n", hr );
+    if (SUCCEEDED(hr)) IUnknown_Release( unknown );
+}
 
 static BOOLEAN test_Init( void )
 {
@@ -60,6 +74,26 @@ failed:
     return FALSE;
 }
 
+static void test_XThreading( void )
+{
+    IXThreading *xthreading = NULL;
+    HRESULT hr;
+
+    hr = QueryApiImpl( &CLSID_XThreadingImpl, &IID_IXThreading, (void **)&xthreading );
+    ok( hr == S_OK || broken( hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) ), "got hr %#lx.\n", hr );
+    if (hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) )
+    {
+        win_skip( "clsid %s not supported, skipping tests.\n", debugstr_guid( &CLSID_XThreadingImpl ) );
+        return;
+    }
+    if (!xthreading) return;
+
+    check_interface( xthreading, &IID_IUnknown );
+    check_interface( xthreading, &IID_IXThreading );
+
+    IXThreading_Release( xthreading );
+}
+
 START_TEST(xgameruntime)
 {
     HRESULT hr;
@@ -69,6 +103,8 @@ START_TEST(xgameruntime)
         win_skip( "Failed to initialize xgameruntime, skipping tests.\n" );
         return;
     }
+
+    test_XThreading();
 
     hr = UninitializeApiImpl();
     ok( hr == S_OK, "got hr %#lx.\n", hr );

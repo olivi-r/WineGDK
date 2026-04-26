@@ -18,21 +18,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __WINE_XGAMERUNTIME_PRIVATE_H
-#define __WINE_XGAMERUNTIME_PRIVATE_H
-
-#define COBJMACROS
-
-#include <stdlib.h>
-#include <windows.h>
-#include <wine/debug.h>
+#include <wtypes.h>
 #include <xgameruntime.h>
 
-extern IXThreading *x_threading_impl;
+void WINAPI XAsyncCancel( XAsyncBlock *asyncBlock )
+{
+}
 
-/* Deference is for other modules to communicate with eachother through the same binary. */
-HRESULT WINAPI QueryApiImpl( const GUID *classId, REFIID interfaceId, void **out );
+HRESULT WINAPI XAsyncGetResultSize( XAsyncBlock *asyncBlock, SIZE_T *bufferSize )
+{
+    return E_NOTIMPL;
+}
 
-HRESULT WINAPI GDKC_InitAPI( ULONG gdkVer, ULONG gsVer, char mode, const XGameRuntimeOptions *options );
+HRESULT WINAPI XAsyncGetStatus( XAsyncBlock *asyncBlock, BOOLEAN wait )
+{
+    return E_NOTIMPL;
+}
 
-#endif
+HRESULT WINAPI XAsyncRun( XAsyncBlock *asyncBlock, XAsyncWork *work )
+{
+    return E_NOTIMPL;
+}
