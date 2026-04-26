@@ -40,6 +40,7 @@ interface IXDisplay;
 interface IErrorImpl1;
 interface IXGame;
 interface IGameActivationImpl1;
+interface IXGameEvent;
 interface IXLauncher;
 
 coclass XAccessibilityImpl;
@@ -49,6 +50,7 @@ coclass XDisplayImpl;
 coclass XErrorImpl;
 coclass XGameImpl;
 coclass XGameActivationImpl;
+coclass XGameEventImpl;
 coclass XLauncherImpl;
 
 [
@@ -178,6 +180,16 @@ interface IGameActivationImpl1 : IUnknown
 [
     local,
     object,
+    uuid(bbfbdcc7-bfe7-409b-a5ca-edf054960b4d)
+]
+interface IXGameEvent : IUnknown
+{
+    HRESULT XGameEventWrite( [in] XUserHandle user, [in, string] const char *serviceConfigId, [in, string] const char *playSessionId, [in, string] const char *eventName, [in, optional, string] const char *dimensionsJson, [in, optional, string] const char *measurementsJson );
+}
+
+[
+    local,
+    object,
     uuid(1b339674-328d-4283-a200-3171f18d3639)
 ]
 interface IXLauncher : IUnknown
@@ -241,6 +253,14 @@ coclass XGameImpl
 coclass XGameActivationImpl
 {
     [default] interface IGameActivationImpl1;
+}
+
+[
+    uuid(bbfbdcc7-bfe7-409b-a5ca-edf054960b4d)
+]
+coclass XGameEventImpl
+{
+    [default] interface IXGameEvent;
 }
 
 [
