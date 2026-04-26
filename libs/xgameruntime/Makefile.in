@@ -9,6 +9,7 @@ SOURCES = \
 	xerror.c \
 	xgame.c \
 	xgameactivation.c \
+	xgameevent.c \
 	xgameruntimeinit.c \
 	xlauncher.c \
 	xspeechsynthesizer.c \

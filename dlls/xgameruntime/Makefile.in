@@ -10,5 +10,6 @@ SOURCES = \
 	xerror.c \
 	xgame.c \
 	xgameactivation.c \
+	xgameevent.c \
 	xthreading.c \
 	xuser.c
