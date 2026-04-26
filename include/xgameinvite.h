@@ -16,21 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __WINE_XGAMERUNTIME_H
-#define __WINE_XGAMERUNTIME_H
+#ifndef __WINE_XGAMEINVITE_H
+#define __WINE_XGAMEINVITE_H
 
-#include <xaccessibility.h>
-#include <xappcapture.h>
-#include <xasync.h>
-#include <xasyncprovider.h>
-#include <xdisplay.h>
-#include <xerror.h>
-#include <xgameactivation.h>
-#include <xgameinvite.h>
-#include <xgameruntimeinit.h>
-#include <xgameruntimetypes.h>
-#include <xspeechsynthesizer.h>
-#include <xtaskqueue.h>
-#include <xuser.h>
+typedef void __stdcall XGameInviteEventCallback( void *context, const char *inviteUri );
 
 #endif
