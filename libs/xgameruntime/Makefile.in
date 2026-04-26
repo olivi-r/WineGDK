@@ -6,6 +6,7 @@ SOURCES = \
 	xasync.c \
 	xasyncprovider.c \
 	xdisplay.c \
+	xerror.c \
 	xgameruntimeinit.c \
 	xlauncher.c \
 	xspeechsynthesizer.c \

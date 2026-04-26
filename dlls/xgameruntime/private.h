@@ -32,6 +32,7 @@ extern IXAccessibility *x_accessibility_impl;
 extern IXAppCapture *capture_impl;
 extern IXAppCapture5 *capture5_impl;
 extern IXDisplay *x_display_impl;
+extern IXError *x_error_impl;
 extern IXLauncher *x_launcher_impl;
 extern IXThreading *x_threading_impl;
 extern IXUser6 *x_user_impl;

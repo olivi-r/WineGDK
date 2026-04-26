@@ -152,6 +152,26 @@ static void test_XDisplay( void )
     IXDisplay_Release( xdisplay );
 }
 
+static void test_XError( void )
+{
+    IXError *xerror = NULL;
+    HRESULT hr;
+
+    hr = QueryApiImpl( &CLSID_XErrorImpl, &IID_IXError, (void **)&xerror );
+    ok( hr == S_OK || broken( hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) ), "got hr %#lx.\n", hr );
+    if (hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) )
+    {
+        win_skip( "clsid %s not supported, skipping tests.\n", debugstr_guid( &CLSID_XErrorImpl ) );
+        return;
+    }
+    if (!xerror) return;
+
+    check_interface( xerror, &IID_IUnknown );
+    check_interface( xerror, &IID_IXError );
+
+    IXError_Release( xerror );
+}
+
 static void test_XLauncher( void )
 {
     IXLauncher *xlauncher = NULL;
@@ -252,6 +272,7 @@ START_TEST(xgameruntime)
     test_XAccessibility();
     test_XAppCapture();
     test_XDisplay();
+    test_XError();
     test_XLauncher();
     test_XThreading();
     test_XUser();

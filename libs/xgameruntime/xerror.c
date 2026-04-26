@@ -1,5 +1,7 @@
 /*
- * Copyright (C) the Wine project
+ * Xbox Game runtime Library
+ *
+ * Copyright 2026 Olivia Ryan
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,25 +18,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __WINE_XGAMERUNTIME_H
-#define __WINE_XGAMERUNTIME_H
+#include <wtypes.h>
+#include <xgameruntime.h>
 
-/* April 2026 Release of GDK */
-#define GDKC_VERSION 10002L
-#define GAMING_SERVICES_VERSION 7822L
+void WINAPI XErrorSetCallback( XErrorCallback *callback, void *context )
+{
+}
 
-#include <xaccessibility.h>
-#include <xappcapture.h>
-#include <xasync.h>
-#include <xasyncprovider.h>
-#include <xdisplay.h>
-#include <xerror.h>
-#include <xgameerr.h>
-#include <xgameruntimeinit.h>
-#include <xgameruntimetypes.h>
-#include <xlauncher.h>
-#include <xspeechsynthesizer.h>
-#include <xtaskqueue.h>
-#include <xuser.h>
-
-#endif
+void WINAPI XErrorSetOptions( XErrorOptions optionsDebuggerPresent, XErrorOptions optionsDebuggerNotPresent )
+{
+}
