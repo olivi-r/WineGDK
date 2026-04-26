@@ -19,6 +19,7 @@ SOURCES = \
 	xlauncher.c \
 	xpersistentlocalstorage.c \
 	xspeechsynthesizer.c \
+	xstore.c \
 	xtaskqueue.c \
 	xthread.c \
 	xuser.c

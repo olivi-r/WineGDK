@@ -426,6 +426,31 @@ static void test_XPersistentLocalStorage( void )
     IXPersistentLocalStorage_Release( xpersistentlocalstorage );
 }
 
+static void test_XStore( void )
+{
+    IXStore *xstore = NULL;
+    HRESULT hr;
+
+    hr = QueryApiImpl( &CLSID_XStoreImpl, &IID_IXStore, (void **)&xstore );
+    ok( hr == S_OK || broken( hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) ), "got hr %#lx.\n", hr );
+    if (hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) )
+    {
+        win_skip( "clsid %s not supported, skipping tests.\n", debugstr_guid( &CLSID_XStoreImpl ) );
+        return;
+    }
+    if (!xstore) return;
+
+    check_interface( xstore, &IID_IUnknown );
+    check_interface( xstore, &IID_IXStore );
+    flaky check_interface( xstore, &IID_IXStore2 );
+    flaky check_interface( xstore, &IID_IXStore3 );
+    flaky check_interface( xstore, &IID_IXStore4 );
+    flaky check_interface( xstore, &IID_IXStore5 );
+    flaky check_interface( xstore, &IID_IXStore6 );
+
+    IXStore_Release( xstore );
+}
+
 static void test_XThreading( void )
 {
     IXThreading *xthreading = NULL;
@@ -519,6 +544,7 @@ START_TEST(xgameruntime)
     test_XLauncher();
     test_XPackage();
     test_XPersistentLocalStorage();
+    test_XStore();
     test_XThreading();
     test_XUser();
     test_XUserDevice();

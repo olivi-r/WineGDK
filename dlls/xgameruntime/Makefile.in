@@ -19,5 +19,6 @@ SOURCES = \
 	xgameui.c \
 	xpackage.c \
 	xpersistentlocalstorage.c \
+	xstore.c \
 	xthreading.c \
 	xuser.c

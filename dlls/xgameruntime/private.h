@@ -45,6 +45,7 @@ extern IXGameUi4 *x_game_ui_impl;
 extern IXLauncher *x_launcher_impl;
 extern IXPackage3 *x_package_impl;
 extern IXPersistentLocalStorage3 *x_persistent_local_storage_impl;
+extern IXStore6 *x_store_impl;
 extern IXThreading *x_threading_impl;
 extern IXUser6 *x_user_impl;
 extern IXUserDevice2 *x_user_device_impl;
