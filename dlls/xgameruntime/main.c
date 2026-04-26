@@ -96,6 +96,8 @@ HRESULT WINAPI QueryApiImpl( const GUID *classId, REFIID interfaceId, void **out
         return IXLauncher_QueryInterface( x_launcher_impl, interfaceId, out );
     if (IsEqualGUID( classId, &CLSID_XPackageImpl ))
         return IXPackage3_QueryInterface( x_package_impl, interfaceId, out );
+    if (IsEqualGUID( classId, &CLSID_XPersistentLocalStorageImpl ))
+        return IXPersistentLocalStorage3_QueryInterface( x_persistent_local_storage_impl, interfaceId, out );
     if (IsEqualGUID( classId, &CLSID_XThreadingImpl ))
         return IXThreading_QueryInterface( x_threading_impl, interfaceId, out );
     if (IsEqualGUID( classId, &CLSID_XUserImpl ))

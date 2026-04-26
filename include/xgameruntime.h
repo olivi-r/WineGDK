@@ -43,6 +43,7 @@
 #include <xgameui.h>
 #include <xlauncher.h>
 #include <xpackage.h>
+#include <xpersistentlocalstorage.h>
 #include <xspeechsynthesizer.h>
 #include <xtaskqueue.h>
 #include <xuser.h>
