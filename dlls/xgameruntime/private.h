@@ -34,6 +34,7 @@ extern IXAppCapture5 *capture5_impl;
 extern IXDisplay *x_display_impl;
 extern IXError *x_error_impl;
 extern IXGame3 *x_game_impl;
+extern IXGameActivation *x_game_activation_impl;
 extern IXLauncher *x_launcher_impl;
 extern IXThreading *x_threading_impl;
 extern IXUser6 *x_user_impl;

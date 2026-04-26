@@ -1245,6 +1245,7 @@ SOURCES = \
 	xdisplay.idl \
 	xerror.idl \
 	xgame.idl \
+	xgameactivation.idl \
 	xgameerr.h \
 	xgameruntime.h \
 	xgameruntimeinit.h \
