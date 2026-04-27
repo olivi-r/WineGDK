@@ -94,6 +94,44 @@ static void test_XAccessibility( void )
     IXAccessibility_Release( xaccessibility );
 }
 
+static void test_XAppCapture( void )
+{
+    IXAppCapture2 *xappcapture2 = NULL;
+    IXAppCapture *xappcapture = NULL;
+    HRESULT hr;
+
+    hr = QueryApiImpl( &CLSID_XAppCaptureImpl, &IID_IXAppCapture, (void **)&xappcapture );
+    ok( hr == S_OK || broken( hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) ), "got hr %#lx.\n", hr );
+    if (hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) )
+    {
+        win_skip( "clsid %s not supported, skipping tests.\n", debugstr_guid( &CLSID_XAppCaptureImpl ) );
+        return;
+    }
+    if (!xappcapture) return;
+
+    check_interface( xappcapture, &IID_IUnknown );
+    check_interface( xappcapture, &IID_IXAppCapture );
+
+    IXAppCapture_Release( xappcapture );
+
+    hr = QueryApiImpl( &CLSID_XAppCaptureImpl2, &IID_IXAppCapture2, (void **)&xappcapture2 );
+    ok( hr == S_OK || broken( hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) ), "got hr %#lx.\n", hr );
+    if (hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) )
+    {
+        win_skip( "clsid %s not supported, skipping tests.\n", debugstr_guid( &CLSID_XAppCaptureImpl2 ) );
+        return;
+    }
+    if (!xappcapture2) return;
+
+    check_interface( xappcapture2, &IID_IUnknown );
+    check_interface( xappcapture2, &IID_IXAppCapture2 );
+    flaky check_interface( xappcapture2, &IID_IXAppCapture3 );
+    flaky check_interface( xappcapture2, &IID_IXAppCapture4 );
+    flaky check_interface( xappcapture2, &IID_IXAppCapture5 );
+
+    IXAppCapture2_Release( xappcapture2 );
+}
+
 static void test_XThreading( void )
 {
     IXThreading *xthreading = NULL;
@@ -172,6 +210,7 @@ START_TEST(xgameruntime)
     }
 
     test_XAccessibility();
+    test_XAppCapture();
     test_XThreading();
     test_XUser();
     test_XUserDevice();

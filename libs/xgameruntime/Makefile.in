@@ -2,6 +2,7 @@ STATICLIB = libxgameruntime.a
 
 SOURCES = \
 	xaccessibility.c \
+	xappcapture.c \
 	xasync.c \
 	xasyncprovider.c \
 	xgameruntimeinit.c \
