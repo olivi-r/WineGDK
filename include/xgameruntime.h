@@ -20,6 +20,7 @@
 #define __WINE_XGAMERUNTIME_H
 
 #include <xaccessibility.h>
+#include <xappcapture.h>
 #include <xgameruntimeinit.h>
 #include <xgameruntimetypes.h>
 #include <xspeechsynthesizer.h>

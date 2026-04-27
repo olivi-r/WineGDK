@@ -27,6 +27,8 @@ typedef struct APP_LOCAL_DEVICE_ID
 {
     BYTE value[32];
 } APP_LOCAL_DEVICE_ID;
+
+typedef UINT64 time_t;
 cpp_quote("#endif")
 
 import "xgameruntime.h";
