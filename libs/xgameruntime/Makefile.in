@@ -1,8 +1,10 @@
 STATICLIB = libxgameruntime.a
 
 SOURCES = \
+	xaccessibility.c \
 	xasync.c \
 	xasyncprovider.c \
 	xgameruntimeinit.c \
+	xspeechsynthesizer.c \
 	xtaskqueue.c \
 	xthread.c

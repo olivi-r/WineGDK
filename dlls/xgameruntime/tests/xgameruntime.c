@@ -74,6 +74,26 @@ failed:
     return FALSE;
 }
 
+static void test_XAccessibility( void )
+{
+    IXAccessibility *xaccessibility = NULL;
+    HRESULT hr;
+
+    hr = QueryApiImpl( &CLSID_XAccessibilityImpl, &IID_IXAccessibility, (void **)&xaccessibility );
+    ok( hr == S_OK || broken( hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) ), "got hr %#lx.\n", hr );
+    if (hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) )
+    {
+        win_skip( "clsid %s not supported, skipping tests.\n", debugstr_guid( &CLSID_XAccessibilityImpl ) );
+        return;
+    }
+    if (!xaccessibility) return;
+
+    check_interface( xaccessibility, &IID_IUnknown );
+    check_interface( xaccessibility, &IID_IXAccessibility );
+
+    IXAccessibility_Release( xaccessibility );
+}
+
 static void test_XThreading( void )
 {
     IXThreading *xthreading = NULL;
@@ -104,6 +124,7 @@ START_TEST(xgameruntime)
         return;
     }
 
+    test_XAccessibility();
     test_XThreading();
 
     hr = UninitializeApiImpl();
