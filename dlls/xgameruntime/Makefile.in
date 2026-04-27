@@ -3,6 +3,7 @@ IMPORTS	= advapi32
 
 SOURCES = \
 	accessibility.c \
+	capture.c \
 	gdkc.c \
 	main.c \
 	provider.idl

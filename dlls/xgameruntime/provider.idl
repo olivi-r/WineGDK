@@ -34,8 +34,12 @@ cpp_quote("#endif")
 import "xgameruntime.h";
 
 interface IXAccessibility;
+interface IXAppCapture;
+interface IXAppCapture2;
 
 coclass XAccessibilityImpl;
+coclass XAppCaptureImpl;
+coclass XAppCaptureImpl2;
 
 [
     local,
@@ -66,9 +70,74 @@ interface IXAccessibility : IUnknown
 }
 
 [
+    local,
+    object,
+    uuid(186d5592-a72d-45fb-9560-11aed0e6647a)
+]
+interface IXAppCapture : IUnknown
+{
+    BOOLEAN XAppBroadcastIsAppBroadcasting();
+    HRESULT XAppBroadcastShowUI( [in] XUserHandle requestingUser );
+    HRESULT XAppBroadcastGetStatus( [in] XUserHandle requestingUser, [out] XAppBroadcastStatus *appBroadcastStatus );
+    HRESULT XAppBroadcastRegisterIsAppBroadcastingChanged( [in, optional] XTaskQueueHandle queue, [in, optional] void *context, [in] XAppBroadcastMonitorCallback *appBroadcastMonitorCallback, [out] XTaskQueueRegistrationToken *token );
+    BOOLEAN XAppBroadcastUnregisterIsAppBroadcastingChanged( [in] XTaskQueueRegistrationToken token, [in] BOOLEAN wait );
+    HRESULT XAppCaptureMetadataAddStringEvent( [in, string] const char *name, [in, string] const char *value, [in] XAppCaptureMetadataPriority priority );
+    HRESULT XAppCaptureMetadataAddInt32Event( [in, string] const char *name, [in] INT32 value, [in] XAppCaptureMetadataPriority priority );
+    HRESULT XAppCaptureMetadataAddDoubleEvent( [in, string] const char *name, [in] double value, [in] XAppCaptureMetadataPriority priority );
+    HRESULT XAppCaptureMetadataStartStringState( [in, string] const char *name, [in, string] const char *value, [in] XAppCaptureMetadataPriority priority );
+    HRESULT XAppCaptureMetadataStartInt32State( [in, string] const char *name, [in] INT32 value, [in] XAppCaptureMetadataPriority priority );
+    HRESULT XAppCaptureMetadataStartDoubleState( [in, string] const char *name, [in] double value, [in] XAppCaptureMetadataPriority priority );
+    HRESULT XAppCaptureMetadataStopState( [in, string] const char *name );
+    HRESULT XAppCaptureMetadataStopAllStates();
+    HRESULT XAppCaptureMetadataRemainingStorageBytesAvailable( [out] UINT64 *value );
+    HRESULT XAppCaptureRegisterMetadataPurged( [in, optional] XTaskQueueHandle queue, [in] void *context, [in] XAppCaptureMetadataPurgedCallback *callback, [out] XTaskQueueRegistrationToken *token );
+    BOOLEAN XAppCaptureUnRegisterMetadataPurged( [in] XTaskQueueRegistrationToken token, [in] BOOLEAN wait );
+}
+
+[
+    local,
+    object,
+    uuid(22e672d7-b4e3-406c-bd50-8f0d25236f9e)
+]
+interface IXAppCapture2 : IUnknown
+{
+    HRESULT XAppCaptureTakeDiagnosticScreenshot( [in] BOOLEAN gamescreenOnly, [in] XAppCaptureScreenshotFormatFlag captureFlags, [in, optional, string] const char *filenamePrefix, [out] XAppCaptureDiagnosticScreenshotResult *result );
+    HRESULT XAppCaptureRecordDiagnosticClip( [in] time_t startTime, [in] UINT32 durationInMs, [in, optional, string] const char *filenamePrefix, [out] XAppCaptureRecordClipResult *result );
+    HRESULT XAppCaptureTakeScreenshot( [in] XUserHandle requestingUser, [out] XAppCaptureTakeScreenshotResult *result );
+    HRESULT XAppCaptureOpenScreenshotStream( [in, string] const char *localId, [in] XAppCaptureScreenshotFormatFlag screenshotFormat, [out] XAppCaptureScreenshotStreamHandle *handle, [out, optional] UINT64 *totalBytes );
+    HRESULT XAppCaptureReadScreenshotStream( [in] XAppCaptureScreenshotStreamHandle handle, [in] UINT64 startPosition, [in] UINT32 bytesToRead, [out, size_is(bytesToRead)] UINT8 *buffer, [out] UINT32 *bytesWritten );
+    HRESULT XAppCaptureCloseScreenshotStream( [in] XAppCaptureScreenshotStreamHandle handle );
+    HRESULT XAppCaptureEnableRecord();
+    HRESULT XAppCaptureDisableRecord();
+    HRESULT XAppCaptureGetVideoCaptureSettings( [out] XAppCaptureVideoCaptureSettings *userCaptureSettings );
+    HRESULT XAppCaptureRecordTimespan( [in, optional] const SYSTEMTIME *startTimestamp, [in] UINT64 durationInMilliseconds, [out] XAppCaptureLocalResult *result );
+    HRESULT XAppCaptureReadLocalStream( [in] XAppCaptureLocalStreamHandle handle, [in] SIZE_T startPosition, [in] UINT32 bytesToRead, [out, size_is(bytesToRead)] UINT8 *buffer, [out] UINT32 *bytesWritten );
+    HRESULT XAppCaptureCloseLocalStream( [in] XAppCaptureLocalStreamHandle handle );
+    HRESULT XAppCaptureStartUserRecord( [in] XUserHandle requestingUser, [in] UINT32 localIdBufferLength, [out, string, size_is(localIdBufferLength)] char *localIdBuffer );
+    HRESULT XAppCaptureStopUserRecord( [in, string] const char *localId, [out] XAppCaptureUserRecordingResult *result );
+    HRESULT XAppCaptureCancelUserRecord( [in, string] const char *localId );
+}
+
+[
     uuid(3e241977-6237-41e9-8559-102c2d9983f1)
 ]
 coclass XAccessibilityImpl
 {
     [default] interface IXAccessibility;
+}
+
+[
+    uuid(186d5592-a72d-45fb-9560-11aed0e6647a)
+]
+coclass XAppCaptureImpl
+{
+    [default] interface IXAppCapture;
+}
+
+[
+    uuid(a4f1aee2-4bf1-4485-b008-a7c26d52ac27)
+]
+coclass XAppCaptureImpl2
+{
+    [default] interface IXAppCapture2;
 }

@@ -36,6 +36,8 @@
 #define GAMING_SERVICES_VERSION 7822L
 
 extern IXAccessibility *x_accessibility_impl;
+extern IXAppCapture *capture_impl;
+extern IXAppCapture2 *capture2_impl;
 
 /* Deference is for other modules to communicate with eachother through the same binary. */
 HRESULT WINAPI QueryApiImpl( const GUID *runtimeClassId, REFIID interfaceId, void **out );
