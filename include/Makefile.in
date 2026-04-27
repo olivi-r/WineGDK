@@ -1246,6 +1246,7 @@ SOURCES = \
 	xgameactivation.h \
 	xgameerr.h \
 	xgameinvite.h \
+	xgameprotocol.h \
 	xgameruntime.h \
 	xgameruntimeinit.h \
 	xgameruntimetypes.h \
