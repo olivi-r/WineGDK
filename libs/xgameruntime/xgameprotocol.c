@@ -1,5 +1,7 @@
 /*
- * Copyright (C) the Wine project
+ * Xbox Game runtime Library
+ *
+ * Copyright 2026 Olivia Ryan
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,30 +18,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __WINE_XGAMERUNTIME_H
-#define __WINE_XGAMERUNTIME_H
+#include <wtypes.h>
+#include <xgameruntime.h>
 
-/* April 2026 Release of GDK */
-#define GDKC_VERSION 10002L
-#define GAMING_SERVICES_VERSION 7822L
+HRESULT WINAPI XGameProtocolRegisterForActivation( XTaskQueueHandle queue, void *context, XGameProtocolActivationCallback *callback, XTaskQueueRegistrationToken *token )
+{
+    return E_NOTIMPL;
+}
 
-#include <xaccessibility.h>
-#include <xappcapture.h>
-#include <xasync.h>
-#include <xasyncprovider.h>
-#include <xdisplay.h>
-#include <xerror.h>
-#include <xgame.h>
-#include <xgameactivation.h>
-#include <xgameerr.h>
-#include <xgameevent.h>
-#include <xgameinvite.h>
-#include <xgameprotocol.h>
-#include <xgameruntimeinit.h>
-#include <xgameruntimetypes.h>
-#include <xlauncher.h>
-#include <xspeechsynthesizer.h>
-#include <xtaskqueue.h>
-#include <xuser.h>
-
-#endif
+BOOLEAN WINAPI XGameProtocolUnregisterForActivation( XTaskQueueRegistrationToken token, BOOLEAN wait )
+{
+    return FALSE;
+}

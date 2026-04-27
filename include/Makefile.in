@@ -1253,6 +1253,7 @@ SOURCES = \
 	xgameerr.h \
 	xgameevent.idl \
 	xgameinvite.idl \
+	xgameprotocol.idl \
 	xgameruntime.h \
 	xgameruntimeinit.h \
 	xgameruntimetypes.h \

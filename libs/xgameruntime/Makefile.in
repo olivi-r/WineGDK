@@ -11,6 +11,7 @@ SOURCES = \
 	xgameactivation.c \
 	xgameevent.c \
 	xgameinvite.c \
+	xgameprotocol.c \
 	xgameruntimeinit.c \
 	xlauncher.c \
 	xspeechsynthesizer.c \
