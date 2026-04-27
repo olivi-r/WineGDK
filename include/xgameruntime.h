@@ -19,6 +19,7 @@
 #ifndef __WINE_XGAMERUNTIME_H
 #define __WINE_XGAMERUNTIME_H
 
+#include <xaccessibility.h>
 #include <xgameruntimeinit.h>
 #include <xgameruntimetypes.h>
 

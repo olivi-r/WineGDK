@@ -1227,6 +1227,7 @@ SOURCES = \
 	wtypesbase.idl \
 	wuapi.idl \
 	x3daudio.h \
+	xaccessibility.h \
 	xact.h \
 	xact2wb.h \
 	xact3.h \
