@@ -21,15 +21,21 @@
 #ifndef __WINE_XGAMERUNTIME_PRIVATE_H
 #define __WINE_XGAMERUNTIME_PRIVATE_H
 
+#define COBJMACROS
+
 #include <stdlib.h>
 #include <windows.h>
 #include <wine/debug.h>
 #include <xgameerr.h>
 #include <xgameruntimeinit.h>
 
+#include "provider.h"
+
 /* April 2026 Release of GDK */
 #define GDKC_VERSION 10002L
 #define GAMING_SERVICES_VERSION 7822L
+
+extern IXAccessibility *x_accessibility_impl;
 
 /* Deference is for other modules to communicate with eachother through the same binary. */
 HRESULT WINAPI QueryApiImpl( const GUID *runtimeClassId, REFIID interfaceId, void **out );

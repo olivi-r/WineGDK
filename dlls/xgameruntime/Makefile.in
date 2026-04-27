@@ -2,5 +2,7 @@ MODULE	= xgameruntime.dll
 IMPORTS	= advapi32
 
 SOURCES = \
+	accessibility.c \
 	gdkc.c \
-	main.c
+	main.c \
+	provider.idl

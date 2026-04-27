@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <initguid.h>
+
 #include "private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(xgameruntime);
@@ -61,7 +63,12 @@ HRESULT WINAPI InitializeApiImpl( ULONG gdkVer, ULONG gsVer )
 
 HRESULT WINAPI QueryApiImpl( const GUID *runtimeClassId, REFIID interfaceId, void **out )
 {
-    FIXME( "runtimeClassId %s, interfaceId %s, out %p stub!\n", debugstr_guid( runtimeClassId ), debugstr_guid( interfaceId ), out );
+    TRACE( "runtimeClassId %s, interfaceId %s, out %p.\n", debugstr_guid( runtimeClassId ), debugstr_guid( interfaceId ), out );
+
+    if (IsEqualGUID( runtimeClassId, &CLSID_XAccessibilityImpl ))
+        return IXAccessibility_QueryInterface( x_accessibility_impl, interfaceId, out );
+
+    FIXME( "%s not implemented, returning ERROR_NOT_SUPPORTED.\n", debugstr_guid( runtimeClassId ) );
     return HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED );
 }
 
