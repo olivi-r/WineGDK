@@ -38,6 +38,7 @@
 #include <xgameruntimefeature.h>
 #include <xgameruntimeinit.h>
 #include <xgameruntimetypes.h>
+#include <xgamesave.h>
 #include <xlauncher.h>
 #include <xspeechsynthesizer.h>
 #include <xtaskqueue.h>
