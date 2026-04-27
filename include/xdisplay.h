@@ -16,18 +16,34 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __WINE_XGAMERUNTIME_H
-#define __WINE_XGAMERUNTIME_H
+#ifndef __WINE_XDISPLAY_H
+#define __WINE_XDISPLAY_H
 
-#include <xaccessibility.h>
-#include <xappcapture.h>
-#include <xasync.h>
-#include <xasyncprovider.h>
-#include <xdisplay.h>
-#include <xgameruntimeinit.h>
-#include <xgameruntimetypes.h>
-#include <xspeechsynthesizer.h>
-#include <xtaskqueue.h>
-#include <xuser.h>
+typedef enum XDisplayHdrModePreference XDisplayHdrModePreference;
+typedef enum XDisplayHdrModeResult XDisplayHdrModeResult;
+
+typedef struct XDisplayTimeoutDeferral *XDisplayTimeoutDeferralHandle;
+
+typedef struct XDisplayHdrModeInfo XDisplayHdrModeInfo;
+
+enum XDisplayHdrModePreference
+{
+    XDisplayHdrModePreference_PreferHdr,
+    XDisplayHdrModePreference_PreferRefreshRate,
+};
+
+enum XDisplayHdrModeResult
+{
+    XDisplayHdrModeResult_Unknown,
+    XDisplayHdrModeResult_Enabled,
+    XDisplayHdrModeResult_Disabled,
+};
+
+struct XDisplayHdrModeInfo
+{
+    float minToneMapLuminance;
+    float maxToneMapLuminance;
+    float maxFullFrameToneMapLuminance;
+};
 
 #endif

@@ -1241,6 +1241,7 @@ SOURCES = \
 	xaudio2.idl \
 	xaudio2fx.idl \
 	xcmc.h \
+	xdisplay.h \
 	xgameerr.h \
 	xgameruntime.h \
 	xgameruntimeinit.h \
