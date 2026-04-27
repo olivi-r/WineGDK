@@ -71,6 +71,8 @@ HRESULT WINAPI QueryApiImpl( const GUID *runtimeClassId, REFIID interfaceId, voi
         return IXAppCapture_QueryInterface( capture_impl, interfaceId, out );
     if (IsEqualGUID( runtimeClassId, &CLSID_XAppCaptureImpl2 ))
         return IXAppCapture2_QueryInterface( capture2_impl, interfaceId, out );
+    if (IsEqualGUID( runtimeClassId, &CLSID_XDisplayImpl ))
+        return IXDisplay_QueryInterface( x_display_impl, interfaceId, out );
     if (IsEqualGUID( runtimeClassId, &CLSID_XLauncherImpl ))
         return IXLauncher_QueryInterface( x_launcher_impl, interfaceId, out );
 

@@ -36,11 +36,13 @@ import "xgameruntime.h";
 interface IXAccessibility;
 interface IXAppCapture;
 interface IXAppCapture2;
+interface IXDisplay;
 interface IXLauncher;
 
 coclass XAccessibilityImpl;
 coclass XAppCaptureImpl;
 coclass XAppCaptureImpl2;
+coclass XDisplayImpl;
 coclass XLauncherImpl;
 
 [
@@ -123,11 +125,24 @@ interface IXAppCapture2 : IUnknown
 [
     local,
     object,
+    uuid(35f07670-706e-4bfb-9476-090798c5ebf3)
+]
+interface IXDisplay : IUnknown
+{
+    HRESULT __PADDING__();
+    XDisplayHdrModeResult XDisplayTryEnableHdrMode( [in] XDisplayHdrModePreference displayModePreference, [out, optional] XDisplayHdrModeInfo *displayHdrModeInfo );
+}
+
+[
+    local,
+    object,
     uuid(1b339674-328d-4283-a200-3171f18d3639)
 ]
 interface IXLauncher : IUnknown
 {
     HRESULT XLaunchUri( [in, optional] XUserHandle user, [in, string] const char *uri );
+    HRESULT XDisplayAcquireTimeoutDeferral( [out] XDisplayTimeoutDeferralHandle *handle );
+    void    XDisplayCloseTimeoutDeferralHandle( [in] XDisplayTimeoutDeferralHandle handle );
 }
 
 [
@@ -152,6 +167,14 @@ coclass XAppCaptureImpl
 coclass XAppCaptureImpl2
 {
     [default] interface IXAppCapture2;
+}
+
+[
+    uuid(03f0fe74-fdd9-4e5c-b630-f9339c47acc5)
+]
+coclass XDisplayImpl
+{
+    [default] interface IXDisplay;
 }
 
 [

@@ -1,6 +1,6 @@
 /*
  * Xbox Game runtime Library
- *  GDK Component: System API -> XLauncher
+ *  GDK Component: System API -> XDisplay and XLauncher
  *
  * Copyright 2026 Olivia Ryan
  *
@@ -76,6 +76,17 @@ static HRESULT WINAPI x_launcher_XLaunchUri( IXLauncher *iface, XUserHandle user
     return (SIZE_T)ShellExecuteA( NULL, "open", uri, NULL, NULL, SW_SHOW ) > 32 ? S_OK : E_GAMEPACKAGE_NO_PACKAGE_IDENTIFIER;
 }
 
+static HRESULT WINAPI x_launcher_XDisplayAcquireTimeoutDeferral( IXLauncher *iface, XDisplayTimeoutDeferralHandle *handle )
+{
+    FIXME( "iface %p, handle %p stub!\n", iface, handle );
+    return E_NOTIMPL;
+}
+
+static void WINAPI x_launcher_XDisplayCloseTimeoutDeferralHandle( IXLauncher *iface, XDisplayTimeoutDeferralHandle handle )
+{
+    FIXME( "iface %p, handle %p stub!\n", iface, handle );
+}
+
 static const struct IXLauncherVtbl x_launcher_vtbl =
 {
     x_launcher_QueryInterface,
@@ -83,6 +94,8 @@ static const struct IXLauncherVtbl x_launcher_vtbl =
     x_launcher_Release,
     /* IXLauncher methods */
     x_launcher_XLaunchUri,
+    x_launcher_XDisplayAcquireTimeoutDeferral,
+    x_launcher_XDisplayCloseTimeoutDeferralHandle,
 };
 
 static struct x_launcher x_launcher =
