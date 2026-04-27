@@ -22,5 +22,6 @@
 #include <xaccessibility.h>
 #include <xgameruntimeinit.h>
 #include <xgameruntimetypes.h>
+#include <xspeechsynthesizer.h>
 
 #endif
