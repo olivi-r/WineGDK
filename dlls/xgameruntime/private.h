@@ -29,6 +29,8 @@
 #include <xgameruntime.h>
 
 extern IXAccessibility *x_accessibility_impl;
+extern IXAppCapture *capture_impl;
+extern IXAppCapture5 *capture5_impl;
 extern IXThreading *x_threading_impl;
 extern IXUser6 *x_user_impl;
 extern IXUserDevice2 *x_user_device_impl;

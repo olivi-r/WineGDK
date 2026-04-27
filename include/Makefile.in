@@ -1240,6 +1240,7 @@ SOURCES = \
 	xamlom.idl \
 	xapo.idl \
 	xapofx.h \
+	xappcapture.idl \
 	xasync.h \
 	xasyncprovider.idl \
 	xaudio2.idl \
