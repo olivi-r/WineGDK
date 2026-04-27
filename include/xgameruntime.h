@@ -23,11 +23,13 @@
 #define GDKC_VERSION 10002L
 #define GAMING_SERVICES_VERSION 7822L
 
+#include <xaccessibility.h>
 #include <xasync.h>
 #include <xasyncprovider.h>
 #include <xgameerr.h>
 #include <xgameruntimeinit.h>
 #include <xgameruntimetypes.h>
+#include <xspeechsynthesizer.h>
 #include <xtaskqueue.h>
 
 #endif

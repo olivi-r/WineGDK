@@ -64,6 +64,8 @@ HRESULT WINAPI QueryApiImpl( const GUID *classId, REFIID interfaceId, void **out
 {
     TRACE( "classId %s, interfaceId %s, out %p.\n", debugstr_guid( classId ), debugstr_guid( interfaceId ), out );
 
+    if (IsEqualGUID( classId, &CLSID_XAccessibilityImpl ))
+        return IXAccessibility_QueryInterface( x_accessibility_impl, interfaceId, out );
     if (IsEqualGUID( classId, &CLSID_XThreadingImpl ))
         return IXThreading_QueryInterface( x_threading_impl, interfaceId, out );
 

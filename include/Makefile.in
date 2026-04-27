@@ -1228,6 +1228,7 @@ SOURCES = \
 	wtypesbase.idl \
 	wuapi.idl \
 	x3daudio.h \
+	xaccessibility.idl \
 	xact.h \
 	xact2wb.h \
 	xact3.h \
@@ -1253,6 +1254,7 @@ SOURCES = \
 	xmllite.idl \
 	xpsobjectmodel.idl \
 	xpsobjectmodel_1.idl \
+	xspeechsynthesizer.h \
 	xtaskqueue.h \
 	zmouse.h
 

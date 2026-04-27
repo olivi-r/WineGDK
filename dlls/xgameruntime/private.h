@@ -28,6 +28,7 @@
 #include <wine/debug.h>
 #include <xgameruntime.h>
 
+extern IXAccessibility *x_accessibility_impl;
 extern IXThreading *x_threading_impl;
 
 /* Deference is for other modules to communicate with eachother through the same binary. */
