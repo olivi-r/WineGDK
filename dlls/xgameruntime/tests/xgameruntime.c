@@ -317,6 +317,28 @@ static void test_XGameSave( void )
     IXGameSave_Release( xgamesave );
 }
 
+static void test_XGameStreaming( void )
+{
+    IXGameStreaming *xgamestreaming = NULL;
+    HRESULT hr;
+
+    hr = QueryApiImpl( &CLSID_XGameStreamingImpl, &IID_IXGameStreaming, (void **)&xgamestreaming );
+    ok( hr == S_OK || broken( hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) ), "got hr %#lx.\n", hr );
+    if (hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) )
+    {
+        win_skip( "clsid %s not supported, skipping tests.\n", debugstr_guid( &CLSID_XGameStreamingImpl ) );
+        return;
+    }
+    if (!xgamestreaming) return;
+
+    check_interface( xgamestreaming, &IID_IUnknown );
+    check_interface( xgamestreaming, &IID_IXGameStreaming );
+    flaky check_interface( xgamestreaming, &IID_IXGameStreaming2 );
+    flaky check_interface( xgamestreaming, &IID_IXGameStreaming3 );
+
+    IXGameStreaming_Release( xgamestreaming );
+}
+
 static void test_XLauncher( void )
 {
     IXLauncher *xlauncher = NULL;
@@ -425,6 +447,7 @@ START_TEST(xgameruntime)
     test_XGameProtocol();
     test_XGameRuntimeFeature();
     test_XGameSave();
+    test_XGameStreaming();
     test_XLauncher();
     test_XThreading();
     test_XUser();
