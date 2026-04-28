@@ -15,6 +15,7 @@ SOURCES = \
 	xgameruntimefeature.c \
 	xgameruntimeinit.c \
 	xgamestreaming.c \
+	xgameui.c \
 	xlauncher.c \
 	xspeechsynthesizer.c \
 	xtaskqueue.c \
