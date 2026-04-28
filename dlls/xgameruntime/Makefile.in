@@ -16,5 +16,6 @@ SOURCES = \
 	xgameruntimefeature.c \
 	xgamesave.c \
 	xgamestreaming.c \
+	xgameui.c \
 	xthreading.c \
 	xuser.c
