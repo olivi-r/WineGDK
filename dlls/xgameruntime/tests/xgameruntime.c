@@ -276,7 +276,7 @@ static void test_XGameRuntimeFeature(void)
     /**
      * xgameruntime.lib::XGameRuntimeIsFeatureAvailable
      */
-    isAvailable = IXGameRuntimeFeatureImpl_XGameRuntimeIsFeatureAvailable( xgame_runtime_feature, XGame );
+    isAvailable = IXGameRuntimeFeatureImpl_XGameRuntimeIsFeatureAvailable( xgame_runtime_feature, XGameRuntimeFeature_XGame );
     ok( isAvailable, "got unexpected isAvailable %d.\n", isAvailable );
 
     IXGameRuntimeFeatureImpl_Release( xgame_runtime_feature );
