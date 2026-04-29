@@ -19,28 +19,48 @@
 #ifndef __WINE_XASYNCPROVIDER_H
 #define __WINE_XASYNCPROVIDER_H
 
-#include <stdint.h>
-#include "xasync.h"
+#include <xasync.h>
 
-typedef enum XAsyncOp 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifndef DECLARE_ENUM_CLASS
+#ifdef __cplusplus
+#define _DECLARE_ENUM_CLASS(e,t) enum class e : t {
+#define END_DECLARE_ENUM_CLASS };
+#define _ENUM_CLASS_MEMBER(e,t,m,v) m,
+#else
+#define _DECLARE_ENUM_CLASS(e,t) typedef t e;
+#define END_DECLARE_ENUM_CLASS
+#define _ENUM_CLASS_MEMBER(e,t,m,v) static const t e##_##m = v;
+#endif
+#define DECLARE_ENUM_CLASS(e) _DECLARE_ENUM_CLASS(e,UINT32)
+#define ENUM_CLASS_MEMBER(e,m,v) _ENUM_CLASS_MEMBER(e,UINT32,m,v)
+#endif
+
+DECLARE_ENUM_CLASS( XAsyncOp )
+    ENUM_CLASS_MEMBER( XAsyncOp, Begin,     0 )
+    ENUM_CLASS_MEMBER( XAsyncOp, DoWork,    1 )
+    ENUM_CLASS_MEMBER( XAsyncOp, GetResult, 2 )
+    ENUM_CLASS_MEMBER( XAsyncOp, Cancel,    3 )
+    ENUM_CLASS_MEMBER( XAsyncOp, Cleanup,   4 )
+END_DECLARE_ENUM_CLASS
+
+typedef struct XAsyncProviderData XAsyncProviderData;
+
+typedef HRESULT __stdcall XAsyncProviderCallback( XAsyncOp op, const XAsyncProviderData *data );
+
+struct XAsyncProviderData
 {
-    Begin,
-    DoWork,
-    GetResult,
-    Cancel,
-    Cleanup
-} XAsyncOp;
+    XAsyncBlock *async;
+    SIZE_T bufferSize;
+    void *buffer;
+    void *context;
+};
 
-typedef struct XAsyncProviderData
-{
-    XAsyncBlock* async;
-    size_t bufferSize;
-    void* buffer;
-    void* context;
-} XAsyncProviderData;
-
-typedef HRESULT CALLBACK XAsyncProviderCallback(_In_ XAsyncOp op, _Inout_ const XAsyncProviderData* data);
-
-#define XASYNC_IDENTITY(method) #method
+#ifdef __cplusplus
+}
+#endif
 
 #endif

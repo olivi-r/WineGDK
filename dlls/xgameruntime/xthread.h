@@ -21,6 +21,7 @@
 #ifndef __XTHREAD_H
 #define __XTHREAD_H
 
+#include <stdint.h>
 #include <xasyncprovider.h>
 
 typedef struct IXThreadingImpl IXThreadingImpl;
