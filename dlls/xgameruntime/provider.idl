@@ -29,7 +29,6 @@ typedef void* XSystemHandle;
 typedef enum XSystemHandleType XSystemHandleType;
 typedef enum XSystemHandleCallbackReason XSystemHandleCallbackReason;
 
-typedef struct XVersion XVersion;
 typedef struct XSystemAnalyticsInfo XSystemAnalyticsInfo;
 
 interface IWineAsyncWorkImpl;
@@ -65,20 +64,6 @@ enum XSystemHandleCallbackReason
 {
     Created     = 0x00,
     Destroyed   = 0x01
-};
-
-struct XVersion {  
-    union
-    {
-        struct
-        {
-            UINT16 major;  
-            UINT16 minor;  
-            UINT16 build;  
-            UINT16 revision;
-        };
-        UINT64 Value;
-    };
 };
 
 struct XSystemAnalyticsInfo

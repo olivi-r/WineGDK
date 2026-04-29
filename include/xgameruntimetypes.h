@@ -16,12 +16,48 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __WINE_XGAMERUNTIME_H
-#define __WINE_XGAMERUNTIME_H
+#ifndef __WINE_XGAMERUNTIMETYPES_H
+#define __WINE_XGAMERUNTIMETYPES_H
 
-#include <xgameerr.h>
-#include <xgameruntimefeature.h>
-#include <xgameruntimeinit.h>
-#include <xgameruntimetypes.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct XColor XColor;
+typedef struct XVersion XVersion;
+
+struct XColor
+{
+    union
+    {
+        struct
+        {
+            UINT8 A;
+            UINT8 R;
+            UINT8 G;
+            UINT8 B;
+        };
+        UINT32 Value;
+    };
+};
+
+struct XVersion
+{
+    union
+    {
+        struct
+        {
+            UINT16 major;
+            UINT16 minor;
+            UINT16 build;
+            UINT16 revision;
+        };
+        UINT64 Value;
+    };
+};
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
