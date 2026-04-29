@@ -25,6 +25,7 @@
 #include <xgameruntimefeature.h>
 #include <xgameruntimeinit.h>
 #include <xgameruntimetypes.h>
+#include <xnetworking.h>
 #include <xsystem.h>
 #include <xtaskqueue.h>
 

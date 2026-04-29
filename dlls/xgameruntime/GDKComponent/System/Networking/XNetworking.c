@@ -249,8 +249,8 @@ static HRESULT WINAPI x_networking_XNetworkingGetConnectivityHint( IXNetworkingI
     hint.overDataLimit = FALSE;
     hint.networkInitialized = TRUE;
     hint.approachingDataLimit = FALSE;
-    hint.connectivityLevel = ConnectivityLevelHintInternetAccess;
-    hint.connectivityCost = ConnectivityCostHintUnrestricted;
+    hint.connectivityLevel = XNetworkingConnectivityLevelHint_InternetAccess;
+    hint.connectivityCost = XNetworkingConnectivityCostHint_Unrestricted;
 
     *connectivityHint = hint;
 

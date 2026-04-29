@@ -19,47 +19,68 @@
 #ifndef __WINE_XNETWORKING_H
 #define __WINE_XNETWORKING_H
 
-#include "xasync.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-typedef enum XNetworkingThumbprintType
-{  
-    ThumbprintType_Leaf = 0,  
-    ThumbprintType_Issuer = 1,  
-    ThumbprintType_Root = 2,  
-} XNetworkingThumbprintType;
+#ifndef DECLARE_ENUM_CLASS
+#ifdef __cplusplus
+#define _DECLARE_ENUM_CLASS(e,t) enum class e : t {
+#define END_DECLARE_ENUM_CLASS };
+#define _ENUM_CLASS_MEMBER(e,t,m,v) m,
+#else
+#define _DECLARE_ENUM_CLASS(e,t) typedef t e;
+#define END_DECLARE_ENUM_CLASS
+#define _ENUM_CLASS_MEMBER(e,t,m,v) static const t e##_##m = v;
+#endif
+#define DECLARE_ENUM_CLASS(e) _DECLARE_ENUM_CLASS(e,UINT32)
+#define ENUM_CLASS_MEMBER(e,m,v) _ENUM_CLASS_MEMBER(e,UINT32,m,v)
+#endif
 
-typedef enum XNetworkingConnectivityLevelHint
-{
-    ConnectivityLevelHintUnknown = 0,
-    ConnectivityLevelHintNone = 1,
-    ConnectivityLevelHintLocalAccess = 2,
-    ConnectivityLevelHintInternetAccess = 3,
-    ConnectivityLevelHintConstrainedInternetAccess = 4,
-} XNetworkingConnectivityLevelHint;
+DECLARE_ENUM_CLASS( XNetworkingConfigurationSetting )
+    ENUM_CLASS_MEMBER( XNetworkingConfigurationSetting, MaxTitleTcpQueuedReceiveBufferSize,  0 )
+    ENUM_CLASS_MEMBER( XNetworkingConfigurationSetting, MaxSystemTcpQueuedReceiveBufferSize, 1 )
+    ENUM_CLASS_MEMBER( XNetworkingConfigurationSetting, MaxToolsTcpQueuedReceiveBufferSize,  2 )
+END_DECLARE_ENUM_CLASS
 
-typedef enum XNetworkingConnectivityCostHint
-{
-    ConnectivityCostHintUnknown = 0,
-    ConnectivityCostHintUnrestricted = 1,
-    ConnectivityCostHintFixed = 2,
-    ConnectivityCostHintVariable = 3,
-} XNetworkingConnectivityCostHint;
+DECLARE_ENUM_CLASS( XNetworkingConnectivityCostHint )
+    ENUM_CLASS_MEMBER( XNetworkingConnectivityCostHint, Unknown,      0 )
+    ENUM_CLASS_MEMBER( XNetworkingConnectivityCostHint, Unrestricted, 1 )
+    ENUM_CLASS_MEMBER( XNetworkingConnectivityCostHint, Fixed,        2 )
+    ENUM_CLASS_MEMBER( XNetworkingConnectivityCostHint, Varialbe,     3 )
+END_DECLARE_ENUM_CLASS
 
-typedef struct XNetworkingThumbprint 
-{  
-    XNetworkingThumbprintType thumbprintType;  
-    SIZE_T thumbprintBufferByteCount;  
-    UINT8* thumbprintBuffer;  
-} XNetworkingThumbprint;
+DECLARE_ENUM_CLASS( XNetworkingConnectivityLevelHint )
+    ENUM_CLASS_MEMBER( XNetworkingConnectivityLevelHint, Unknown,                   0 )
+    ENUM_CLASS_MEMBER( XNetworkingConnectivityLevelHint, None,                      1 )
+    ENUM_CLASS_MEMBER( XNetworkingConnectivityLevelHint, LocalAccess,               2 )
+    ENUM_CLASS_MEMBER( XNetworkingConnectivityLevelHint, InternetAccess,            3 )
+    ENUM_CLASS_MEMBER( XNetworkingConnectivityLevelHint, ConstrainedInternetAccess, 4 )
+END_DECLARE_ENUM_CLASS
 
-typedef struct XNetworkingSecurityInformation 
-{
-    UINT32 enabledHttpSecurityProtocolFlags;
-    SIZE_T thumbprintCount;
-    XNetworkingThumbprint* thumbprints;
-} XNetworkingSecurityInformation;
+DECLARE_ENUM_CLASS( XNetworkingStatisticsType )
+    ENUM_CLASS_MEMBER( XNetworkingStatisticsType, TitleTcpQueuedReceivedBufferUsage,  0 )
+    ENUM_CLASS_MEMBER( XNetworkingStatisticsType, SystemTcpQueuedReceivedBufferUsage, 1 )
+    ENUM_CLASS_MEMBER( XNetworkingStatisticsType, ToolsTcpQueuedReceivedBufferUsage,  2 )
+END_DECLARE_ENUM_CLASS
 
-typedef struct XNetworkingConnectivityHint 
+DECLARE_ENUM_CLASS( XNetworkingThumbprintType )
+    ENUM_CLASS_MEMBER( XNetworkingThumbprintType, Leaf,   0 )
+    ENUM_CLASS_MEMBER( XNetworkingThumbprintType, Issuer, 1 )
+    ENUM_CLASS_MEMBER( XNetworkingThumbprintType, Root,   2 )
+END_DECLARE_ENUM_CLASS
+
+typedef struct XNetworkingConnectivityHint XNetworkingConnectivityHint;
+typedef struct XNetworkingSecurityInformation XNetworkingSecurityInformation;
+typedef struct XNetworkingTcpQueuedReceivedBufferUsageStatistics XNetworkingTcpQueuedReceivedBufferUsageStatistics;
+typedef struct XNetworkingThumbprint XNetworkingThumbprint;
+
+typedef union XNetworkingStatisticsBuffer XNetworkingStatisticsBuffer;
+
+typedef void __stdcall XNetworkingConnectivityHintChangedCallback( void *context, const XNetworkingConnectivityHint *connectivityHint );
+typedef void __stdcall XNetworkingPreferredLocalUdpMultiplayerPortChangedCallback( void *context, UINT64 preferredLocalUdpMultiplayerPort );
+
+struct XNetworkingConnectivityHint
 {
     XNetworkingConnectivityLevelHint connectivityLevel;
     XNetworkingConnectivityCostHint connectivityCost;
@@ -68,36 +89,38 @@ typedef struct XNetworkingConnectivityHint
     BOOLEAN approachingDataLimit;
     BOOLEAN overDataLimit;
     BOOLEAN roaming;
-} XNetworkingConnectivityHint;
+};
 
-typedef enum XNetworkingConfigurationSetting
-{  
-    MaxTitleTcpQueuedReceiveBufferSize = 0,  
-    MaxSystemTcpQueuedReceiveBufferSize = 1,  
-    MaxToolsTcpQueuedReceiveBufferSize = 2,  
-} XNetworkingConfigurationSetting;
+struct XNetworkingSecurityInformation
+{
+    UINT32 enabledHttpSecurityProtocolFlags;
+    SIZE_T thumbprintCount;
+    XNetworkingThumbprint *thumbprints;
+};
 
-typedef enum XNetworkingStatisticsType  
-{  
-    TitleTcpQueuedReceivedBufferUsage = 0,  
-    SystemTcpQueuedReceivedBufferUsage = 1,  
-    ToolsTcpQueuedReceivedBufferUsage = 2,  
-} XNetworkingStatisticsType;
+struct XNetworkingTcpQueuedReceivedBufferUsageStatistics
+{
+    UINT64 numBytesCurrentlyQueued;
+    UINT64 peakNumBytesEverQueued;
+    UINT64 totalNumBytesQueued;
+    UINT64 numBytesDroppedForExceedingConfiguredMax;
+    UINT64 numBytesDroppedDueToAnyFailure;
+};
 
-typedef struct XNetworkingTcpQueuedReceivedBufferUsageStatistics 
-{  
-    UINT64 numBytesCurrentlyQueued;  
-    UINT64 peakNumBytesEverQueued;  
-    UINT64 totalNumBytesQueued;  
-    UINT64 numBytesDroppedForExceedingConfiguredMax;  
-    UINT64 numBytesDroppedDueToAnyFailure;  
-} XNetworkingTcpQueuedReceivedBufferUsageStatistics;
+struct XNetworkingThumbprint
+{
+    XNetworkingThumbprintType thumbprintType;
+    SIZE_T thumbprintBufferByteCount;
+    UINT8 *thumbprintBuffer;
+};
 
-typedef union XNetworkingStatisticsBuffer 
-{  
-    XNetworkingTcpQueuedReceivedBufferUsageStatistics tcpQueuedReceiveBufferUsage;  
-} XNetworkingStatisticsBuffer;
+union XNetworkingStatisticsBuffer
+{
+    XNetworkingTcpQueuedReceivedBufferUsageStatistics tcpQueuedReceiveBufferUsage;
+};
 
-typedef void CALLBACK XNetworkingPreferredLocalUdpMultiplayerPortChangedCallback(_In_opt_ PVOID context, _In_ UINT16 preferredLocalUdpMultiplayerPort);
-typedef void CALLBACK XNetworkingConnectivityHintChangedCallback(_In_opt_ PVOID context, _In_ const XNetworkingConnectivityHint* connectivityHint);
+#ifdef __cplusplus
+}
+#endif
+
 #endif
