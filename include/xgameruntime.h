@@ -23,5 +23,6 @@
 #include <xgameruntimefeature.h>
 #include <xgameruntimeinit.h>
 #include <xgameruntimetypes.h>
+#include <xsystem.h>
 
 #endif
