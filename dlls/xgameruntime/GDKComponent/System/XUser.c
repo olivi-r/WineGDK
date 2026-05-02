@@ -134,6 +134,7 @@ static inline HRESULT GetJson##obj_type##Value( IJsonObject *object, const WCHAR
 
 GetJsonValue_( Object, IJsonObject** )
 GetJsonValue_( Array, IJsonArray** )
+GetJsonValue_( Value, IJsonValue** )
 GetJsonValue_( String, HSTRING* )
 GetJsonValue_( Number, DOUBLE* )
 
@@ -494,8 +495,97 @@ cleanup:
 
 static HRESULT WINAPI user_FetchProfileSettings( IUser *iface, const WCHAR *settings, IUnknown **result )
 {
-    FIXME( "iface %p, settings %s, result %p stub!\n", iface, debugstr_w( settings ), result );
-    return E_NOTIMPL;
+    const WCHAR *template = L"/users/me/profile/settings?settings=";
+    UINT32 headers_len, token_len, settings_count, uhs_len, url_len = wcslen( template ) + wcslen( settings ) + 1;
+    const WCHAR *class_name = RuntimeClass_Windows_Data_Json_JsonObject;
+    XUserHandle impl = impl_from_IUser( iface );
+    WCHAR *data = NULL, *pathAndQuery, *headers;
+    IJsonObject *object = NULL;
+    IVector_IJsonValue *vector;
+    const WCHAR *token, *uhs;
+    HSTRING_HEADER class_hdr;
+    HSTRING class, id = NULL;
+    IJsonArray *array;
+    IJsonValue *value;
+    UCHAR *buffer;
+    SIZE_T size;
+    HRESULT hr;
+
+    TRACE( "iface %p.\n", iface );
+
+    *result = NULL;
+
+    uhs = WindowsGetStringRawBuffer( impl->user_hash, &uhs_len );
+    token = WindowsGetStringRawBuffer( impl->xsts_token, &token_len );
+
+    headers_len = wcslen( L"x-xbl-contract-version: 2\r\nAuthorization: XBL3.0 x=;" ) + uhs_len + token_len + 1;
+    url_len = wcslen( template ) + wcslen( settings ) + 1;
+    if (!(data = calloc( headers_len + url_len, sizeof(WCHAR) ))) return E_OUTOFMEMORY;
+
+    headers = data;
+    wcscpy( headers, L"x-xbl-contract-version: 2\r\nAuthorization: XBL3.0 x=" );
+    wcsncat( headers, uhs, uhs_len );
+    wcscat( headers, L";" );
+    wcsncat( headers, token, token_len );
+
+    pathAndQuery = data + headers_len;
+    wcscpy( pathAndQuery, template );
+    wcscat( pathAndQuery, settings );
+
+    hr = HttpRequest( L"GET", L"profile.xboxlive.com", pathAndQuery, (char *)"", headers, ACCEPT_JSON, &buffer, &size );
+    free( data );
+    if (FAILED(hr)) return hr;
+
+    hr = ParseJsonObject( (char *)buffer, size, &object );
+    free( buffer );
+    if (FAILED(hr)) return hr;
+
+    hr = GetJsonArrayValue( object, L"profileUsers", &array );
+    IJsonObject_Release( object );
+    if (FAILED(hr)) return hr;
+
+    hr = IJsonArray_GetObjectAt( array, 0, &object );
+    IJsonArray_Release( array );
+    if (FAILED(hr)) return hr;
+
+    hr = GetJsonArrayValue( object, L"settings", &array );
+    IJsonObject_Release( object );
+    if (FAILED(hr)) return hr;
+
+    /* repack settings for easier access */
+
+    if (FAILED(hr = IJsonArray_QueryInterface( array, &IID_IVector_IJsonValue, (void **)&vector ))) goto cleanup;
+    hr = IVector_IJsonValue_get_Size( vector, &settings_count );
+    IVector_IJsonValue_Release( vector );
+    if (FAILED(hr)) goto cleanup;
+
+    if (FAILED(hr = WindowsCreateStringReference( class_name, wcslen( class_name ), &class_hdr, &class ))) goto cleanup;
+    if (FAILED(hr = RoActivateInstance( class, (IInspectable **)result ))) goto cleanup;
+
+    for (UINT32 i = 0; i < settings_count; i++)
+    {
+        if (FAILED(hr = IJsonArray_GetObjectAt( array, i, &object ))) goto cleanup;
+        if (FAILED(hr = GetJsonStringValue( object, L"id", &id ))) goto cleanup;
+        if (FAILED(hr = GetJsonValueValue( object, L"value", &value ))) goto cleanup;
+        IJsonObject_Release( object );
+        object = NULL;
+        hr = IJsonObject_SetNamedValue( (IJsonObject *)*result, id, value );
+        IJsonValue_Release( value );
+        if (FAILED(hr)) goto cleanup;
+        WindowsDeleteString( id );
+        id = NULL;
+    }
+
+cleanup:
+    IJsonArray_Release( array );
+    if (id) WindowsDeleteString( id );
+    if (object) IJsonObject_Release( object );
+    if (FAILED(hr) && *result)
+    {
+        IUnknown_Release( *result );
+        *result = NULL;
+    }
+    return hr;
 }
 
 static HRESULT WINAPI user_GenerateKeyPair( IUser *iface )
