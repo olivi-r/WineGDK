@@ -1269,6 +1269,7 @@ SOURCES = \
 	xmldso.idl \
 	xmldsodid.h \
 	xmllite.idl \
+	xnetworking.idl \
 	xpackage.idl \
 	xpersistentlocalstorage.idl \
 	xpsobjectmodel.idl \
