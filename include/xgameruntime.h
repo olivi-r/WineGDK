@@ -42,6 +42,7 @@
 #include <xgamestreaming.h>
 #include <xgameui.h>
 #include <xlauncher.h>
+#include <xnetworking.h>
 #include <xpackage.h>
 #include <xpersistentlocalstorage.h>
 #include <xspeechsynthesizer.h>

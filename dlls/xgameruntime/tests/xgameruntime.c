@@ -382,6 +382,27 @@ static void test_XLauncher( void )
     IXLauncher_Release( xlauncher );
 }
 
+static void test_XNetworking( void )
+{
+    IXNetworking *xnetworking = NULL;
+    HRESULT hr;
+
+    hr = QueryApiImpl( &CLSID_XNetworkingImpl, &IID_IXNetworking, (void **)&xnetworking );
+    ok( hr == S_OK || broken( hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) ), "got hr %#lx.\n", hr );
+    if (hr == HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED ) )
+    {
+        win_skip( "clsid %s not supported, skipping tests.\n", debugstr_guid( &CLSID_XNetworkingImpl ) );
+        return;
+    }
+    if (!xnetworking) return;
+
+    check_interface( xnetworking, &IID_IUnknown );
+    check_interface( xnetworking, &IID_IXNetworking );
+    flaky check_interface( xnetworking, &IID_IXNetworking2 );
+
+    IXNetworking_Release( xnetworking );
+}
+
 static void test_XPackage( void )
 {
     IXPackage *xpackage = NULL;
@@ -586,6 +607,7 @@ START_TEST(xgameruntime)
     test_XGameStreaming();
     test_XGameUi();
     test_XLauncher();
+    test_XNetworking();
     test_XPackage();
     test_XPersistentLocalStorage();
     test_XStore();
