@@ -25,10 +25,79 @@ WINE_DEFAULT_DEBUG_CHANNEL(gdkc);
 
 const char msaAppId[] = "0000000040159362";
 
+static const WCHAR *ACCEPT_JSON[] = { L"application/json", NULL };
+static const WCHAR CT_FORM_URLENCODED[] = L"Content-Type: application/x-www-form-urlencoded";
+
+static HRESULT MultiByteToHSTRING( const char *str, UINT32 str_size, HSTRING *hstr )
+{
+    UINT32 wstr_size;
+    WCHAR *wstr;
+    HRESULT hr;
+
+    if (!(wstr_size = MultiByteToWideChar( CP_UTF8, MB_ERR_INVALID_CHARS, str, str_size, NULL, 0 )))
+        return HRESULT_FROM_WIN32( GetLastError() );
+
+    if (!(wstr = calloc( wstr_size, sizeof(WCHAR) ))) return E_OUTOFMEMORY;
+
+    if (!(wstr_size = MultiByteToWideChar( CP_UTF8, MB_ERR_INVALID_CHARS, str, str_size, wstr, wstr_size )))
+    {
+        free( wstr );
+        return HRESULT_FROM_WIN32( GetLastError() );
+    }
+
+    hr = WindowsCreateString( wstr, wstr_size, hstr );
+    free( wstr );
+    return hr;
+}
+
+#define GetJsonValue_( obj_type, ret_type )                                                                 \
+static inline HRESULT GetJson##obj_type##Value( IJsonObject *object, const WCHAR *key, ret_type value )     \
+{                                                                                                           \
+    HSTRING_HEADER key_hdr;                                                                                 \
+    HSTRING key_hstr;                                                                                       \
+    HRESULT hr;                                                                                             \
+                                                                                                            \
+    if (FAILED(hr = WindowsCreateStringReference( key, wcslen( key ), &key_hdr, &key_hstr ))) return hr;    \
+    return IJsonObject_GetNamed##obj_type( object, key_hstr, value );                                       \
+}
+
+GetJsonValue_( String, HSTRING* )
+GetJsonValue_( Number, DOUBLE* )
+
+static HRESULT ParseJsonObject( const char *str, SIZE_T str_size, IJsonObject **object )
+{
+    const WCHAR *class_name = RuntimeClass_Windows_Data_Json_JsonValue;
+    IJsonValueStatics *statics;
+    HSTRING_HEADER class_hdr;
+    HSTRING class, content;
+    IJsonValue *value;
+    HRESULT hr;
+
+    if (FAILED(hr = WindowsCreateStringReference( class_name, wcslen( class_name ), &class_hdr, &class ))) return hr;
+    if (FAILED(hr = RoGetActivationFactory( class, &IID_IJsonValueStatics, (void **)&statics ))) return hr;
+    if (FAILED(hr = MultiByteToHSTRING( str, str_size, &content )))
+    {
+        IJsonValueStatics_Release( statics );
+        return hr;
+    }
+
+    hr = IJsonValueStatics_Parse( statics, content, &value );
+    IJsonValueStatics_Release( statics );
+    WindowsDeleteString( content );
+    if (FAILED(hr)) return hr;
+
+    hr = IJsonValue_GetObject( value, object );
+    IJsonValue_Release( value );
+    return hr;
+}
+
 struct XUser
 {
     IUser IUser_iface;
     LONG ref;
+
+    DOUBLE interval;
+    HSTRING device_code;
 };
 
 static inline struct XUser *impl_from_IUser( IUser *iface )
@@ -67,14 +136,49 @@ static ULONG WINAPI user_Release( IUser *iface )
     struct XUser *impl = impl_from_IUser( iface );
     ULONG ref = InterlockedDecrement( &impl->ref );
     TRACE( "iface %p decreasing refcount to %lu.\n", iface, ref );
-    if (!ref) free( impl );
+    if (!ref)
+    {
+        if (impl->device_code) WindowsDeleteString( impl->device_code );
+        free( impl );
+    }
     return ref;
 }
 
 static HRESULT WINAPI user_RequestOAuthCode( IUser *iface, HSTRING *user, HSTRING *uri )
 {
-    FIXME( "iface %p, user %p, uri %p stub!\n", iface, user, uri );
-    return E_NOTIMPL;
+    static const char template[] = "scope=service::user.auth.xboxlive.com::MBI_SSL&response_type=device_code&client_id=";
+    struct XUser *impl = impl_from_IUser( iface );
+    char *buffer = NULL, *data = NULL;
+    IJsonObject *object = NULL;
+    SIZE_T size = 0;
+    HRESULT hr;
+
+    TRACE( "iface %p, user %p, uri %p.\n", iface, user, uri );
+
+    if (!(data = calloc( 1, ARRAY_SIZE( template ) + ARRAY_SIZE( msaAppId ) - 1 )))
+    {
+        return E_OUTOFMEMORY;
+    }
+    strcpy( data, template );
+    strcat( data, msaAppId );
+
+    if (FAILED(hr = HttpRequest( L"POST", L"login.live.com", L"/oauth20_connect.srf", data, CT_FORM_URLENCODED, ACCEPT_JSON, (UCHAR **)&buffer, &size )))
+        goto cleanup;
+    if (FAILED(hr = ParseJsonObject( buffer, size, &object ))) goto cleanup;
+    if (FAILED(hr = GetJsonStringValue( object, L"device_code", &impl->device_code ))) goto cleanup;
+    if (FAILED(hr = GetJsonStringValue( object, L"verification_uri", uri ))) goto cleanup;
+    if (FAILED(hr = GetJsonNumberValue( object, L"interval", &impl->interval ))) goto cleanup;
+    hr = GetJsonStringValue( object, L"user_code", user );
+
+cleanup:
+    if (data) free( data );
+    if (buffer) free( buffer );
+    IJsonObject_Release( object );
+    if (SUCCEEDED(hr)) return hr;
+    if (*uri) WindowsDeleteString( *uri );
+    if (*user) WindowsDeleteString( *user );
+    if (impl->device_code) WindowsDeleteString( impl->device_code );
+    return hr;
 }
 
 static HRESULT WINAPI user_RequestOAuthToken( IUser *iface )
