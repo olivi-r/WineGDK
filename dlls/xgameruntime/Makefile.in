@@ -2,6 +2,7 @@ IMPORTS   = user32 advapi32 crypt32 combase winhttp
 MODULE    = xgameruntime.dll
 
 SOURCES = \
+	common.c \
 	main.c \
 	provider.idl \
 	\
