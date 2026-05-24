@@ -38,6 +38,8 @@
 #define WIDL_using_Windows_System_Profile
 #include <windows.system.profile.h>
 
+extern DWORD tlsIndex;
+
 extern IXAccessibility *x_accessibility_impl;
 extern IXAppCapture *capture_impl;
 extern IXAppCapture5 *capture5_impl;

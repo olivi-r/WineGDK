@@ -519,6 +519,7 @@ static void test_XSystemAnalytics( void )
 static void test_XThreading( void )
 {
     IXThreading *xthreading = NULL;
+    BOOLEAN isTimeSensitiveThread;
     HRESULT hr;
 
     hr = QueryApiImpl( &CLSID_XThreadingImpl, &IID_IXThreading, (void **)&xthreading );
@@ -532,6 +533,18 @@ static void test_XThreading( void )
 
     check_interface( xthreading, &IID_IUnknown );
     check_interface( xthreading, &IID_IXThreading );
+
+    /* XThread */
+    isTimeSensitiveThread = IXThreading_XThreadIsTimeSensitive( xthreading );
+    ok( isTimeSensitiveThread == FALSE, "got isTimeSensitiveThread %d.\n", isTimeSensitiveThread );
+    hr = IXThreading_XThreadSetTimeSensitive( xthreading, TRUE );
+    ok( hr == S_OK, "got hr %#lx.\n", hr );
+    isTimeSensitiveThread = IXThreading_XThreadIsTimeSensitive( xthreading );
+    ok( isTimeSensitiveThread == TRUE, "got isTimeSensitiveThread %d.\n", isTimeSensitiveThread );
+    hr = IXThreading_XThreadSetTimeSensitive( xthreading, FALSE );
+    ok( hr == S_OK, "got hr %#lx.\n", hr );
+    isTimeSensitiveThread = IXThreading_XThreadIsTimeSensitive( xthreading );
+    ok( isTimeSensitiveThread == FALSE, "got isTimeSensitiveThread %d.\n", isTimeSensitiveThread );
 
     IXThreading_Release( xthreading );
 }
