@@ -23,6 +23,20 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(gdkc);
 
+struct XTaskQueuePortObject
+{
+    XTaskQueueHandle owner;
+    XTaskQueueDispatchMode mode;
+};
+
+struct XTaskQueueObject
+{
+    LONG ref;
+    BOOLEAN isComposite;
+    XTaskQueuePortHandle workPort;
+    XTaskQueuePortHandle completionPort;
+};
+
 struct x_threading
 {
     IXThreading IXThreading_iface;
@@ -122,26 +136,65 @@ static HRESULT WINAPI x_threading_XAsyncGetResult( IXThreading *iface, XAsyncBlo
 
 static HRESULT WINAPI x_threading_XTaskQueueCreate( IXThreading *iface, XTaskQueueDispatchMode workDispatchMode, XTaskQueueDispatchMode completionDispatchMode, XTaskQueueHandle *queue )
 {
-    FIXME( "iface %p, workDispatchMode %d, completionDispatchMode %d, queue %p stub!\n", iface, workDispatchMode, completionDispatchMode, queue );
-    return E_NOTIMPL;
+    struct XTaskQueueObject *impl;
+
+    TRACE( "iface %p, workDispatchMode %d, completionDispatchMode %d, queue %p.\n", iface, workDispatchMode, completionDispatchMode, queue );
+
+    if (!(impl = calloc( 1, sizeof(*impl) + 2 * sizeof(struct XTaskQueuePortObject) ))) return E_OUTOFMEMORY;
+    impl->ref = 1;
+    impl->isComposite = FALSE;
+    impl->workPort = (struct XTaskQueuePortObject *)(impl + 1);
+    impl->workPort->owner = impl;
+    impl->completionPort = impl->workPort + 1;
+    impl->completionPort->owner = impl;
+
+    *queue = impl;
+    return S_OK;
 }
 
 static HRESULT WINAPI x_threading_XTaskQueueCreateComposite( IXThreading *iface, XTaskQueuePortHandle workPort, XTaskQueuePortHandle completionPort, XTaskQueueHandle *queue )
 {
-    FIXME( "iface %p, workPort %p, completionPort %p, queue %p stub!\n", iface, workPort, completionPort, queue );
-    return E_NOTIMPL;
+    struct XTaskQueueObject *impl;
+
+    TRACE( "iface %p, workPort %p, completionPort %p, queue %p.\n", iface, workPort, completionPort, queue );
+
+    if (!(impl = calloc( 1, sizeof(*impl) ))) return E_OUTOFMEMORY;
+    impl->ref = 1;
+    impl->isComposite = TRUE;
+    /* composite queue holds reference to owners of port objects */
+    InterlockedIncrement( &workPort->owner->ref );
+    InterlockedIncrement( &completionPort->owner->ref );
+    impl->workPort = workPort;
+    impl->completionPort = completionPort;
+
+    *queue = impl;
+    return S_OK;
 }
 
 static HRESULT WINAPI x_threading_XTaskQueueGetPort( IXThreading *iface, XTaskQueueHandle queue, XTaskQueuePort port, XTaskQueuePortHandle *portHandle )
 {
-    FIXME( "iface %p, queue %p, port %d, portHandle %p stub!\n", iface, queue, port, portHandle );
-    return E_NOTIMPL;
+    TRACE( "iface %p, queue %p, port %d, portHandle %p.\n", iface, queue, port, portHandle );
+
+    switch (port)
+    {
+        case XTaskQueuePort_Work:
+            *portHandle = queue->workPort;
+            return S_OK;
+
+        case XTaskQueuePort_Completion:
+            *portHandle = queue->completionPort;
+            return S_OK;
+    }
+
+    return E_INVALIDARG;
 }
 
 static HRESULT WINAPI x_threading_XTaskQueueDuplicateHandle( IXThreading *iface, XTaskQueueHandle queueHandle, XTaskQueueHandle *duplicatedHandle )
 {
-    FIXME( "iface %p, queueHandle %p, duplicatedHandle %p stub!\n", iface, queueHandle, duplicatedHandle );
-    return E_NOTIMPL;
+    TRACE( "iface %p, queueHandle %p, duplicatedHandle %p.\n", iface, queueHandle, duplicatedHandle );
+    InterlockedIncrement( &queueHandle->ref );
+    *duplicatedHandle = queueHandle;
+    return S_OK;
 }
 
 static BOOLEAN WINAPI x_threading_XTaskQueueDispatch( IXThreading *iface, XTaskQueueHandle queue, XTaskQueuePort port, UINT32 timeoutInMs )
@@ -152,7 +205,19 @@ static BOOLEAN WINAPI x_threading_XTaskQueueDispatch( IXThreading *iface, XTaskQ
 
 static VOID WINAPI x_threading_XTaskQueueCloseHandle( IXThreading *iface, XTaskQueueHandle queue )
 {
-    FIXME( "iface %p, queue %p stub!\n", iface, queue );
+    ULONG ref = InterlockedDecrement( &queue->ref );
+
+    TRACE( "iface %p, queue %p.\n", iface, queue );
+
+    if (!ref)
+    {
+        if (queue->isComposite)
+        {
+            IXThreading_XTaskQueueCloseHandle( iface, queue->workPort->owner );
+            IXThreading_XTaskQueueCloseHandle( iface, queue->completionPort->owner );
+        }
+        free( queue );
+    }
 }
 
 static HRESULT WINAPI x_threading_XTaskQueueSubmitCallback( IXThreading *iface, XTaskQueueHandle queue, XTaskQueuePort port, void *callbackContext, XTaskQueueCallback *callback )
